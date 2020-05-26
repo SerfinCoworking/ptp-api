@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "description": "NodeJS + MongoDB API for PTP Management",
     "engines": {
-        "node": "12.14.x"
+        "node": "12.14.x",
+        "npm": "6.13.x"
     },
     "license": "MIT",
     "repository": {
