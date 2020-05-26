@@ -1,7 +1,6 @@
 import { Schema, Model, model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import IUser from '../interfaces/user.interface';
-import IRole from '../interfaces/role.interface';
 import { ObjectID } from 'mongodb';
 
 
