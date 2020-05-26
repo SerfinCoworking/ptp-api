@@ -2,6 +2,9 @@
     "name": "ptp-api",
     "version": "1.0.0",
     "description": "NodeJS + MongoDB API for PTP Management",
+    "engines": {
+        "node": "12.14.x"
+    },
     "license": "MIT",
     "repository": {
         "type": "git",
