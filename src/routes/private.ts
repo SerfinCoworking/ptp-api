@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 
-import { hasPermissionIn } from '../middlewares/roles.middleware';
 // interfaces
 
 // controllers
