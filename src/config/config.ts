@@ -5,10 +5,12 @@ export const env = {
     MONGODB_CONNECTION: 'mongodb://localhost/ptp-db'
 };
 
-export const httpCodes = {
+export const HttpCodes: { [key: string ]: number } = {
     BAD_REQUEST: 400,
     UNAUTHORIZED: 401,
     FORBIDDEN: 403,
+    RESOURCE_NOT_FOUND: 404,
     EXPIRED_TOKEN: 406,
     EXPECTATION_FAILED: 417,
+    SERVER_ERROR: 500,
   };
