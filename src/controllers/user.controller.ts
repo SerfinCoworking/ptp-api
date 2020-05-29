@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { BaseController } from './base.controllers.interface';
+import { errorHandler, GenericError } from '../common/errors.handler';
 import User from '../models/user.model';
 import IUser from '../interfaces/user.interface';
 
@@ -14,10 +15,11 @@ class UserController extends BaseController{
     try{
       const id: string = req.params.id;
       const user: IUser | null = await User.findOne({_id: id}).select("username email role");
+      if(!user) throw new GenericError({property:"User", message: 'User not found', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(user);
     }catch(err){
-      console.log(err);
-      return res.status(500).json('Server Error');
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
@@ -27,24 +29,24 @@ class UserController extends BaseController{
       const body = await this.filterNullValues(req.body, this.permitBody());
 
       const opts: any = { runValidators: true, new: true };
-      const role: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts).select("username email role");
+      const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts).select("username email role");
+      if(!user) throw new GenericError({property:"User", message: 'User not found', type: "RESOURCE_NOT_FOUND"});
 
-      return res.status(200).json(role);
+      return res.status(200).json(user);
     } catch(err){
-      console.log(err);
-      return res.status(500).json('Server Error');
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
   public delete = async (req: Request, res: Response): Promise<Response> => {
     try{
-
       const { id } = req.params;
       await User.findByIdAndDelete(id);
       return res.status(200).json('User deleted successfully');
     }catch(err){
-      console.log(err);
-      return res.status(500).json('Server Error');
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 

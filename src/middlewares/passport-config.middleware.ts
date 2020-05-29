@@ -2,7 +2,7 @@ import {Request, Response, NextFunction} from 'express';
 import passport from 'passport';
 import passportJwt from 'passport-jwt';
 import passportLocal from 'passport-local';
-import { env, httpCodes } from '../config/config';
+import { env, HttpCodes } from '../config/config';
 import User from '../models/user.model';
 import IUser from '../interfaces/user.interface';
 
@@ -22,14 +22,14 @@ passport.use(new JwtStrategy({
     try{
         const expirationDate = new Date(payload.exp);
         if(expirationDate < new Date()) {
-            return done(null, false, {code: httpCodes.EXPIRED_TOKEN, message: 'El token ha expirado'});
+            return done(null, false, {code: HttpCodes.EXPIRED_TOKEN, message: 'El token ha expirado'});
         }
         // find the user specified in token
         const user = await User.findOne({ _id: payload.sub }).select('_id');
 
         // if user doesn't exists, handle it
         if(!user){
-            return done(null, false, {code: httpCodes.EXPECTATION_FAILED, message: 'Debe iniciar sesión'});
+            return done(null, false, {code: HttpCodes.EXPECTATION_FAILED, message: 'Debe iniciar sesión'});
         }
 
         // otherwise, return the user
@@ -56,7 +56,7 @@ passport.use(new LocalStrategy({
         if(!user){
             user = await User.findOne({ username: identifier });
             if(!user){
-                return done(null, false, {code: httpCodes.UNAUTHORIZED, message: 'El usuario o contraseña que has ingresado es incorrecto. Por favor intenta de nuevo.'});
+                return done(null, false, {code: HttpCodes.UNAUTHORIZED, message: 'El usuario o contraseña que has ingresado es incorrecto. Por favor intenta de nuevo.'});
             }
         }
 
@@ -65,7 +65,7 @@ passport.use(new LocalStrategy({
 
         // if not, handle it
         if(!isMatch){
-            return done(null, false, {code: httpCodes.UNAUTHORIZED, message: 'El usuario o contraseña que has ingresado es incorrecto. Por favor intenta de nuevo.'});
+            return done(null, false, {code: HttpCodes.UNAUTHORIZED, message: 'El usuario o contraseña que has ingresado es incorrecto. Por favor intenta de nuevo.'});
         }
         // otherwise, return the user
         done(null, user);
@@ -85,7 +85,7 @@ const authenticationMiddleware = (req: Request, res: Response, next: NextFunctio
             req.user = user;
             next();
         }catch(error){
-            if(error.code == 'ERR_HTTP_INVALID_STATUS_CODE') return res.status(httpCodes.EXPECTATION_FAILED).json({message: 'Debe iniciar sesión'});
+            if(error.code == 'ERR_HTTP_INVALID_STATUS_CODE') return res.status(HttpCodes.EXPECTATION_FAILED).json({message: 'Debe iniciar sesión'});
 
             return res.status(500).json('Server Error')
         }

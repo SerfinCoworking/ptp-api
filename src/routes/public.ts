@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import RoleController from '../controllers/role.controller';
 import EmployeeController from '../controllers/employee.controller';
+import UserController from '../controllers/user.controller';
 class PublicRoutes{
 
   constructor(private router: Router = Router()){}
@@ -15,12 +16,17 @@ class PublicRoutes{
     this.router.patch('/roles/:id', RoleController.update);
     this.router.delete('/roles/:id', RoleController.delete);
 
-
     this.router.get('/employees', EmployeeController.index);
     this.router.post('/employees', EmployeeController.create);
     this.router.get('/employees/:id', EmployeeController.show);
     this.router.patch('/employees/:id', EmployeeController.update);
     this.router.delete('/employees/:id', EmployeeController.delete);
+
+    this.router.get('/users', UserController.index);
+    // this.router.post('/users', UserController.create);
+    this.router.get('/users/:id', UserController.show);
+    this.router.patch('/users/:id', UserController.update);
+    this.router.delete('/users/:id', UserController.delete);
     return this.router;
   }
 }
