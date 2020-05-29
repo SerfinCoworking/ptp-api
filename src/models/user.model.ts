@@ -48,7 +48,10 @@ export const userSchema = new Schema({
   },
   role: {
     _id: ObjectID,
-    name: String,
+    name: {
+      type: String,
+      required: '{PATH} is required',
+    },
   },
   refreshToken: {
     type: String,
