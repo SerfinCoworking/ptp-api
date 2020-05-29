@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import IUser from '../interfaces/user.interface';
 import User from '../models/user.model';
 import { BaseController } from './base.controllers.interface';
+import { errorHandler } from '../common/errors.handler';
 
 class AuthController extends BaseController{
 
@@ -16,11 +17,8 @@ class AuthController extends BaseController{
       return res.status(200).json(newUser);
 
     }catch(e){
-      let errors: { [key: string]: string } = {};
-      Object.keys(e.errors).forEach(prop => {
-          errors[ prop ] = e.errors[prop].message;
-      });
-      return res.status(422).json(errors);
+      const handler = errorHandler(e);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
