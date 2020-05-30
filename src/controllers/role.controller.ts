@@ -39,7 +39,7 @@ class RoleController extends BaseController{
       const id: string = req.params.id;
       const body = await this.filterNullValues(req.body, this.permitBody());
 
-      const opts: any = { runValidators: true, new: true };
+      const opts: any = { runValidators: true, new: true, context: 'query' };
       const role: IRole | null = await Role.findOneAndUpdate({_id: id}, body, opts);
       if(!role) throw new GenericError({propperty: "Role", message: "Role not found", type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(role);

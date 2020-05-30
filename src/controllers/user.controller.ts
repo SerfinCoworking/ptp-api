@@ -28,7 +28,7 @@ class UserController extends BaseController{
       const id: string = req.params.id;
       const body = await this.filterNullValues(req.body, this.permitBody());
 
-      const opts: any = { runValidators: true, new: true };
+      const opts: any = { runValidators: true, new: true, context: 'query' };
       const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts).select("username email role");
       if(!user) throw new GenericError({property:"User", message: 'User not found', type: "RESOURCE_NOT_FOUND"});
 
