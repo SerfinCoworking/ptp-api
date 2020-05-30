@@ -46,10 +46,10 @@ class AuthController extends BaseController{
     const { _id } = req.user as IUser;
     try{
 
-      const user: IUser | null = await User.findOne({_id}).select("_id username role.name");
+      const user: IUser | null = await User.findOne({_id}).select("_id username role");
       if(!user) throw new GenericError({property: 'User', message:'Debe iniciar sesión', tpye:'EXPECTATION_FAILED'});
 
-      const token = this.signInToken(user._id, user.username, user.role.name);
+      const token = this.signInToken(user._id, user.username, user.role);
       const refreshToken = uuidv4();
       await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
       return res.status(200).json({
@@ -78,11 +78,11 @@ class AuthController extends BaseController{
   public refresh = async (req: Request, res: Response): Promise<Response> => {
     try{
       const refreshTokenBody = req.body.refreshToken;
-      const user: IUser | null = await User.findOne({refreshToken: refreshTokenBody }).select("_id username role.name");
+      const user: IUser | null = await User.findOne({refreshToken: refreshTokenBody }).select("_id username role");
 
       if(!user) throw new GenericError({property: 'User', message: 'Debe iniciar sesión', type: 'EXPECTATION_FAILED'});
 
-      const token = this.signInToken(user._id, user.username, user.role.name);
+      const token = this.signInToken(user._id, user.username, user.role);
 
       // generate a new refresh_token
       const refreshToken = uuidv4();
