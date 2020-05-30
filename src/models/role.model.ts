@@ -36,6 +36,6 @@ export const roleSchema = new Schema({
 // Model
 const Role: Model<IRole> = model<IRole>('Role', roleSchema);
 
-Role.schema.path('name').validate(uniqueRoleName, 'This {PATH} is already registered');
+Role.schema.path('name').validate(uniqueRoleName, 'This role {PATH} is already registered');
 
 export default Role;
