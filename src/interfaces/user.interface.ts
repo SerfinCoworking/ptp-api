@@ -4,7 +4,7 @@ export default interface IUser extends Document{
     username: string;
     email: string;
     password: string;
-    role: {_id: ObjectID, name: string};
+    role:  string;
     refreshToken?: string;
     createdAt?: Date;
     updatedAt?: Date;
