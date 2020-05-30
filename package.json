@@ -16,7 +16,9 @@
         "build": "tsc",
         "start": "node dist/src/server.js",
         "start:dev": "ts-node ./src/server.ts",
-        "dev": "nodemon"
+        "dev": "nodemon",
+        "db:seed-dev": "ts-node ./src/database/seeds.ts",
+        "db:seed": "node dist/src/database/seeds.js"
     },
     "dependencies": {
         "bcryptjs": "^2.4.3",
