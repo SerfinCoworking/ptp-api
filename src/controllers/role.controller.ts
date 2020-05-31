@@ -8,7 +8,7 @@ class RoleController extends BaseController{
 
   public index = async (req: Request, res: Response): Promise<Response> => {
     const roles: IRole[] = await Role.find();
-    return res.status(200).json({roles});
+    return res.status(200).json(roles);
   }
 
   public create = async (req: Request, res: Response): Promise<Response> => {
