@@ -40,11 +40,11 @@ export const addressSchema = new Schema({
 }, { _id : false });
 
 export const phoneSchema = new Schema({
-  cod_area: {
+  area: {
     type: String,
     required: '{PATH} is required'
   },
-  number: {
+  line: {
     type: String,
     required: '{PATH} is required'
   }

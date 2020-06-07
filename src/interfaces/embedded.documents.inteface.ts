@@ -15,12 +15,12 @@ export interface IAddress extends Document {
 }
 
 export interface IPhone extends Document {
-  cod_area: string;
-  number: string;
+  area: string;
+  line: string;
 }
 
 export interface IContact extends Document {
   email: string;
   address: IAddress;
-  phone: IPhone;
+  phones: IPhone[];
 }
