@@ -1,4 +1,6 @@
-import { Schema, Model, model } from 'mongoose';
+import { Schema, PaginateModel, model } from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2';
+
 import {profileSchema, contactSchema} from './embedded.documents';
 import IEmployee from '../interfaces/employee.interface';
 
@@ -13,7 +15,11 @@ export const employeeSchema = new Schema({
   timestamps: true
 });
 
+employeeSchema.plugin(mongoosePaginate);
+
+
 // Model
-const Employee: Model<IEmployee> = model<IEmployee>('Employee', employeeSchema);
+const Employee: PaginateModel<IEmployee> = model('Employee', employeeSchema);
+// const Employee: Model<IEmployee> = model<IEmployee>('Employee', employeeSchema);
 
 export default Employee;
