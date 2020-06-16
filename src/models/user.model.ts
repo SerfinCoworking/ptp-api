@@ -57,6 +57,9 @@ export const userSchema = new Schema({
     minlength: [8, '{PATH} required a minimum of 8 characters'],
     set: encryptPassword
   },
+  avatar: {
+    type: String
+  },
   role: {
     type: String,
     required: '{PATH} is required',
