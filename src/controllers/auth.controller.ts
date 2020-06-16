@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import * as JWT from 'jsonwebtoken';
-import { env, httpCodes } from '../config/config';
+import { BaseController } from './base.controllers.interface';
+import { errorHandler, GenericError } from '../common/errors.handler';
+import { env } from '../config/config';
 import { v4 as uuidv4 } from 'uuid';
 
 import IUser from '../interfaces/user.interface';
 import User from '../models/user.model';
-import { BaseController } from './base.controllers.interface';
 
 class AuthController extends BaseController{
 
@@ -15,12 +16,9 @@ class AuthController extends BaseController{
       const newUser = await User.create(body);
       return res.status(200).json(newUser);
 
-    }catch(e){
-      let errors: { [key: string]: string } = {};
-      Object.keys(e.errors).forEach(prop => {
-          errors[ prop ] = e.errors[prop].message;
-      });
-      return res.status(422).json(errors);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
@@ -29,15 +27,18 @@ class AuthController extends BaseController{
     const { oldPassword, newPassword } = req.body;
     try{
       const user: IUser | null = await User.findOne({ _id });
-      if(!user) return res.status(404).json('No se ha encontrado el usuario');
+      if(!user) throw new GenericError({property:"User", message: 'User not found', type: "RESOURCE_NOT_FOUND"});
+
       const isMatch: boolean = await User.schema.methods.isValidPassword(user, oldPassword);
-      if(!isMatch) return res.status(401).json({ message: 'Su contraseña actual no coincide con nuestros registros'});
+      if(!isMatch) throw new GenericError({property:"User", message: 'Su contraseña actual no coincide con nuestros registros', type: "UNAUTHORIZED"});
+      // if(!isMatch) return res.status(401).json({ message: 'Su contraseña actual no coincide con nuestros registros'});
 
       await user.update({password: newPassword});
       return res.status(200).json('Se ha modificado la contraseña correctamente!');
+
     }catch(err){
-      console.log(err);
-      return res.status(500).json('Server Error');
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
@@ -45,22 +46,21 @@ class AuthController extends BaseController{
     const { _id } = req.user as IUser;
     try{
 
-      const user: IUser | null = await User.findOne({_id}).select("_id username role.name");
-      if(user){
-        const token = this.signInToken(user._id, user.username, user.role.name);
+      const user: IUser | null = await User.findOne({_id}).select("_id username role");
+      if(!user) throw new GenericError({property: 'User', message:'Debe iniciar sesión', tpye:'EXPECTATION_FAILED'});
 
-        const refreshToken = uuidv4();
-        await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
-        return res.status(200).json({
-          jwt: token,
-          refreshToken: refreshToken
-        });
-      }
+      const token = this.signInToken(user._id, user.username, user.role);
+      const refreshToken = uuidv4();
+      await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
+      return res.status(200).json({
+        jwt: token,
+        refreshToken: refreshToken
+      });
 
-      return res.status(httpCodes.EXPECTATION_FAILED).json('Debe iniciar sesión');//in the case that not found user
+
     }catch(err){
-      console.log(err);
-      return res.status(500).json('Server Error');
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
@@ -70,34 +70,31 @@ class AuthController extends BaseController{
       await User.findOneAndUpdate({ refreshToken: refreshToken }, { refreshToken: '' });
       return res.status(204).json({message: 'Logged out successfully!'});
     }catch(err){
-      console.log(err);
-      return res.status(500).json("Server error");
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
   public refresh = async (req: Request, res: Response): Promise<Response> => {
-    const refreshToken = req.body.refreshToken;
     try{
-      const user: IUser | null = await User.findOne({refreshToken: refreshToken }).select("_id username role.name");
+      const refreshTokenBody = req.body.refreshToken;
+      const user: IUser | null = await User.findOne({refreshToken: refreshTokenBody }).select("_id username role");
 
-      if(user){
+      if(!user) throw new GenericError({property: 'User', message: 'Debe iniciar sesión', type: 'EXPECTATION_FAILED'});
 
-        const token = this.signInToken(user._id, user.username, user.role.name);
+      const token = this.signInToken(user._id, user.username, user.role);
 
-        // generate a new refresh_token
-        const refreshToken = uuidv4();
-        await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
-        return res.status(200).json({
-          jwt: token,
-          refreshToken: refreshToken
-        });
-      }
-
-      return res.status(httpCodes.EXPECTATION_FAILED).json('Debe iniciar sesión');//in the case that not found user
+      // generate a new refresh_token
+      const refreshToken = uuidv4();
+      await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
+      return res.status(200).json({
+        jwt: token,
+        refreshToken: refreshToken
+      });
 
     }catch(err){
-      console.log(err);
-      return res.status(500).json('Server error');
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
     }
 
   }

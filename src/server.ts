@@ -10,7 +10,7 @@ import * as db from './database/dbconfig';
 import { env } from './config/config';
 
 import routes from './routes/routes';
-import permissions from './utils/permissions';
+import { permissions } from './utils/permissions';
 
 class Server {
 

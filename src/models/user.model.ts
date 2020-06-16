@@ -1,8 +1,8 @@
 import { Schema, Model, model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import IUser from '../interfaces/user.interface';
+import Role from '../models/role.model';
 import IRole from '../interfaces/role.interface';
-import { ObjectID } from 'mongodb';
 
 
 // Validation callbacks
@@ -23,11 +23,20 @@ const uniqueUsername = async function(username: string): Promise<boolean> {
   return !user;
 };
 
+const existInRole = async function(role: string): Promise<boolean> {
+  const roleDB: IRole | null = await Role.findOne({ name: role});
+  return !!roleDB;
+};
+
 // Setter
 const encryptPassword = (password: string) => {
   const salt = bcrypt.genSaltSync(10);
   const passwordDigest = bcrypt.hashSync(password, salt);
   return passwordDigest;
+}
+
+const setEmail = (email: string): string => {
+  return email.toLocaleLowerCase();
 }
 
 // Schema
@@ -39,7 +48,8 @@ export const userSchema = new Schema({
   },
   email: {
     type: String,
-    unique: true
+    unique: true,
+    set: setEmail
   },
   password: {
     type: String,
@@ -48,8 +58,8 @@ export const userSchema = new Schema({
     set: encryptPassword
   },
   role: {
-    _id: ObjectID,
-    name: String,
+    type: String,
+    required: '{PATH} is required',
   },
   refreshToken: {
     type: String,
@@ -77,5 +87,6 @@ User.schema.method('isValidPassword', async function(thisUser: IUser, password: 
 User.schema.path('email').validate(uniqueEmail, 'This {PATH} address is already registered');
 User.schema.path('email').validate(validEmail, 'The {PATH} field most be type of email.');
 User.schema.path('username').validate(uniqueUsername, 'This {PATH} is already registered');
+User.schema.path('role').validate(existInRole, 'This {PATH} is invalid');
 
 export default User;

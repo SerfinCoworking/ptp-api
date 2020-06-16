@@ -9,10 +9,6 @@ class Permissions {
     this.access = new AccessControl();
   }
 
-  getAccessControll(): AccessControl{
-    return this.access;
-  }
-
   initialize = async () => {
     const roles = await Role.find();
 
@@ -26,6 +22,12 @@ class Permissions {
     this.access.setGrants(objList);
     console.log("Grants initialized");
   }
+
+  getAccessControl(): AccessControl{
+    return this.access;
+  }
 }
 
-export default new Permissions();
+export const permissions: Permissions = new Permissions();
+
+export default permissions.getAccessControl();
