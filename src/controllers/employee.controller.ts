@@ -24,8 +24,8 @@ class EmployeeController extends BaseController{
       };
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? page : 1),
-        limit: (typeof(limit) !== 'undefined' ? limit : 10)
+        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
+        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
       };
 
       const employees: PaginateResult<IEmployee> = await Employee.paginate(query, options);
