@@ -1,5 +1,5 @@
-import { Schema, PaginateModel, model } from 'mongoose';
-import mongoosePaginate from 'mongoose-paginate-v2';
+import { Schema, model, PaginateModel } from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate';
 
 import {profileSchema, contactSchema} from './embedded.documents';
 import IEmployee from '../interfaces/employee.interface';
