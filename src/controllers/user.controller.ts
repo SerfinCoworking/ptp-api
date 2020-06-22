@@ -7,14 +7,14 @@ import IUser from '../interfaces/user.interface';
 class UserController extends BaseController{
 
   public index = async (req: Request, res: Response): Promise<Response> => {
-    const users: IUser[] = await User.find().select("username email role");
+    const users: IUser[] = await User.find().select("username email role profile");
     return res.status(200).json({users});
   }
 
   public show = async (req: Request, res: Response): Promise<Response> => {
     try{
       const id: string = req.params.id;
-      const user: IUser | null = await User.findOne({_id: id}).select("username email role");
+      const user: IUser | null = await User.findOne({_id: id}).select("username email profile");
       if(!user) throw new GenericError({property:"User", message: 'User not found', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(user);
     }catch(err){
@@ -29,7 +29,7 @@ class UserController extends BaseController{
       const body = await this.filterNullValues(req.body, this.permitBody());
 
       const opts: any = { runValidators: true, new: true, context: 'query' };
-      const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts).select("username email role");
+      const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts).select("username email profile");
       if(!user) throw new GenericError({property:"User", message: 'User not found', type: "RESOURCE_NOT_FOUND"});
 
       return res.status(200).json(user);
@@ -51,7 +51,7 @@ class UserController extends BaseController{
   }
 
   private permitBody(): Array<string>{
-    return ["username", "email", "password", "role"];
+    return ["username", "email", "password", "role", "profile"];
   }
 }
 

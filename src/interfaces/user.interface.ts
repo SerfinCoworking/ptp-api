@@ -1,8 +1,9 @@
 import { Document } from 'mongoose';
-import { ObjectID } from 'mongodb';
+import { IProfile } from './embedded.documents.inteface';
 export default interface IUser extends Document{
     username: string;
     email: string;
+    profile: IProfile;
     password: string;
     role:  string;
     refreshToken?: string;

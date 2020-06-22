@@ -49,7 +49,7 @@ class AuthController extends BaseController{
       const user: IUser | null = await User.findOne({_id}).select("_id username role");
       if(!user) throw new GenericError({property: 'User', message:'Debe iniciar sesión', tpye:'EXPECTATION_FAILED'});
 
-      const token = this.signInToken(user._id, user.username, user.role);
+      const token = this.signInToken(user._id, user.role);
       const refreshToken = uuidv4();
       await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
       return res.status(200).json({
@@ -82,7 +82,7 @@ class AuthController extends BaseController{
 
       if(!user) throw new GenericError({property: 'User', message: 'Debe iniciar sesión', type: 'EXPECTATION_FAILED'});
 
-      const token = this.signInToken(user._id, user.username, user.role);
+      const token = this.signInToken(user._id, user.role);
 
       // generate a new refresh_token
       const refreshToken = uuidv4();
@@ -103,11 +103,10 @@ class AuthController extends BaseController{
     return ["username", "email", "password", "role"];
   }
 
-  private signInToken = (userId: string, username: string, role: string): any => {
+  private signInToken = (userId: string, role: string): any => {
     const token = JWT.sign({
       iss: "ptp",
       sub: userId,
-      usrn: username,
       rl: role,
       iat: new Date().getTime(),
       exp: new Date().setDate(new Date().getDate() + env.TOKEN_LIFETIME)
