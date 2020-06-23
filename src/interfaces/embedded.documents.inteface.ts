@@ -10,7 +10,6 @@ export interface IProfile extends Document {
 export interface IAddress extends Document {
   street: string;
   city: string;
-  country: string;
   zip: string;
 }
 

@@ -32,10 +32,6 @@ export const addressSchema = new Schema({
   zip: {
     type: String,
     required: '{PATH} is required'
-  },
-  country: {
-    type: String,
-    required: '{PATH} is required'
   }
 }, { _id : false });
 
