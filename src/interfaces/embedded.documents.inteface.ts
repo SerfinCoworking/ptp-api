@@ -22,4 +22,9 @@ export interface IContact extends Document {
   email: string;
   address: IAddress;
   phones: IPhone[];
+
+}
+export interface IServiceType {
+  name: string;
+  hours: number;
 }
