@@ -12,7 +12,7 @@ export const objectiveSchema = new Schema({
   address: addressSchema,
   serviceType: [serviceTypeSchema],
   description: {
-    tpye: String
+    type: String
   }
 },{
   timestamps: true

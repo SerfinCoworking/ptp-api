@@ -58,7 +58,7 @@ class ObjectiveController extends BaseController{
 
   update = async (req: Request, res: Response): Promise<Response<IObjective>> => {
     const id: string = req.params.id;
-    const body = await this.filterNullValues(req.body, this.permitBody());
+    const body: IObjective = await this.filterNullValues(req.body, this.permitBody());
     try{
       const opts: any = { runValidators: true, new: true };
       const objective: IObjective | null = await Objective.findOneAndUpdate({_id: id}, body, opts);
