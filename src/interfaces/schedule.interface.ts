@@ -21,7 +21,7 @@ export interface IPeriod extends Document {
   fromDate: string;
   toDate: string;
   shifts: IShift[];
-  ojbective: {
+  objective: {
     _id: ObjectId;
     name: string;
   };

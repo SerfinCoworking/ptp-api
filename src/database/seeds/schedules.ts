@@ -76,13 +76,42 @@ export const createScheduleCalendar = async () => {
   const events: IEvent[] = [
     {
       fromDatetime: new Date("2020-06-24 08:00:00"),
-      toDatetime: new Date("2020-06-24 08:00:00")
+      toDatetime: new Date("2020-06-24 20:00:00")
     }, {
       fromDatetime: new Date("2020-06-26 08:00:00"),
-      toDatetime: new Date("2020-06-26 08:00:00")
+      toDatetime: new Date("2020-06-26 20:00:00")
     }, {
       fromDatetime: new Date("2020-06-28 08:00:00"),
-      toDatetime: new Date("2020-06-28 08:00:00")
+      toDatetime: new Date("2020-06-28 20:00:00")
+    }
+  ];
+
+  const events2: IEvent[] = [
+    {
+      fromDatetime: new Date("2020-06-24 20:00:00"),
+      toDatetime: new Date("2020-06-25 08:00:00")
+    }, {
+      fromDatetime: new Date("2020-06-26 20:00:00"),
+      toDatetime: new Date("2020-06-27 08:00:00")
+    }, {
+      fromDatetime: new Date("2020-06-28 20:00:00"),
+      toDatetime: new Date("2020-06-29 08:00:00")
+    }
+  ];
+
+  const events3: IEvent[] = [
+    {
+      fromDatetime: new Date("2020-06-25 08:00:00"),
+      toDatetime: new Date("2020-06-25 12:00:00")
+    }, {
+      fromDatetime: new Date("2020-06-25 16:00:00"),
+      toDatetime: new Date("2020-06-25 20:00:00")
+    },{
+      fromDatetime: new Date("2020-06-27 08:00:00"),
+      toDatetime: new Date("2020-06-27 12:00:00")
+    }, {
+      fromDatetime: new Date("2020-06-27 16:00:00"),
+      toDatetime: new Date("2020-06-27 20:00:00")
     }
   ];
 
@@ -104,19 +133,32 @@ export const createScheduleCalendar = async () => {
     toDate: "2020-07-25"
   };
 
-  const employee: IEmployee | null = await Employee.findOne({enrollment: "2020"});
-  if(employee){
+  const employees: IEmployee[] = await Employee.find().where("enrollment", ["2020", "2021", "2022"]);
 
-    // const events: IEvent[] = await createEvents(eventsToCreate);
-    // const shifts: IShift[] = await createShift(employee, eventsToCreate);
+  if(employees.length){
+
     const shifts: IShift[] = [{
       employee: {
-        _id: new ObjectId(employee._id),
-        firstName: employee.profile.firstName,
-        lastName: employee.profile.lastName
+        _id: new ObjectId(employees[0]._id),
+        firstName: employees[0].profile.firstName,
+        lastName: employees[0].profile.lastName
       },
-      events
-    }]
+      events: events
+    }, {
+      employee: {
+        _id: new ObjectId(employees[1]._id),
+        firstName: employees[1].profile.firstName,
+        lastName: employees[1].profile.lastName
+      },
+      events: events2
+    }, {
+      employee: {
+        _id: new ObjectId(employees[2]._id),
+        firstName: employees[2].profile.firstName,
+        lastName: employees[2].profile.lastName
+      },
+      events: events3
+    }];
 
     const objective: IObjective = await createObjective(objectiveToCreate);
     const period: IPeriod = await createPeriod(periodDates, shifts, objective);

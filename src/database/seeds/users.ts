@@ -4,12 +4,12 @@ const users = [
   {
     "username": "paul",
     "email": "paul@example.com",
-    "role": "owner",
+    "role": "dev",
     "password": "12345678"
   },{
     "username": "eugenio",
     "email": "eugenio@example.com",
-    "role": "owner",
+    "role": "admin",
     "password": "12345678"
   }
 ]
