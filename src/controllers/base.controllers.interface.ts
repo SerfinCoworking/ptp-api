@@ -23,6 +23,7 @@ export class BaseController {
       const field = sortMethod.split("_")[0];
       const direction = sortMethod.split("_")[1];
       if(_.includes(['asc', 'desc'], direction)){
+        sort = {}; // clean the sort
         sort[field] = direction === 'asc' ? 1 : -1;
       }
 

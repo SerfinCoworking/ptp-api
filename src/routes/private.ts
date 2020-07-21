@@ -1,7 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { hasPermissionIn } from '../middlewares/permissions.middleware';
 import EmployeeController from '../controllers/employee.controller';
-import CustomerController from '../controllers/customer.controller';
+import ObjectiveController from '../controllers/objective.controller';
 
 // interfaces
 
@@ -24,12 +24,12 @@ class PrivateRoutes{
     this.router.patch('/employees/:id', hasPermissionIn('update', 'employee'), EmployeeController.update);
     this.router.delete('/employees/:id', hasPermissionIn('delete', 'employee'), EmployeeController.delete);
 
-    // employee
-    this.router.get('/customers', hasPermissionIn('list', 'employee'), CustomerController.index);
-    this.router.post('/customers',hasPermissionIn('create', 'employee'), CustomerController.create);
-    this.router.get('/customers/:id', hasPermissionIn('show', 'employee'), CustomerController.show);
-    this.router.patch('/customers/:id', hasPermissionIn('update', 'employee'), CustomerController.update);
-    this.router.delete('/customers/:id', hasPermissionIn('delete', 'employee'), CustomerController.delete);
+    // objective
+    this.router.get('/objectives', hasPermissionIn('list', 'objective'), ObjectiveController.index);
+    this.router.post('/objectives',hasPermissionIn('create', 'objective'), ObjectiveController.create);
+    this.router.get('/objectives/:id', hasPermissionIn('show', 'objective'), ObjectiveController.show);
+    this.router.patch('/objectives/:id', hasPermissionIn('update', 'objective'), ObjectiveController.update);
+    this.router.delete('/objectives/:id', hasPermissionIn('delete', 'objective'), ObjectiveController.delete);
 
     return this.router;
   }

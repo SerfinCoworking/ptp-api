@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import IUser from '../interfaces/user.interface';
 import Role from '../models/role.model';
 import IRole from '../interfaces/role.interface';
-
+import {profileSchema} from './embedded.documents';
 
 // Validation callbacks
 const uniqueEmail = async (email: string): Promise<boolean> => {
@@ -51,6 +51,7 @@ export const userSchema = new Schema({
     unique: true,
     set: setEmail
   },
+  profile: profileSchema,
   password: {
     type: String,
     required: '{PATH} is required is required',

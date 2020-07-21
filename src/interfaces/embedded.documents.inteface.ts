@@ -10,7 +10,6 @@ export interface IProfile extends Document {
 export interface IAddress extends Document {
   street: string;
   city: string;
-  country: string;
   zip: string;
 }
 
@@ -23,4 +22,9 @@ export interface IContact extends Document {
   email: string;
   address: IAddress;
   phones: IPhone[];
+
+}
+export interface IServiceType {
+  name: string;
+  hours: number;
 }

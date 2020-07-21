@@ -32,10 +32,6 @@ export const addressSchema = new Schema({
   zip: {
     type: String,
     required: '{PATH} is required'
-  },
-  country: {
-    type: String,
-    required: '{PATH} is required'
   }
 }, { _id : false });
 
@@ -57,4 +53,15 @@ export const contactSchema = new Schema({
   },
   address: addressSchema,
   phones: [ phoneSchema ],
+}, { _id : false });
+
+export const serviceTypeSchema = new Schema({
+  name: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  hours: {
+    type: Number,
+    required: '{PATH} is required'
+  }
 }, { _id : false });
