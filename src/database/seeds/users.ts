@@ -15,7 +15,7 @@ const users = [
   },{
     "username": "eugenio",
     "email": "eugenio@example.com",
-    "role": "admin",
+    "role": "dev",
     "password": "12345678",
     "profile": {
       "firstName": "Eugenio",
