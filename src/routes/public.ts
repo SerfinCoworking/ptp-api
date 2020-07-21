@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import ScheduleController from '../controllers/schedule.controller';
 import RoleController from '../controllers/role.controller';
 import UserController from '../controllers/user.controller';
 class PublicRoutes{
@@ -10,7 +9,6 @@ class PublicRoutes{
   public routes(): Router{
 
     // this.router.get('home', (req: Request, res: Response): Response => { return res.send('Welcome home') } ) // example
-    this.router.get('/schedules', ScheduleController.index);
 
     this.router.get('/roles', RoleController.index);
     this.router.post('/roles', RoleController.create);

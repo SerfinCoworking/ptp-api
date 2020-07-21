@@ -9,6 +9,8 @@ import { PaginateResult, PaginateOptions } from 'mongoose';
 import moment from 'moment';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
+import Objective from '../models/objective.model';
+import IObjective from '../interfaces/objective.interface';
 
 class ScheduleController extends BaseController{
 
@@ -22,6 +24,18 @@ class ScheduleController extends BaseController{
     }));
     const calendarList: ICalendarList = { schedules: schedules, calendars: calendars } as ICalendarList;
     return res.status(200).json(calendarList);
+  }
+
+  newRecord = async (req: Request, res :Response): Promise<Response<any>> => {
+    try{
+      // get objectives and employees
+      const objectives: IObjective[] = await Objective.find().select('name');
+      const employees: IEmployee[] = await Employee.find().select('profile.firstName profile.lastName');
+      return res.status(200).json({objectives, employees});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
   }
 
   getDaysObject(from: string, to: string){
