@@ -9,6 +9,7 @@ class PublicRoutes{
   public routes(): Router{
 
     // this.router.get('home', (req: Request, res: Response): Response => { return res.send('Welcome home') } ) // example
+
     this.router.get('/roles', RoleController.index);
     this.router.post('/roles', RoleController.create);
     this.router.get('/roles/:id', RoleController.show);
