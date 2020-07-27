@@ -40,13 +40,16 @@ export interface ISchedule extends Document {
   updatedAt?: Date;
 }
 
-//  one schedule and one period
-export interface ICalendar extends Document {
+export interface ICalendarBuilder {
+  schedule: ISchedule;
   period: PaginateResult<IPeriod>;
   days: string[];
 }
-
-export interface ICalendarList extends Document {
-  schedules: PaginateResult<ISchedule>;
-  calendars: ICalendar[];
+export interface ICalendarList {
+  docs: ICalendarBuilder[];
+  total: number;
+  limit: number;
+  page?: number;
+  pages?: number;
+  offset?: number;
 }
