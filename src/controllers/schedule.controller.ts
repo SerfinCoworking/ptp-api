@@ -68,6 +68,30 @@ class ScheduleController extends BaseController{
     }
   }
 
+  addPeriod = async (req: Request, res: Response): Promise<Response<any>> => {
+    const body: any = await this.filterNullValues(req.body, this.permitBody(['fromDate', 'toDate', 'objective']));
+    try{
+      const period: IPeriod = await new Period({
+         fromDate: body.fromDate,
+         toDate: body.toDate,
+         "objective._id": body.objective._id,
+         "objective.name": body.objective.name
+        });
+
+      // validates date and objective period
+      const isInvalid: boolean = await Period.schema.methods.validatePeriod(period);
+      if(isInvalid){
+        return res.status(200).json({message: "No se pudo crear el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas."});
+      }
+
+      await period.save();
+      return res.status(200).json({message: "Periodo creado correctamente", period: period});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
   // ---------------
 
   private getDaysObject(from: string, to: string){

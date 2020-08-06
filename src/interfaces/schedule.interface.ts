@@ -27,6 +27,7 @@ export interface IPeriod extends Document {
   };
   createdAt?: Date;
   updatedAt?: Date;
+  validatePeriod(period: IPeriod): Promise<boolean>;
 }
 // schedule: ISchedule;
 
