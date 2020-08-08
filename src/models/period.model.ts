@@ -59,7 +59,6 @@ const Period: PaginateModel<IPeriod> = model('Period', periodSchema);
 // Model methods
 Period.schema.method('validatePeriod', async function(period: IPeriod): Promise<boolean>{
   try{
-    console.log("in period model", period);
     const periods: IPeriod[] | null = await Period.find(
       {
         $or: [
@@ -73,6 +72,12 @@ Period.schema.method('validatePeriod', async function(period: IPeriod): Promise<
             $and: [
               { fromDate: { $lte: period.toDate}},
               { toDate: {$gte: period.toDate}},
+              {"objective._id": new ObjectId(period.objective._id) }
+            ]
+          },{
+            $and: [
+              { fromDate: { $gte: period.fromDate}},
+              { toDate: {$lte: period.toDate}},
               {"objective._id": new ObjectId(period.objective._id) }
             ]
           }

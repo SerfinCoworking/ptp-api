@@ -77,11 +77,10 @@ class ScheduleController extends BaseController{
          "objective._id": body.objective._id,
          "objective.name": body.objective.name
         });
-
-      // validates date and objective period
-      const isInvalid: boolean = await Period.schema.methods.validatePeriod(period);
+        // validates date and objective period
+        const isInvalid: boolean = await Period.schema.methods.validatePeriod(period);
       if(isInvalid){
-        return res.status(200).json({message: "No se pudo crear el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas."});
+        throw new GenericError({property:"Period", message: "No se pudo crear el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas.", type: "BAD_REQUEST"});
       }
 
       await period.save();
