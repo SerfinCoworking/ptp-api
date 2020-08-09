@@ -4,13 +4,14 @@ import { BaseController } from './base.controllers.interface';
 import Schedule from '../models/schedule.model';
 import Period from '../models/period.model';
 import IEmployee from '../interfaces/employee.interface';
-import { ISchedule, IPeriod,ICalendarList } from '../interfaces/schedule.interface';
+import { ISchedule, IPeriod,ICalendarList, IShift, IEvent } from '../interfaces/schedule.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
 import moment from 'moment';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import Objective from '../models/objective.model';
 import IObjective from '../interfaces/objective.interface';
+import { ObjectId } from 'mongodb';
 
 class ScheduleController extends BaseController{
 
@@ -85,6 +86,33 @@ class ScheduleController extends BaseController{
 
       await period.save();
       return res.status(200).json({message: "Periodo creado correctamente", period: period});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
+  addShifts = async (req: Request, res: Response): Promise<Response<any>> => {
+    const body: any = await this.filterNullValues(req.body, this.permitBody(['employees', 'periodId']));
+    try{
+      const period: IPeriod | null = await Period.findOne({ _id: body.periodId });
+      if(!period) throw new GenericError({property:"Period", message: "No se encontro el periodo.", type: "BAD_REQUEST"});
+      await Promise.all(body.employees.map(async( employee: IEmployee) => {
+        const shift: IShift = {
+          employee: {
+            _id: new ObjectId(employee._id),
+            firstName: employee.profile.firstName,
+            lastName: employee.profile.lastName,
+          },
+          events: [] as IEvent[]
+        };
+
+        period.shifts.push(shift);
+      }));
+
+      period.save();
+
+      return res.status(200).json({message: "Empleados agregados correctamente", period: period});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
