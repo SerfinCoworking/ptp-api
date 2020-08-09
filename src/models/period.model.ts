@@ -8,12 +8,10 @@ import { ObjectId } from 'mongodb';
 // Schema Event
 export const eventSchema = new Schema({
   fromDatetime: {
-    type: Date,
-    unique: true
+    type: Date
   },
   toDatetime: {
-    type: Date,
-    unique: true
+    type: Date
   }
 },{ _id : false });
 
