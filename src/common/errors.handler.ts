@@ -37,12 +37,14 @@ export const errorHandler = (error: any): CustomHandlerError => {
   const handler = new CustomHandlerError();
 
   if(error instanceof MongooseError.ValidationError){
+
     // mongoose validations
-    handler.setCode(HttpCodes.BAD_REQUEST);
+    handler.setCode(HttpCodes.UNPROCESSABLE_ENTITY);
     Object.keys(error.errors).forEach(prop => {
       handler.setErrors({property: prop, message: error.errors[prop].message});
     });
 
+    console.log('Handler: ', handler);
   }else if(error instanceof AccessControlError){
 
     handler.setCode(HttpCodes.FORBIDDEN)

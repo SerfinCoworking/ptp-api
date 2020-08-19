@@ -17,7 +17,7 @@ class PublicRoutes{
     this.router.delete('/roles/:id', RoleController.delete);
 
     this.router.get('/users', UserController.index);
-    // this.router.post('/users', UserController.create);
+    this.router.post('/users', UserController.create);
     this.router.get('/users/:id', UserController.show);
     this.router.patch('/users/:id', UserController.update);
     this.router.delete('/users/:id', UserController.delete);
