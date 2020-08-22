@@ -119,6 +119,21 @@ class ScheduleController extends BaseController{
     }
   }
 
+  getPeriod = async (req: Request, res: Response): Promise<Response<any>> => {
+    const id: string = req.params.id;
+    try{
+      const period: IPeriod | null = await Period.findOne({_id: id});
+      if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+
+      const employees: IEmployee[] = await Employee.find().select('profile.firstName profile.lastName');
+
+      return res.status(200).json({period, employees});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
   // ---------------
 
   private getDaysObject(from: string, to: string){
@@ -133,55 +148,6 @@ class ScheduleController extends BaseController{
     }
     return days;
   }
-
-
-  // create = async (req: Request, res: Response): Promise<Response<IEmployee>> => {
-  //   const body: IEmployee = await this.filterNullValues(req.body, this.permitBody());
-  //   try{
-  //     const employee: IEmployee = await Employee.create(body);
-  //     return res.status(200).json(employee);
-  //   }catch(err){
-  //     const handler = errorHandler(err);
-  //     return res.status(handler.getCode()).json(handler.getErrors());
-  //   }
-  // }
-
-  // show = async (req: Request, res: Response): Promise<Response<IEmployee>> => {
-  //   const id: string = req.params.id;
-  //   try{
-  //     const employee: IEmployee | null = await Employee.findOne({_id: id});
-  //     if(!employee) throw new GenericError({property:"Employee", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
-  //     return res.status(200).json(employee);
-  //   }catch(err){
-  //     const handler = errorHandler(err);
-  //     return res.status(handler.getCode()).json(handler.getErrors());
-  //   }
-  // }
-
-  // update = async (req: Request, res: Response): Promise<Response<IEmployee>> => {
-  //   const id: string = req.params.id;
-  //   const body = await this.filterNullValues(req.body, this.permitBody());
-  //   try{
-  //     const opts: any = { runValidators: true, new: true };
-  //     const employee: IEmployee | null = await Employee.findOneAndUpdate({_id: id}, body, opts);
-  //     if(!employee) throw new GenericError({property:"Employee", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
-  //     return res.status(200).json(employee);
-  //   }catch(err){
-  //     const handler = errorHandler(err);
-  //     return res.status(handler.getCode()).json(handler.getErrors());
-  //   }
-  // }
-
-  // delete = async (req: Request, res: Response): Promise<Response> => {
-  //   const { id } = req.params;
-  //   try{
-  //     await Employee.findByIdAndDelete(id);
-  //     return res.status(200).json("Employee deleted successfully");
-  //   }catch(err){
-  //     const handler = errorHandler(err);
-  //     return res.status(handler.getCode()).json(handler.getErrors());
-  //   }
-  // }
 
   private permitBody = (permit: string[]): Array<string> => {
     return permit ? permit : [ 'enrollment', 'profile', 'contact' ];
