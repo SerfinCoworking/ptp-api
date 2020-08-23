@@ -134,6 +134,24 @@ class ScheduleController extends BaseController{
     }
   }
 
+  savePeriod = async (req: Request, res: Response): Promise<Response<any>> => {
+    const id: string = req.params.id;
+    const body: any = await this.filterNullValues(req.body, this.permitBody());
+    try{
+      const opts: any = { runValidators: true };
+      // update only shifts
+      const period: IPeriod | null = await Period.findOneAndUpdate({_id: id}, {
+        shifts: body.shifts
+      }, opts);
+      if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+
+      return res.status(200).json(period);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
   // ---------------
 
   private getDaysObject(from: string, to: string){
@@ -149,8 +167,8 @@ class ScheduleController extends BaseController{
     return days;
   }
 
-  private permitBody = (permit: string[]): Array<string> => {
-    return permit ? permit : [ 'enrollment', 'profile', 'contact' ];
+  private permitBody = (permit?: string[] | undefined): Array<string> => {
+    return permit ? permit : [ 'objective', 'fromDate', 'toDate', 'shifts' ];
   }
 }
 

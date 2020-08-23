@@ -39,6 +39,7 @@ class PrivateRoutes{
     this.router.post('/schedules/create-period',hasPermissionIn('create', 'schedule'), ScheduleController.addPeriod);
     this.router.post('/schedules/add-shifts',hasPermissionIn('create', 'schedule'), ScheduleController.addShifts);
     this.router.get('/schedules/period/:id', hasPermissionIn('edit', 'schedule'), ScheduleController.getPeriod);
+    this.router.patch('/schedules/period/:id', hasPermissionIn('edit', 'schedule'), ScheduleController.savePeriod);
 
 
     return this.router;
