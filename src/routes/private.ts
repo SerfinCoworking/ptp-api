@@ -3,6 +3,7 @@ import { hasPermissionIn } from '../middlewares/permissions.middleware';
 import EmployeeController from '../controllers/employee.controller';
 import ObjectiveController from '../controllers/objective.controller';
 import ScheduleController from '../controllers/schedule.controller';
+import UserController from '../controllers/user.controller';
 
 // interfaces
 
@@ -41,6 +42,9 @@ class PrivateRoutes{
     this.router.get('/schedules/period/:id', hasPermissionIn('edit', 'schedule'), ScheduleController.getPeriod);
     this.router.patch('/schedules/period/:id', hasPermissionIn('edit', 'schedule'), ScheduleController.savePeriod);
 
+
+    // user
+    // this.router.post('/users', hasPermissionIn('create', 'user'), UserController.create);
 
     return this.router;
   }

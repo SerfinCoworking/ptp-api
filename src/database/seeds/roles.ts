@@ -27,6 +27,13 @@ export const createRoles = async () => {
           "resource": "employee"
         }
       ]
+    },{
+      "name": "objective",
+      "grants": [
+        {
+          "resource": "booking"
+        }
+      ]
     }
   ];
   console.log("Creating Roles...");

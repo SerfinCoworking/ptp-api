@@ -1,9 +1,10 @@
-import { Schema, Model, model } from 'mongoose';
+import { Schema, Model, model, PaginateModel } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import IUser from '../interfaces/user.interface';
 import Role from '../models/role.model';
 import IRole from '../interfaces/role.interface';
 import {profileSchema} from './embedded.documents';
+import mongoosePaginate from 'mongoose-paginate';
 
 // Validation callbacks
 const uniqueEmail = async (email: string): Promise<boolean> => {
@@ -51,12 +52,19 @@ export const userSchema = new Schema({
     unique: true,
     set: setEmail
   },
+  rfid: {
+    type: String,
+    unique: true,
+  },
   profile: profileSchema,
   password: {
     type: String,
     required: '{PATH} is required is required',
     minlength: [8, '{PATH} required a minimum of 8 characters'],
     set: encryptPassword
+  },
+  avatar: {
+    type: String
   },
   role: {
     type: String,
@@ -72,8 +80,10 @@ export const userSchema = new Schema({
   updatedAt: Date,
 });
 
+userSchema.plugin(mongoosePaginate);
+
 // Model
-const User: Model<IUser> = model<IUser>('User', userSchema);
+const User: PaginateModel<IUser> = model<IUser>('User', userSchema);
 
 // Model methods
 User.schema.method('isValidPassword', async function(thisUser: IUser, password: string): Promise<boolean>{
@@ -85,9 +95,10 @@ User.schema.method('isValidPassword', async function(thisUser: IUser, password: 
 });
 
 // Model Validations
-User.schema.path('email').validate(uniqueEmail, 'This {PATH} address is already registered');
-User.schema.path('email').validate(validEmail, 'The {PATH} field most be type of email.');
-User.schema.path('username').validate(uniqueUsername, 'This {PATH} is already registered');
-User.schema.path('role').validate(existInRole, 'This {PATH} is invalid');
+User.schema.path('email').validate(uniqueEmail, 'El {PATH} está en uso');
+User.schema.path('email').validate(validEmail, 'El {PATH} debe ser de tipo email');
+User.schema.path('username').validate(uniqueUsername, 'Este {PATH} ya está en uso');
+User.schema.path('role').validate(existInRole, 'Este {PATH} es inválido');
+
 
 export default User;
