@@ -5,6 +5,7 @@ const users = [
     "username": "paul",
     "email": "paul@example.com",
     "role": "dev",
+    "rfid" : "11111111",
     "password": "12345678",
     "profile": {
       "firstName": "Paul",
@@ -16,6 +17,7 @@ const users = [
     "username": "eugenio",
     "email": "eugenio@example.com",
     "role": "dev",
+    "rfid": "22222222",
     "password": "12345678",
     "profile": {
       "firstName": "Eugenio",

@@ -52,6 +52,10 @@ export const userSchema = new Schema({
     unique: true,
     set: setEmail
   },
+  rfid: {
+    type: String,
+    unique: true,
+  },
   profile: profileSchema,
   password: {
     type: String,
