@@ -1,5 +1,5 @@
 import { Schema, PaginateModel, model } from 'mongoose';
-import mongoosePaginate from 'mongoose-paginate-v2';
+import mongoosePaginate from 'mongoose-paginate';
 
 import {profileSchema, contactSchema} from './embedded.documents';
 import ICustomer from '../interfaces/customer.interface';
