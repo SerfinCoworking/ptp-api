@@ -158,7 +158,7 @@ class ScheduleController extends BaseController{
     // get closest sunday (before)
     const start = moment(from).subtract(1, "day").weekday((0));
     // get closest saturday (after)
-    const end = moment(to).add(1, "day").weekday(6).add(1, "day"); // fix 1 day more for condition
+    const end = moment(start).add(42, "day");
     const days = [];
     while(!(start.isSame(end, "day") && start.isSame(end, "month") && start.isSame(end, "year"))){
       days.push(start.format("YYYY-MM-DD"));
