@@ -9,7 +9,8 @@ export default interface IObjective extends Document {
   identifier: string;
   address: IAddress;
   serviceType: IServiceType[];
-  description: string;
+  description?: string;
+  avatar?: string;
   password: string;
   role:  string;
   refreshToken?: string;

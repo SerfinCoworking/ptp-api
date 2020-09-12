@@ -4,6 +4,8 @@ import { BaseController } from './base.controllers.interface';
 import Objective from '../models/objective.model';
 import IObjective from '../interfaces/objective.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
+import _ from 'lodash';
+
 
 class ObjectiveController extends BaseController{
 
@@ -47,7 +49,7 @@ class ObjectiveController extends BaseController{
   show = async (req: Request, res: Response): Promise<Response<IObjective>> => {
     const id: string = req.params.id;
     try{
-      const objective: IObjective | null = await Objective.findOne({_id: id}).select("_id name address serviceType description identifier");
+      const objective: IObjective | null = await Objective.findOne({_id: id}).select("_id name address serviceType description avatar identifier");
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(objective);
     }catch(err){
@@ -58,10 +60,13 @@ class ObjectiveController extends BaseController{
 
   update = async (req: Request, res: Response): Promise<Response<IObjective>> => {
     const id: string = req.params.id;
-    const body: IObjective = await this.filterNullValues(req.body, this.permitBody());
+    const body: any = await this.filterNullValues(req.body, this.permitBody());
+    if(_.isEmpty(body.password)) delete body.password;
+
     try{
-      const opts: any = { runValidators: true, new: true };
+      const opts: any = { runValidators: true, new: true, context: 'query' };
       const objective: IObjective | null = await Objective.findOneAndUpdate({_id: id}, body, opts);
+
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(objective);
     }catch(err){
@@ -81,8 +86,8 @@ class ObjectiveController extends BaseController{
     }
   }
 
-  private permitBody = (): Array<string> => {
-    return [ 'name', 'serviceType', 'address', 'description', 'password', 'identifier' ];
+  private permitBody = (permit?: string[] | undefined): Array<string> => {
+    return permit ? permit : [ 'name', 'serviceType', 'address', 'description', 'password', 'identifier', 'avatar' ];
   }
 }
 

@@ -55,6 +55,9 @@ export const objectiveSchema = new Schema({
   description: {
     type: String
   },
+  avatar: {
+    type: String
+  },
   password: {
     type: String,
     required: '{PATH} is required is required',
