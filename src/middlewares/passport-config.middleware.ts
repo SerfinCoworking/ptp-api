@@ -5,6 +5,8 @@ import passportLocal from 'passport-local';
 import { env, HttpCodes } from '../config/config';
 import User from '../models/user.model';
 import IUser from '../interfaces/user.interface';
+import IObjective from '../interfaces/objective.interface';
+import Objective from '../models/objective.model';
 
 const JwtStrategy = passportJwt.Strategy;
 const LocalStrategy = passportLocal.Strategy;
@@ -18,14 +20,17 @@ const ExtractJwt = passportJwt.ExtractJwt;
 passport.use(new JwtStrategy({
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: (process.env.JWT_SECRET || env.JWT_SECRET)
-}, async (payload, done: (err?: any, user?: IUser | boolean, info?: {code: number, message: string}) => any | Response) => {
+}, async (payload, done: (err?: any, user?: IUser | IObjective | boolean, info?: {code: number, message: string}) => any | Response) => {
     try{
         const expirationDate = new Date(payload.exp);
         if(expirationDate < new Date()) {
             return done(null, false, {code: HttpCodes.EXPIRED_TOKEN, message: 'El token ha expirado'});
         }
         // find the user specified in token
-        const user = await User.findOne({ _id: payload.sub }).select('_id');
+        let user: IUser | IObjective | null = await User.findOne({ _id: payload.sub }).select('_id');
+        if(!user){
+            user = await Objective.findOne({ _id: payload.sub }).select('_id');
+        }
 
         // if user doesn't exists, handle it
         if(!user){
@@ -47,17 +52,23 @@ passport.use(new JwtStrategy({
 passport.use(new LocalStrategy({
     usernameField: 'identifier',
     passwordField: 'password'
-}, async (identifier, password, done: (err?: any, user?: IUser | boolean, info?: {code: number, message: string}) => any | Response ) => {
+}, async (identifier, password, done: (err?: any, user?: IUser | IObjective | boolean, info?: {code: number, message: string}) => any | Response ) => {
     try{
         // find the user given the identifier
-        let user = await User.findOne({ email: identifier });
+        let user: IUser | IObjective | null = await User.findOne({ email: identifier });
 
         // if not, handle it
         if(!user){
             user = await User.findOne({ username: identifier });
-            if(!user){
-                return done(null, false, {code: HttpCodes.UNAUTHORIZED, message: 'El usuario o contraseña que has ingresado es incorrecto. Por favor intenta de nuevo.'});
-            }
+        }
+
+        // objective login
+        if(!user){
+            user = await Objective.findOne({ identifier: identifier });
+        }
+
+        if(!user){
+            return done(null, false, {code: HttpCodes.UNAUTHORIZED, message: 'El usuario o contraseña que has ingresado es incorrecto. Por favor intenta de nuevo.'});
         }
 
         // check if the password is correct
@@ -75,7 +86,7 @@ passport.use(new LocalStrategy({
 }));
 
 const authenticationMiddleware = (req: Request, res: Response, next: NextFunction, authenticationType: string) => {
-    passport.authenticate(authenticationType, {session: false}, (err, user: IUser | boolean, info?: {code: number, message: string}): any | Response => {
+    passport.authenticate(authenticationType, {session: false}, (err, user: IUser | IObjective | boolean, info?: {code: number, message: string}): any | Response => {
         try{
 
             if (err) return next(err)

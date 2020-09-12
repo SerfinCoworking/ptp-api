@@ -36,7 +36,7 @@ class ObjectiveController extends BaseController{
   create = async (req: Request, res: Response): Promise<Response<IObjective>> => {
     const body: IObjective = await this.filterNullValues(req.body, this.permitBody());
     try{
-      const objective: IObjective = await Objective.create(body);
+      const objective: IObjective = await Objective.create({...body, role: 'objective'});
       return res.status(200).json(objective);
     }catch(err){
       const handler = errorHandler(err);
@@ -47,7 +47,7 @@ class ObjectiveController extends BaseController{
   show = async (req: Request, res: Response): Promise<Response<IObjective>> => {
     const id: string = req.params.id;
     try{
-      const objective: IObjective | null = await Objective.findOne({_id: id});
+      const objective: IObjective | null = await Objective.findOne({_id: id}).select("_id name address serviceType description identifier");
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(objective);
     }catch(err){
@@ -82,7 +82,7 @@ class ObjectiveController extends BaseController{
   }
 
   private permitBody = (): Array<string> => {
-    return [ 'name', 'serviceType', 'address', 'description' ];
+    return [ 'name', 'serviceType', 'address', 'description', 'password', 'identifier' ];
   }
 }
 

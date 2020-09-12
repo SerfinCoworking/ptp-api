@@ -9,6 +9,7 @@ export default interface IUser extends Document{
     avatar: string;
     role:  string;
     refreshToken?: string;
+    loginCount: number;
     createdAt?: Date;
     updatedAt?: Date;
     isValidPassword(thisUser: IUser, password: string): Promise<boolean>;

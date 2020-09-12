@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import IUser from '../interfaces/user.interface';
 import User from '../models/user.model';
+import IObjective from '../interfaces/objective.interface';
+import Objective from '../models/objective.model';
 
 class AuthController extends BaseController{
 
@@ -43,20 +45,28 @@ class AuthController extends BaseController{
   }
 
   public login = async (req: Request, res: Response): Promise<Response> => {
-    const { _id } = req.user as IUser;
+    const { _id } = req.user as IUser | IObjective;
     try{
 
-      const user: IUser | null = await User.findOne({_id}).select("_id username role");
+      let user: IUser | IObjective | null = await User.findOne({_id}).select("_id username role loginCount");
+
+      if(!user)  user = await Objective.findOne({_id}).select("_id name role loginCount"); // try to find by objective
+
       if(!user) throw new GenericError({property: 'User', message:'Debe iniciar sesión', tpye:'EXPECTATION_FAILED'});
 
       const token = this.signInToken(user._id, user.role);
       const refreshToken = uuidv4();
-      await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
+      const loginCount: number = ++user.loginCount;
+      if(user instanceof User){
+        await User.updateOne({_id: user._id}, {refreshToken: refreshToken, loginCount: loginCount});
+      }else if(user instanceof Objective){
+        await Objective.updateOne({_id: user._id}, {refreshToken: refreshToken, loginCount: loginCount});
+      }
+
       return res.status(200).json({
         jwt: token,
         refreshToken: refreshToken
       });
-
 
     }catch(err){
       const handler = errorHandler(err);
@@ -67,7 +77,16 @@ class AuthController extends BaseController{
   public logout = async (req: Request, res: Response): Promise<Response> => {
     const { refreshToken } = req.body;
     try{
-      await User.findOneAndUpdate({ refreshToken: refreshToken }, { refreshToken: '' });
+      let user: IUser | IObjective | null = await User.findOne({ refreshToken: refreshToken });
+      if(!user) user = await Objective.findOne({ refreshToken: refreshToken });
+
+      if(user instanceof User){
+        await User.updateOne({_id: user._id},{refreshToken: ''});
+      }else if(user instanceof Objective){
+        await Objective.updateOne({_id: user._id},{refreshToken: ''});
+      }
+
+
       return res.status(204).json({message: 'Logged out successfully!'});
     }catch(err){
       const handler = errorHandler(err);
@@ -96,8 +115,21 @@ class AuthController extends BaseController{
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
-
   }
+
+  show = async (req: Request, res: Response): Promise<Response<IUser>> => {
+    try{
+      const id: string = req.params.id;
+      let user: IUser | IObjective | null = await User.findOne({_id: id}).select("username email role rfid profile");
+      if(!user) user = await Objective.findOne({_id: id}).select("identifier role");
+      if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
+      return res.status(200).json(user);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
 
   private permitBody(): Array<string>{
     return ["username", "email", "password", "role"];
