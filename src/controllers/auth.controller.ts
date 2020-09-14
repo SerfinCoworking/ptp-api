@@ -121,7 +121,7 @@ class AuthController extends BaseController{
     try{
       const id: string = req.params.id;
       let user: IUser | IObjective | null = await User.findOne({_id: id}).select("username email role rfid profile");
-      if(!user) user = await Objective.findOne({_id: id}).select("identifier role");
+      if(!user) user = await Objective.findOne({_id: id}).select("identifier role avatar");
       if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(user);
     }catch(err){
