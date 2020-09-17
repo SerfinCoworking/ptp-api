@@ -9,6 +9,9 @@ export const employeeSchema = new Schema({
   enrollment: {
     type: String
   },
+  rfid: {
+    type: Number
+  },
   profile: profileSchema,
   contact: contactSchema
 },{

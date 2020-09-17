@@ -6,6 +6,7 @@ import { IProfile, IContact } from './embedded.documents.inteface';
 export default interface IEmployee extends Document {
   _id: ObjectID;
   enrollment: string;
+  rfid: number;
   profile: IProfile;
   contact: IContact;
   createdAt?: Date;

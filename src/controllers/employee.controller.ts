@@ -85,7 +85,7 @@ class EmployeeController extends BaseController{
   }
 
   private permitBody = (): Array<string> => {
-    return [ 'enrollment', 'profile', 'contact' ];
+    return [ 'enrollment', 'rfid', 'profile', 'contact' ];
   }
 }
 
