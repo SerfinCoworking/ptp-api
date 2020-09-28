@@ -3,6 +3,8 @@ import permissions from '../utils/permissions';
 import { errorHandler, GenericError } from '../common/errors.handler';
 import IUser from '../interfaces/user.interface';
 import User from '../models/user.model';
+import IObjective from '../interfaces/objective.interface';
+import Objective from '../models/objective.model';
 
 // middleware with param
 export const hasPermissionIn = (action: string, resource: string) => {
@@ -10,9 +12,12 @@ export const hasPermissionIn = (action: string, resource: string) => {
 
     try{
       const { _id } = req.user as IUser;
-      const user: IUser | null = await User.findOne({ _id }).select('role'); //get users roles
+      let user: IUser | IObjective | null = await User.findOne({ _id }).select('role'); //try with user
+      if(!user) user = await Objective.findOne({ _id }).select('role'); //try with objective
+      
+      // User or Objective not found
       if(!user) throw new GenericError({propperty: "User", message: "User not found", type: "RESOURCE_NOT_FOUND"});
-
+      
       const canAccess: boolean = await checkByAction(user.role, action, resource);
       if(!canAccess) throw new GenericError({property: "Permissions", message: "You have not permissions to perform this action", type: "FORBIDDEN"})
 

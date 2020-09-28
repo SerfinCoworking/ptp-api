@@ -12,6 +12,12 @@ export const eventSchema = new Schema({
   },
   toDatetime: {
     type: Date
+  },
+  checkin: {
+    type: Date
+  },
+  checkout: {
+    type: Date
   }
 },{ _id : false });
 
@@ -26,7 +32,10 @@ export const shiftSchema = new Schema({
       type: String
     }
   },
-  events: [ eventSchema ]
+  events: [ eventSchema ],
+  signed: [{
+    type: Date
+  }]
 },{
   _id: false
 });

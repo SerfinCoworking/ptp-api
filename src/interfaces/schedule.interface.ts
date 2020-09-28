@@ -2,9 +2,17 @@ import { Document } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { PaginateResult } from 'mongoose';
 
+
 export interface IEvent{
   fromDatetime: Date;
   toDatetime: Date;
+  checkin: Date;
+  checkout: Date;
+}
+
+export interface ISigned{
+  event: IEvent;
+  eventIndex: number;
 }
 
 export interface IShift{
@@ -14,6 +22,7 @@ export interface IShift{
     lastName: string;
   };
   events: IEvent[];
+  signed?: Date[];
 }
 
 export interface IPeriod extends Document {

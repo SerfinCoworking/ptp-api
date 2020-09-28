@@ -32,15 +32,17 @@ class PrivateRoutes{
     this.router.get('/objectives/:id', hasPermissionIn('show', 'objective'), ObjectiveController.show);
     this.router.patch('/objectives/:id', hasPermissionIn('update', 'objective'), ObjectiveController.update);
     this.router.delete('/objectives/:id', hasPermissionIn('delete', 'objective'), ObjectiveController.delete);
-
+    
     // schedule
     this.router.get('/schedules', hasPermissionIn('list', 'schedule'), ScheduleController.index);
     this.router.post('/schedules',hasPermissionIn('create', 'schedule'), ScheduleController.create);
     this.router.get('/schedules/new', hasPermissionIn('create', 'schedule'), ScheduleController.newRecord);
     this.router.post('/schedules/create-period',hasPermissionIn('create', 'schedule'), ScheduleController.addPeriod);
+    this.router.post('/schedules/period', hasPermissionIn('signed', 'schedule'), ScheduleController.signedEmployee);
     this.router.post('/schedules/add-shifts',hasPermissionIn('create', 'schedule'), ScheduleController.addShifts);
     this.router.get('/schedules/period/:id', hasPermissionIn('edit', 'schedule'), ScheduleController.getPeriod);
     this.router.patch('/schedules/period/:id', hasPermissionIn('edit', 'schedule'), ScheduleController.savePeriod);
+    this.router.delete('/schedules/period/:id', hasPermissionIn('delete', 'schedule'), ScheduleController.deletePeriod);
 
 
     // user
