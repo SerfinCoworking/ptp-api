@@ -166,6 +166,7 @@ class ScheduleController extends BaseController{
 
   signedEmployee = async (req: Request, res: Response) => {
     const { objectiveId, rfid } = req.body;
+    console.log(objectiveId, rfid);
     try{
       const today = moment();
       // const today = moment("2020-09-27 20:50:00");
@@ -176,10 +177,10 @@ class ScheduleController extends BaseController{
       // const today = moment("2020-09-27 22:35:00");
       // const today = moment("2020-09-27 22:55:00");
       // const today = moment("2020-09-27 23:55:00");
-      console.log(today.format("YYYY-MM-DD HH:mm:ss"), "<===================== DEBUG");
       const employee: IEmployee | null = await Employee.findOne({ rfid: rfid}).select('_id');
       if(!employee) throw new GenericError({property:"Empleado", message: 'Empleado no encontrado', type: "RESOURCE_NOT_FOUND"});
-
+      
+      
       const period: IPeriod | null = await Period.findOne({"objective._id": objectiveId, 
         "fromDate": { 
           $lte: today.format("YYYY-MM-DD")
@@ -193,12 +194,13 @@ class ScheduleController extends BaseController{
       
       await Promise.all( period.shifts.map( async (shift: IShift, index: number) => {
         if (shift.employee._id.equals(employee._id)){
-          const content: ISigned[] = await this.getAllEventsByDate(today, shift);          
+          const content: ISigned[] = await this.getAllEventsByDate(today, shift);    
           if(content.length){
             let firstContent:  ISigned = await this.getClosestEvent(today, content);
             firstContent = await this.setSigend(today, firstContent);
-            console.log(moment(firstContent.event.fromDatetime).format("YYYY-MM-DD HH:mm:ss"), moment(firstContent.event.toDatetime).format("YYYY-MM-DD HH:mm:ss"), "=================== FIST EVENT FOUND");
-            console.log(moment(firstContent.event.checkin).format("YYYY-MM-DD HH:mm:ss"), moment(firstContent.event.checkout).format("YYYY-MM-DD HH:mm:ss"), "=================== FIST EVENT FOUND");
+            
+            console.log("DEBUG INGRESO ====>", moment(firstContent.event.fromDatetime).format("YYYY-MM-DD HH:mm:ss"), "DEBUG EGRESO ====>", moment(firstContent.event.toDatetime).format("YYYY-MM-DD HH:mm:ss"));
+            console.log("DEBUG FICHADO INGRESO ====>", moment(firstContent.event.checkin).format("YYYY-MM-DD HH:mm:ss"),"DEBUG FICHADO EGRESO ====>", moment(firstContent.event.checkout).format("YYYY-MM-DD HH:mm:ss"));
 
             period.shifts[index].events[firstContent.eventIndex] = firstContent.event;
             period.shifts[index].signed?.push(today.toDate());
@@ -236,7 +238,15 @@ class ScheduleController extends BaseController{
   private getAllEventsByDate = async (target: moment.Moment, shift: IShift): Promise<ISigned[]> => {
     const content: ISigned[] = [];
     Promise.all(shift.events.map((event: IEvent, index: number) => {
-      if ( target.isSame(event.fromDatetime, 'day') || target.isSame(event.toDatetime, 'day'))
+
+      // debemos tener en cuenta quitar un día, y agregar un día
+      // Este caso se da cuando tengo un evento a las 23:30hs por ejemplo, y llego tarde a las 00:05hs
+      // o bicevesa, tengo guardia a las 00:15hs y llego temprano a las 23:50hs
+      const beforeToday = moment(target).subtract(1, 'day');
+      const afterToday = moment(target).add(1, 'day');
+      if ( (target.isSame(event.fromDatetime, 'day') || target.isSame(event.toDatetime, 'day')) || 
+      ( beforeToday.isSame(event.fromDatetime, 'day') || beforeToday.isSame(event.toDatetime, 'day')) ||
+       ( afterToday.isSame(event.fromDatetime, 'day') || afterToday.isSame(event.toDatetime, 'day')))
         content.push({event, eventIndex: index})
     }));
     return content;
@@ -269,8 +279,8 @@ class ScheduleController extends BaseController{
   
   private setSigend = async (target: moment.Moment, content: ISigned): Promise<ISigned> => {
     return new Promise((resolve, reject)  => {
-      
-      if(!content.event.checkin && target.isSameOrBefore(content.event.fromDatetime, 'minutes')){
+      if(!content.event.checkin){
+      // if(!content.event.checkin && target.isSameOrBefore(content.event.fromDatetime, 'minutes')){
         // no tiene checkin o la hora de fichado es menor a la hora Entrada
         content.event.checkin = target.toDate();
       }else if(!content.event.checkout || target.isSameOrAfter(content.event.checkout, 'minutes')){
