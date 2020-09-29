@@ -31,8 +31,6 @@ export const hasPermissionIn = (action: string, resource: string) => {
 }
 
 const checkByAction = async (role: string, action: string, resource: string): Promise<boolean> => {
-  console.log(role, action, resource);
   const permission = await permissions.can(role).execute(action).on(resource);
-  console.log(permission, "=========DEBUG");
   return permission ? permission.granted : true;
 }
