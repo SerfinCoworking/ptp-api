@@ -6,8 +6,8 @@ import { PaginateResult } from 'mongoose';
 export interface IEvent{
   fromDatetime: Date;
   toDatetime: Date;
-  checkin: Date;
-  checkout: Date;
+  checkin?: Date;
+  checkout?: Date;
 }
 
 export interface ISigned{
