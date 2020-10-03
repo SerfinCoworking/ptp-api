@@ -3,6 +3,8 @@ import { hasPermissionIn } from '../middlewares/permissions.middleware';
 import EmployeeController from '../controllers/employee.controller';
 import ObjectiveController from '../controllers/objective.controller';
 import ScheduleController from '../controllers/schedule.controller';
+import PeriodController from '../controllers/period.controller';
+import SignedController from '../controllers/signed.controller';
 import UserController from '../controllers/user.controller';
 
 // interfaces
@@ -37,14 +39,18 @@ class PrivateRoutes{
     this.router.get('/schedules', hasPermissionIn('list', 'schedule'), ScheduleController.index);
     this.router.post('/schedules',hasPermissionIn('create', 'schedule'), ScheduleController.create);
     this.router.get('/schedules/new', hasPermissionIn('create', 'schedule'), ScheduleController.newRecord);
-    this.router.post('/schedules/create-period',hasPermissionIn('create', 'schedule'), ScheduleController.addPeriod);
-    this.router.post('/schedules/period', hasPermissionIn('signed', 'schedule'), ScheduleController.signedEmployee);
-    this.router.post('/schedules/add-shifts',hasPermissionIn('create', 'schedule'), ScheduleController.addShifts);
-    this.router.get('/schedules/period/:id', hasPermissionIn('edit', 'schedule'), ScheduleController.getPeriod);
-    this.router.patch('/schedules/period/:id', hasPermissionIn('edit', 'schedule'), ScheduleController.savePeriod);
-    this.router.delete('/schedules/period/:id', hasPermissionIn('delete', 'schedule'), ScheduleController.deletePeriod);
+    
+    // period
+    this.router.get('/period/:id', hasPermissionIn('edit', 'period'), PeriodController.getPeriod);
+    this.router.post('/period',hasPermissionIn('create', 'period'), PeriodController.create);
+    // this.router.patch('/period/:id', hasPermissionIn('edit', 'period'), PeriodController.update);
 
-
+    this.router.post('/period/:id/create-shifts',hasPermissionIn('create', 'period'), PeriodController.createShifts);
+    this.router.patch('/period/:id/update-shifts', hasPermissionIn('edit', 'period'), PeriodController.updateShifts);
+    this.router.delete('/period/:id', hasPermissionIn('delete', 'period'), PeriodController.delete);
+    
+    // signed
+    this.router.post('/signed', hasPermissionIn('signing', 'singed'), SignedController.signedEmployee);
     // user
     // this.router.post('/users', hasPermissionIn('create', 'user'), UserController.create);
 
