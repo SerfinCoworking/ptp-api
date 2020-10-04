@@ -64,33 +64,37 @@ const Period: PaginateModel<IPeriod> = model('Period', periodSchema);
 
 
 // Model methods
-Period.schema.method('validatePeriod', async function(period: IPeriod): Promise<boolean>{
+Period.schema.method('validatePeriod', async function(period: IPeriod): Promise<boolean>{  
   try{
     const periods: IPeriod[] | null = await Period.find(
       {
-        $or: [
-          {
-            $and: [
-              { fromDate: { $lte: period.fromDate}},
-              { toDate: {$gte: period.fromDate}},
-              {"objective._id": new ObjectId(period.objective._id) }
-            ]
-          },{
-            $and: [
-              { fromDate: { $lte: period.toDate}},
-              { toDate: {$gte: period.toDate}},
-              {"objective._id": new ObjectId(period.objective._id) }
-            ]
-          },{
-            $and: [
-              { fromDate: { $gte: period.fromDate}},
-              { toDate: {$lte: period.toDate}},
-              {"objective._id": new ObjectId(period.objective._id) }
-            ]
-          }
+        $and: [
+          {$or: [
+            {
+              $and: [
+                { fromDate: { $lte: period.fromDate}},
+                { toDate: {$gte: period.fromDate}},
+                {"objective._id": new ObjectId(period.objective._id) }
+              ]
+            },{
+              $and: [
+                { fromDate: { $lte: period.toDate}},
+                { toDate: {$gte: period.toDate}},
+                {"objective._id": new ObjectId(period.objective._id) }
+              ]
+            },{
+              $and: [
+                { fromDate: { $gte: period.fromDate}},
+                { toDate: {$lte: period.toDate}},
+                {"objective._id": new ObjectId(period.objective._id) }
+              ]
+            }
+          ]},
+          { _id: { $nin: [period._id]} }
         ]
       }
     );
+
     return !!periods.length;
   } catch(err){
     throw new Error(err);

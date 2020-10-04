@@ -39,31 +39,31 @@ class PeriodController extends BaseController{
     }
   }
   
-  // update = async (req: Request, res: Response): Promise<Response<any>> => {
-    // const body: any = await this.filterNullValues(req.body, this.permitBody(['fromDate', 'toDate']));
-    // const { id } = req.params;
-    // try{
-    //   const period: IPeriod | null = await Period.findOne({_id: id});
-
-    //   if(!period) throw new GenericError({property:"Period", message: "No se encontro el periodo.", type: "BAD_REQUEST"});
-
-    //   period.fromDate = body.fromDate;
-    //   period.toDate = body.toDate;
-    //   period.validatePeriod(id);
-    //   // validates date and objective period
-    //   const isInvalid: boolean = await Period.schema.methods.validatePeriod(period);
+  update = async (req: Request, res: Response): Promise<Response<any>> => {
+    const body: any = await this.filterNullValues(req.body, this.permitBody(['fromDate', 'toDate']));
+    const { id } = req.params;
+    try{
+      const period: IPeriod | null = await Period.findOne({_id: id});
       
-    //   if(isInvalid){
-    //     throw new GenericError({property:"Period", message: "No se pudo actualizar el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas.", type: "BAD_REQUEST"});
-    //   }
+      if(!period) throw new GenericError({property:"Period", message: "No se encontro el periodo.", type: "BAD_REQUEST"});
+      
+      period.fromDate = body.fromDate;
+      period.toDate = body.toDate;
+      
+      // validates date and objective period
+      const isInvalid: boolean = await Period.schema.methods.validatePeriod(period);
+      
+      if(isInvalid){
+        throw new GenericError({property:"Period", message: "No se pudo actualizar el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas.", type: "BAD_REQUEST"});
+      }
 
-    //   await period.save();
-    //   return res.status(200).json({message: "Periodo creado correctamente", period: period});
-    // }catch(err){
-    //   const handler = errorHandler(err);
-    //   return res.status(handler.getCode()).json(handler.getErrors());
-    // }
-  // }
+      await period.save();
+      return res.status(200).json({message: "Periodo creado correctamente", period: period});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
 
   createShifts = async (req: Request, res: Response): Promise<Response<any>> => {
     const body: any = await this.filterNullValues(req.body, this.permitBody(['employees']));
