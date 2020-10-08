@@ -23,6 +23,7 @@ export interface IShift{
   };
   events: IEvent[];
   signed?: Date[];
+  otherEvents?: IEvent[];
 }
 
 export interface IPeriod extends Document {

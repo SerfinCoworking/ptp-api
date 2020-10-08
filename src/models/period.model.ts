@@ -35,7 +35,8 @@ export const shiftSchema = new Schema({
   events: [ eventSchema ],
   signed: [{
     type: Date
-  }]
+  }],
+  otherEvents: [ eventSchema ]
 },{
   _id: false
 });
