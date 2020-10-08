@@ -1,22 +1,16 @@
 import { Request, Response } from 'express';
 import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
-import Schedule from '../models/schedule.model';
 import Period from '../models/period.model';
 import IEmployee from '../interfaces/employee.interface';
-import { ISchedule, IPeriod,ICalendarList, IShift, IEvent, ISigned } from '../interfaces/schedule.interface';
-import { PaginateResult, PaginateOptions } from 'mongoose';
-import moment from 'moment';
+import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
-import Objective from '../models/objective.model';
-import IObjective from '../interfaces/objective.interface';
 import { ObjectId } from 'mongodb';
-import { range, reject } from 'lodash';
 
 class PeriodController extends BaseController{
 
-  create = async (req: Request, res: Response): Promise<Response<any>> => {
+  create = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
     const body: any = await this.filterNullValues(req.body, this.permitBody(['fromDate', 'toDate', 'objective']));
     try{
       const period: IPeriod = await new Period({
@@ -32,14 +26,15 @@ class PeriodController extends BaseController{
       }
 
       await period.save();
-      return res.status(200).json({message: "Periodo creado correctamente", period: period});
+      const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
+      return res.status(200).json({period: periodDigest, shifts});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
   
-  update = async (req: Request, res: Response): Promise<Response<any>> => {
+  update = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
     const body: any = await this.filterNullValues(req.body, this.permitBody(['fromDate', 'toDate']));
     const { id } = req.params;
     try{
@@ -58,50 +53,50 @@ class PeriodController extends BaseController{
       }
 
       await period.save();
-      return res.status(200).json({message: "Periodo creado correctamente", period: period});
+      const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
+      return res.status(200).json({period: periodDigest, shifts});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
-  createShifts = async (req: Request, res: Response): Promise<Response<any>> => {
+  createShifts = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
     const body: any = await this.filterNullValues(req.body, this.permitBody(['employees']));
     const { id } = req.params;
     try{
       const period: IPeriod | null = await Period.findOne({ _id: id });
       if(!period) throw new GenericError({property:"Period", message: "No se encontro el periodo.", type: "BAD_REQUEST"});
-      await Promise.all(body.employees.map(async( employee: IEmployee) => {
+      await Promise.all(body.employees.map(async( employee: any) => {
         const shift: IShift = {
           employee: {
             _id: new ObjectId(employee._id),
-            firstName: employee.profile.firstName,
-            lastName: employee.profile.lastName,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
           },
           events: [] as IEvent[]
         };
 
         period.shifts.push(shift);
       }));
-
-      period.save();
-
-      return res.status(200).json({message: "Empleados agregados correctamente", period: period});
+      await period.save();
+      const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
+      return res.status(200).json({period: periodDigest, shifts});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
 
-  getPeriod = async (req: Request, res: Response): Promise<Response<any>> => {
-    const id: string = req.params.id;
+  getPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
     try{
+      const id: string = req.params.id;
       const period: IPeriod | null = await Period.findOne({_id: id});
+  
       if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
-
-      const employees: IEmployee[] = await Employee.find().select('profile.firstName profile.lastName');
-
-      return res.status(200).json({period, employees});
+  
+      const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
+      return res.status(200).json({period: periodDigest, shifts});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
@@ -135,6 +130,76 @@ class PeriodController extends BaseController{
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
+  }
+
+  private getPeriodWithEmployees = async (period: IPeriod): Promise<{periodDigest: IPeriod, shifts: IShift[]}> => {
+
+    // traemos todos los empleados salvo los con la cantidad de eventos y horas a cumplir
+    // agregamos parametro para indicar si queremos filtrar por periodo, de esta forma podremos
+    // reutilizar la funcion para cuando este armada la planilla de turnos (edicion)
+    // pero en ese caso necesitamos al periodo en cuestion con ya con dichos eventos como "other events"
+    const shiftsDigest: IShift[] = [];  
+    const otherPeriods: IPeriod[] | null = await Period.find(
+      {
+        $and: [{
+          $or: [
+          {
+            $and: [
+              { fromDate: { $lte: period.fromDate } },
+              { toDate: {$gte: period.fromDate } }
+            ]
+          }, {
+            $and: [
+              { fromDate: { $lte: period.toDate } },
+              { toDate: {$gte: period.toDate } }
+            ]
+          },{
+            $and: [
+              { fromDate: { $gte: period.fromDate } },
+              { toDate: {$lte: period.toDate } }
+            ]
+          }]
+        },{
+          _id: { $nin: [ period._id ]}
+        }]
+      });
+
+    const employees: IEmployee[] | null = await Employee.find();
+
+    
+    await Promise.all(employees.map( async (employee: IEmployee ) => {
+      let otherEvents: IEvent[] = [];
+      await Promise.all(otherPeriods.map( async (p: IPeriod) => {
+        await Promise.all(p.shifts.map((shift: IShift)=> {
+          if(employee._id.equals(shift.employee._id)){
+            otherEvents.push(...shift.events);
+          }
+        }));
+      }));//end otherPeriods map
+      
+      // buscamos entres las guardias la que coincida con el empleado
+      const shiftFound: number = await Promise.resolve(
+        period.shifts.findIndex( (mshift: IShift, mindex: number) => {
+          return mshift.employee._id.equals(employee._id) && otherEvents.length;
+      }));
+
+      // Si se encontro alguna coincidencia con el empleado, le cargamos los otros eventos de otros objetivos
+      if(shiftFound > -1){  
+        _.set(period.shifts[shiftFound], 'otherEvents', otherEvents);
+      }else{
+        // por ultimo armamos el array con los empleados y sus otros eventos en otros objetivos mismo periodo
+        shiftsDigest.push({
+          employee: {
+            _id: employee._id,
+            firstName: employee.profile.firstName,
+            lastName: employee.profile.lastName
+          },
+          events: [],
+          otherEvents: otherEvents
+        });
+      }
+    }));
+    return {periodDigest: period, shifts: shiftsDigest};
   }
 
   private permitBody = (permit?: string[] | undefined): Array<string> => {
