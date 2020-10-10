@@ -180,7 +180,7 @@ class PeriodController extends BaseController{
       // buscamos entres las guardias la que coincida con el empleado
       const shiftFound: number = await Promise.resolve(
         period.shifts.findIndex( (mshift: IShift, mindex: number) => {
-          return mshift.employee._id.equals(employee._id) && otherEvents.length;
+          return mshift.employee._id.equals(employee._id);
       }));
 
       // Si se encontro alguna coincidencia con el empleado, le cargamos los otros eventos de otros objetivos
