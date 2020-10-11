@@ -40,8 +40,7 @@ class ScheduleController extends BaseController{
     try{
       // get objectives and employees
       const objectives: IObjective[] = await Objective.find().select('name');
-      const employees: IEmployee[] = await Employee.find().select('profile.firstName profile.lastName');
-      return res.status(200).json({objectives, employees});
+      return res.status(200).json(objectives);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
@@ -52,16 +51,35 @@ class ScheduleController extends BaseController{
   create = async (req: Request, res: Response): Promise<Response<any>> => {
     const body: any = await this.filterNullValues(req.body, this.permitBody(['objective']));
     try{
-      let schedule: ISchedule | null = await Schedule.findOne({"objective._id": body.objective._id}).select('objective');
+      const objective: IObjective | null = await Objective.findOne({_id: body.objective});
+      if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
+
+      let schedule: ISchedule | null = await Schedule.findOne({"objective._id": objective._id}).select('objective');
       let periods: IPeriod[];
 
       if(!schedule){
         schedule = await Schedule.create({"objective": body.objective});
         periods = [];
       }else{
-        periods = await Period.find({"objective._id": schedule.objective._id}).select('objective fromDate toDate').sort({toDate: -1}).limit(3);
+        periods = await Period.find({"objective._id": objective._id}).select('objective fromDate toDate').sort({toDate: -1}).limit(3);
       }
       return res.status(200).json({schedule, periods});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
+  show = async (req: Request, res: Response): Promise<Response<ISchedule>> => {
+    const id: string = req.params.id;
+    try{
+      const schedule: ISchedule | null = await Schedule.findOne({_id: id});
+      
+      if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
+
+      const periods = await Period.find({"objective._id": schedule.objective._id}).select('objective fromDate toDate').sort({toDate: -1}).limit(3);
+      const objectives: IObjective[] = await Objective.find().select('name');
+      return res.status(200).json({schedule, periods, objectives});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
