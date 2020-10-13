@@ -125,7 +125,10 @@ export const createScheduleCalendar = async () => {
     serviceType: [{
       name: "Monitoreo",
       hours: "12"
-    }]
+    }],
+    identifier: "chapelco",
+    password: "12345678",
+    role: "objective"
   };
 
   const periodDates = {

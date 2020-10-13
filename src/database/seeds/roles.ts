@@ -16,6 +16,8 @@ export const createRoles = async () => {
           "resource": "objective"
         },{
           "resource": "schedule"
+        },{
+          "resource": "period"
         }
       ]
     },{
@@ -31,7 +33,7 @@ export const createRoles = async () => {
       "name": "objective",
       "grants": [
         {
-          "resource": "booking"
+          "resource": "singed"
         }
       ]
     }
