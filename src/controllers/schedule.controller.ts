@@ -8,32 +8,44 @@ import { ISchedule, IPeriod,ICalendarList} from '../interfaces/schedule.interfac
 import { PaginateResult } from 'mongoose';
 import moment from 'moment';
 import * as _ from 'lodash';
-import Employee from '../models/employee.model';
 import Objective from '../models/objective.model';
 import IObjective from '../interfaces/objective.interface';
+import schedule from '../models/schedule.model';
 
 class ScheduleController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<ICalendarList>> => {
-    const schedules: PaginateResult<ISchedule> = await Schedule.paginate({}, {page: 1, limit: 6, sort: {"objective.name": 1}});
-    const calendarList: ICalendarList = {
-      docs: [],
-      total: schedules.total,
-      limit: schedules.limit,
-      page: schedules.page,
-      pages: schedules.pages,
-      offset: schedules.offset,
-     };
-    await Promise.all(schedules.docs.map(async (schedule: ISchedule) => {
-      let period: PaginateResult<IPeriod> = await Period.paginate({"objective._id": schedule.objective._id}, { sort: { toDate: -1 }, page: 1, limit: 1 });
-      let days: string[] = [];
-      if(period.total > 0){
-        days = this.getDaysObject(period.docs[0].fromDate, period.docs[0].toDate);
-      }
-      calendarList.docs.push({schedule, period, days});// set nested items
-    }));
+    const {schedulePage, periodPage, objectiveId } = req.query;
+ 
+    const sPage: number = schedulePage ? schedulePage : 1;
+    
+    try{
+  
+      const schedules: PaginateResult<ISchedule> = await Schedule.paginate({}, {page: sPage, limit: 6, sort: {"objective.name": 1}});
+      const calendarList: ICalendarList = {
+        docs: [],
+        total: schedules.total,
+        limit: schedules.limit,
+        page: schedules.page,
+        pages: schedules.pages,
+        offset: schedules.offset,
+      };
+      await Promise.all(schedules.docs.map(async (schedule: ISchedule) => {
+        const pPage: number = periodPage && schedule.objective._id.equals(objectiveId) ? periodPage : 1;
+        
+        let period: PaginateResult<IPeriod> = await Period.paginate({"objective._id": schedule.objective._id}, { sort: { toDate: -1 }, page: pPage, limit: 1 });
+        let days: string[] = [];
+        if(period.total > 0){
+          days = this.getDaysObject(period.docs[0].fromDate, period.docs[0].toDate);
+        }
+        calendarList.docs.push({schedule, period, days});// set nested items
+      }));
 
-    return res.status(200).json(calendarList);
+      return res.status(200).json(calendarList);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
   }
 
   newRecord = async (req: Request, res :Response): Promise<Response<any>> => {
