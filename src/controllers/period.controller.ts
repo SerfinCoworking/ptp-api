@@ -7,6 +7,8 @@ import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import { ObjectId } from 'mongodb';
+import moment from 'moment';
+import { reject } from 'lodash';
 
 class PeriodController extends BaseController{
 
@@ -97,6 +99,21 @@ class PeriodController extends BaseController{
   
       const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
       return res.status(200).json({period: periodDigest, shifts});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+  
+  getPrintPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
+    try{
+      const id: string = req.params.id;
+      const period: IPeriod | null = await Period.findOne({_id: id});
+  
+      if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+  
+      const periodDigest = await this.getDaysObject(period);
+      return res.status(200).json(periodDigest);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
@@ -200,6 +217,43 @@ class PeriodController extends BaseController{
       }
     }));
     return {periodDigest: period, shifts: shiftsDigest};
+  }
+
+
+  private getDaysObject = async (period: IPeriod): Promise<Array<string[]>> =>{
+    
+    
+    return await new Promise( (resolve, reject) => {
+      
+        let fromDate = moment(period.fromDate);
+        let toDate = moment(period.toDate);
+        
+        toDate = toDate.add(1, 'day'); // (while fix) add 1 day
+        
+        const weeks: Array<string[]> = [];
+        let days: string[] = [];
+        let weekCounter: number = 0;
+        let condition: boolean = (fromDate.isSame(toDate, "day") && fromDate.isSame(toDate, "month") && fromDate.isSame(toDate, "year"));
+      
+        while(!condition){
+        
+        days.push(fromDate.format("YYYY-MM-DD"));
+        fromDate.add(1, "day");
+        
+        condition = (fromDate.isSame(toDate, "day") && fromDate.isSame(toDate, "month") && fromDate.isSame(toDate, "year"));
+              
+        weekCounter++;
+        if(weekCounter == 7){
+          weeks.push(days);
+          days = [];
+          weekCounter = 0;
+        }else if(condition){
+          weeks.push(days);
+        }
+      }
+        resolve(weeks);
+    });
+
   }
 
   private permitBody = (permit?: string[] | undefined): Array<string> => {

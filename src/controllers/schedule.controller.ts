@@ -3,14 +3,12 @@ import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
 import Schedule from '../models/schedule.model';
 import Period from '../models/period.model';
-import IEmployee from '../interfaces/employee.interface';
 import { ISchedule, IPeriod,ICalendarList} from '../interfaces/schedule.interface';
 import { PaginateResult } from 'mongoose';
 import moment from 'moment';
 import * as _ from 'lodash';
 import Objective from '../models/objective.model';
 import IObjective from '../interfaces/objective.interface';
-import schedule from '../models/schedule.model';
 
 class ScheduleController extends BaseController{
 

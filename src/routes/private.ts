@@ -43,7 +43,8 @@ class PrivateRoutes{
     
     // period
     this.router.get('/period/:id', hasPermissionIn('index', 'period'), PeriodController.getPeriod);
-    this.router.post('/period',hasPermissionIn('create', 'period'), PeriodController.create);
+    this.router.get('/period/:id/print', hasPermissionIn('index', 'period'), PeriodController.getPrintPeriod);
+    this.router.post('/period', hasPermissionIn('create', 'period'), PeriodController.create);
     this.router.patch('/period/:id', hasPermissionIn('edit', 'period'), PeriodController.update);
 
     this.router.post('/period/:id/create-shifts',hasPermissionIn('create', 'period'), PeriodController.createShifts);
