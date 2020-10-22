@@ -12,11 +12,10 @@ class EmployeeController extends BaseController{
 
     const target: string = await this.searchDigest(search);
     const sortDiggest: any = await this.sortDigest(sort, {"profile.firstName": 1, "profile.lastName": 1});
-
     try{
       const query = {
         $or: [
-          {"profile.fistName":  { $regex: new RegExp( target, "ig")}},
+          {"profile.firstName":  { $regex: new RegExp( target, "ig")}},
           {"profile.lastName":  { $regex: new RegExp( target, "ig")}},
           {"profile.dni":  { $regex: new RegExp( target, "ig")}},
           {"contact.email":  { $regex: new RegExp( target, "ig")}}

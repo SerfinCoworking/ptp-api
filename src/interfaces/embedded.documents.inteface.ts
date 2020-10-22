@@ -5,12 +5,21 @@ export interface IProfile extends Document {
   lastName: string;
   avatar: string;
   dni: string;
+  admissionDate: string;
+  employer: string;
 }
 
 export interface IAddress extends Document {
-  street: string;
-  city: string;
-  zip: string;
+  street?: string;
+  city?: string;
+  country?: string;
+  zip?: string;
+  streetNumber?: string;
+  department?: string;
+  manz?: string;
+  lote?: string;
+  neighborhood?: string;
+  province?: string;
 }
 
 export interface IPhone extends Document {

@@ -17,21 +17,44 @@ export const profileSchema: Schema<IProfile> = new Schema({
   dni: {
     type: String,
     required: '{PATH} is required'
+  },
+  admissionDate: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  employer: {
+    type: String,
+    required: '{PATH} is required'
   }
 }, { _id : false });
 
 export const addressSchema = new Schema({
   street: {
-    type: String,
-    required: '{PATH} is required'
+    type: String
   },
   city: {
-    type: String,
-    required: '{PATH} is required'
+    type: String
   },
   zip: {
-    type: String,
-    required: '{PATH} is required'
+    type: String
+  },
+  streetNumber: {
+    type: String
+  },
+  department: {
+    type: String
+  },
+  manz: {
+    type: String
+  },
+  lote: {
+    type: String
+  },
+  neighborhood: {
+    type: String
+  },
+  province: {
+    type: String
   }
 }, { _id : false });
 
