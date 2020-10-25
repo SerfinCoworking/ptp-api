@@ -5,6 +5,9 @@ export interface IProfile extends Document {
   lastName: string;
   avatar: string;
   dni: string;
+  cuilPrefix: string;
+  cuilDni: string;
+  cuilSufix: string;
   admissionDate: string;
   employer: string;
 }

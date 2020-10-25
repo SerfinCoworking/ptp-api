@@ -18,6 +18,18 @@ export const profileSchema: Schema<IProfile> = new Schema({
     type: String,
     required: '{PATH} is required'
   },
+  cuilPrefix: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  cuilDni: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  cuilSufix: {
+    type: String,
+    required: '{PATH} is required'
+  },
   admissionDate: {
     type: String,
     required: '{PATH} is required'
@@ -71,8 +83,7 @@ export const phoneSchema = new Schema({
 
 export const contactSchema = new Schema({
   email: {
-    type: String,
-    required: '{PATH} is required'
+    type: String
   },
   address: addressSchema,
   phones: [ phoneSchema ],
