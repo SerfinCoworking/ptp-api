@@ -8,7 +8,6 @@ import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
-import { reject } from 'lodash';
 
 class PeriodController extends BaseController{
 
@@ -53,6 +52,17 @@ class PeriodController extends BaseController{
       if(isInvalid){
         throw new GenericError({property:"Period", message: "No se pudo actualizar el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas.", type: "BAD_REQUEST"});
       }
+
+      await Promise.all(
+        period.shifts.map(async (shift: IShift, sIndex: number) => {
+          await Promise.all(shift.events.map((event: IEvent, eIndex: number) => {
+            const fromDate = moment(event.fromDatetime);
+            if(!fromDate.isBetween(period.fromDate, period.toDate)){
+              period.shifts[sIndex].events.splice(eIndex, 1);
+            }          
+          }));
+        })
+      );
 
       await period.save();
       const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
