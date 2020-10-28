@@ -144,21 +144,24 @@ export const createScheduleCalendar = async () => {
       employee: {
         _id: new ObjectId(employees[0]._id),
         firstName: employees[0].profile.firstName,
-        lastName: employees[0].profile.lastName
+        lastName: employees[0].profile.lastName,
+        avatar: employees[0].profile.avatar
       },
       events: events
     }, {
       employee: {
         _id: new ObjectId(employees[1]._id),
         firstName: employees[1].profile.firstName,
-        lastName: employees[1].profile.lastName
+        lastName: employees[1].profile.lastName,
+        avatar: employees[1].profile.avatar
       },
       events: events2
     }, {
       employee: {
         _id: new ObjectId(employees[2]._id),
         firstName: employees[2].profile.firstName,
-        lastName: employees[2].profile.lastName
+        lastName: employees[2].profile.lastName,
+        avatar: employees[2].profile.avatar
       },
       events: events3
     }];
