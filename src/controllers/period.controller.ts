@@ -85,6 +85,7 @@ class PeriodController extends BaseController{
             _id: new ObjectId(employee._id),
             firstName: employee.firstName,
             lastName: employee.lastName,
+            avatar: employee.avatar,
           },
           events: [] as IEvent[]
         };
@@ -219,7 +220,8 @@ class PeriodController extends BaseController{
           employee: {
             _id: employee._id,
             firstName: employee.profile.firstName,
-            lastName: employee.profile.lastName
+            lastName: employee.profile.lastName,
+            avatar: employee.profile.avatar
           },
           events: [],
           otherEvents: otherEvents

@@ -20,6 +20,7 @@ export interface IShift{
     _id: ObjectId;
     firstName: string;
     lastName: string;
+    avatar: string;
   };
   events: IEvent[];
   signed?: Date[];

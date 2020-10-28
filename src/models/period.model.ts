@@ -30,6 +30,9 @@ export const shiftSchema = new Schema({
     },
     lastName: {
       type: String
+    },
+    avatar: {
+      type: String
     }
   },
   events: [ eventSchema ],
