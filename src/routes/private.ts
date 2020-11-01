@@ -49,6 +49,7 @@ class PrivateRoutes{
 
     this.router.post('/period/:id/create-shifts',hasPermissionIn('create', 'period'), PeriodController.createShifts);
     this.router.patch('/period/:id/update-shifts', hasPermissionIn('edit', 'period'), PeriodController.updateShifts);
+    this.router.patch('/period/:id/update-signeds', hasPermissionIn('edit', 'period'), PeriodController.updateSigneds);
     this.router.delete('/period/:id', hasPermissionIn('delete', 'period'), PeriodController.delete);
     
     // signed

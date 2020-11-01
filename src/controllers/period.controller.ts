@@ -148,6 +148,42 @@ class PeriodController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
+  
+  updateSigneds = async (req: Request, res: Response): Promise<Response<any>> => {
+    const id: string = req.params.id;
+    const body: any = await this.filterNullValues(req.body, ['employeeId', 'eventsDay']);
+    try{
+      // find period
+      const period: IPeriod | null = await Period.findOne({_id: id});
+      if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+
+      await Promise.all(period.shifts.map( async (shift: IShift, sIndex) => {
+        // find correct shift
+        if(shift.employee._id.equals(body.employeeId)){
+          await Promise.all(shift.events.map((event: IEvent, eIndex) => {
+            // LIMIT: event should not been modify
+            // find correct event 1
+            if(typeof(body.eventsDay[0]) !== 'undefined' && moment(body.eventsDay[0].fromDatetime).isSame(event.fromDatetime) && moment(body.eventsDay[0].toDatetime).isSame(event.toDatetime)){
+              period.shifts[sIndex].events[eIndex].checkin = typeof(body.eventsDay[0].checkin) !== 'undefined' ? body.eventsDay[0].checkin : '';
+              period.shifts[sIndex].events[eIndex].checkout = typeof(body.eventsDay[0].checkout) !== 'undefined' ? body.eventsDay[0].checkout : '';
+            }
+
+            // find correct event 2
+            if(typeof(body.eventsDay[1]) !== 'undefined' && moment(body.eventsDay[1].fromDatetime).isSame(event.fromDatetime) && moment(body.eventsDay[1].toDatetime).isSame(event.toDatetime)){
+              period.shifts[sIndex].events[eIndex].checkin = typeof(body.eventsDay[1].checkin) !== 'undefined' ? body.eventsDay[1].checkin : '';
+              period.shifts[sIndex].events[eIndex].checkout = typeof(body.eventsDay[1].checkout) !== 'undefined' ? body.eventsDay[1].checkout : '';
+            }
+          }));
+        }
+      }));
+
+      await period.save();
+      return res.status(200).json(period);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
 
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
