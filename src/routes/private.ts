@@ -5,7 +5,7 @@ import ObjectiveController from '../controllers/objective.controller';
 import ScheduleController from '../controllers/schedule.controller';
 import PeriodController from '../controllers/period.controller';
 import SignedController from '../controllers/signed.controller';
-import UserController from '../controllers/user.controller';
+import LiquidationController from '../controllers/liquidation.controller';
 
 // interfaces
 
@@ -51,6 +51,8 @@ class PrivateRoutes{
     this.router.patch('/period/:id/update-shifts', hasPermissionIn('edit', 'period'), PeriodController.updateShifts);
     this.router.patch('/period/:id/update-signeds', hasPermissionIn('edit', 'period'), PeriodController.updateSigneds);
     this.router.delete('/period/:id', hasPermissionIn('delete', 'period'), PeriodController.delete);
+    
+    this.router.get('/liquidation', hasPermissionIn('create', 'liquidation'), LiquidationController.new);
     
     // signed
     this.router.post('/signed', hasPermissionIn('signing', 'singed'), SignedController.signedEmployee);
