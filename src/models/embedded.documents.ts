@@ -37,6 +37,38 @@ export const profileSchema: Schema<IProfile> = new Schema({
   employer: {
     type: String,
     required: '{PATH} is required'
+  },
+  function: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  art: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  birthdate: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  nationality: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  maritalStatus: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  sonsCount: {
+    type: Number,
+    required: '{PATH} is required',
+    default: 0
+  },
+  studyLevel: {
+    type: String,
+    required: '{PATH} is required'
+  },
+  observations: {
+    type: String
   }
 }, { _id : false });
 
