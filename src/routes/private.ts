@@ -56,8 +56,6 @@ class PrivateRoutes{
     
     // signed
     this.router.post('/signed', hasPermissionIn('signing', 'singed'), SignedController.signedEmployee);
-    // user
-    // this.router.post('/users', hasPermissionIn('create', 'user'), UserController.create);
 
     return this.router;
   }
