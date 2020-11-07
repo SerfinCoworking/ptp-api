@@ -14,7 +14,7 @@ import { isLength } from 'lodash';
 
 class LiquidationController extends BaseController{
 
-  new = async (req: Request, res: Response) => { 
+  new = async (req: Request, res: Response): Promise<Response<ILiquidation[]>> => { 
     const { fromDate, toDate } = req.query;
     try{
       const fromDateFormat = moment(fromDate, "DD_MM_YYYY").format("YYYY-MM-DD");
@@ -59,42 +59,40 @@ class LiquidationController extends BaseController{
                 if(employee._id.equals(shift.employee._id)){
                   const realFrom = moment(event.fromDatetime);
                   const realTo = moment(event.toDatetime);
-                  const toDaytime = moment(event.toDatetime);
-                  const toNighttime = moment(event.toDatetime);
+                  
                   let  dayHours: number = 0;
                   let  nightHours: number = 0;
 
-                  const startDay = moment(event.fromDatetime).set("hours", 6).set("minutes", 0);
-                  const endDay = moment(event.toDatetime).set("hours", 21).set("minutes", 0);
-console.log(startDay, endDay);
-
                   // Nocturno 21 - 6
                   // Diurno 6 - 21
-                  // Feriados (discriminar)
+                  const startDayFrom = moment(event.fromDatetime).set("hours", 6).set("minutes", 0);
+                  const endDayFrom = moment(event.fromDatetime).set("hours", 21).set("minutes", 0);
+
 
                   // si ambas horas se encuentra entre las horas diurnas
-                  if(realFrom.isBetween(startDay, endDay) && realTo.isBetween(startDay, endDay)){
+                  if(realFrom.isBetween(startDayFrom, endDayFrom, 'hour', '[]') && realTo.isBetween(startDayFrom, endDayFrom, 'hour', '[]')){
                     dayHours = realTo.diff(realFrom, 'hours');
 
-                  // }else if{
+                  }else if(realFrom.isBetween(startDayFrom, endDayFrom, 'hour', '[]')){
                     // sino from se encuentra entre las horas diurnas
-
-                  // }
-                  // }else if{
+                    dayHours = endDayFrom.diff(realFrom, 'hours');
+                    nightHours = realTo.diff(endDayFrom, 'hours');
+                    
+                  }else if(realTo.isBetween(startDayFrom, endDayFrom, 'hour', '[]')){
                     // sino to se encuentra entre las horas diurnas
+                    dayHours = startDayFrom.diff(realFrom, 'hours');
+                    nightHours = realTo.diff(startDayFrom, 'hours');
                     
-                    
-                  // }
+                    console.log(dayHours, nightHours, "DEBUG");
                   }else {
                     nightHours = realTo.diff(realFrom, 'hours');
                     // sino ninguna se encuentra entre las horas diurnas
                   }
 
-
                   day_hours += dayHours;
                   night_hours += nightHours;
                   total_hours += (dayHours + nightHours);
-                  total_extra += 1;
+                  total_extra += 0;
                 }
 
               }));
@@ -117,27 +115,9 @@ console.log(startDay, endDay);
             total_extra: total_extra,
           } as ILiquidation);
         }));
-          
-          
-           
-            
-        // console.log(liquidations.length, "DEBUG LENGTH");
-        // await Promise.all(liquidations.map(async (liq: ILiquidation) => {
-        //   const liqIndex: number = await helpers.aFindIndex(liquidations, async(subliq) => {
-        //     return Promise.resolve(subliq.employee._id.equals(liq.employee._id))
-        //   });
-          
-        //   if(liqIndex > 0){
-        //     liquidations[liqIndex].day_hours += 1;
-        //     liquidations[liqIndex].night_hours  += 1;
-        //     liquidations[liqIndex].total_hours  += 1;
-        //     liquidations[liqIndex].total_extra  += 1;
-        //   }
-          
-          
-        // }));
-        console.log(liquidations, liquidations.length, "===LIQUIDATIONS");
-        return res.status(200).json("periods found!");
+                     
+        // console.log(liquidations, liquidations.length, "===LIQUIDATIONS");
+        return res.status(200).json(liquidations);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
