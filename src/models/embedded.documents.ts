@@ -131,3 +131,5 @@ export const serviceTypeSchema = new Schema({
     required: '{PATH} is required'
   }
 }, { _id : false });
+
+

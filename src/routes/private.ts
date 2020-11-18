@@ -4,12 +4,10 @@ import EmployeeController from '../controllers/employee.controller';
 import ObjectiveController from '../controllers/objective.controller';
 import ScheduleController from '../controllers/schedule.controller';
 import PeriodController from '../controllers/period.controller';
+import NewsConceptController from '../controllers/newsConcept.controller';
+import NewsController from '../controllers/news.controller';
 import SignedController from '../controllers/signed.controller';
 import LiquidationController from '../controllers/liquidation.controller';
-
-// interfaces
-
-// controllers
 
 class PrivateRoutes{
 
@@ -53,6 +51,20 @@ class PrivateRoutes{
     this.router.delete('/period/:id', hasPermissionIn('delete', 'period'), PeriodController.delete);
     
     this.router.get('/liquidation', hasPermissionIn('create', 'liquidation'), LiquidationController.new);
+
+    // news
+    this.router.get('/news', hasPermissionIn('list', 'news'), NewsController.index);
+    this.router.post('/news',hasPermissionIn('create', 'news'), NewsController.create);
+    this.router.get('/news/:id', hasPermissionIn('show', 'news'), NewsController.show);
+    this.router.patch('/news/:id', hasPermissionIn('update', 'news'), NewsController.update);
+    this.router.delete('/news/:id', hasPermissionIn('delete', 'news'), NewsController.delete);
+    
+    // newsConcept
+    this.router.get('/news-concept', hasPermissionIn('list', 'news-concept'), NewsConceptController.index);
+    this.router.post('/news-concept',hasPermissionIn('create', 'news-concept'), NewsConceptController.create);
+    this.router.get('/news-concept/:id', hasPermissionIn('show', 'news-concept'), NewsConceptController.show);
+    this.router.patch('/news-concept/:id', hasPermissionIn('update', 'news-concept'), NewsConceptController.update);
+    this.router.delete('/news-concept/:id', hasPermissionIn('delete', 'news-concept'), NewsConceptController.delete);
     
     // signed
     this.router.post('/signed', hasPermissionIn('signing', 'singed'), SignedController.signedEmployee);
