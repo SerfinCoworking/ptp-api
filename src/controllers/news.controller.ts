@@ -4,6 +4,7 @@ import { BaseController } from './base.controllers.interface';
 import News from '../models/news.model';
 import INews from '../interfaces/news.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
+import moment from 'moment';
 
 class NewsController extends BaseController{
 
@@ -11,16 +12,17 @@ class NewsController extends BaseController{
     const { search, page, limit, sort } = req.query;
 
     const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"profile.firstName": 1, "profile.lastName": 1});
+    const sortDiggest: any = await this.sortDigest(sort, {"fromDate": 1});
     try{
-      const query = {
-        $or: [
-          {"profile.firstName":  { $regex: new RegExp( target, "ig")}},
-          {"profile.lastName":  { $regex: new RegExp( target, "ig")}},
-          {"profile.dni":  { $regex: new RegExp( target, "ig")}},
-          {"contact.email":  { $regex: new RegExp( target, "ig")}}
-        ]
-      };
+        const query = {
+          $or: [
+            {"concept.name":  { $regex: new RegExp( target, "ig")}},
+            {"target.profile.lastName":  { $regex: new RegExp( target, "ig")}},
+            {"target.profile.firstName":  { $regex: new RegExp( target, "ig")}},
+            {"target.profile.dni":  { $regex: new RegExp( target, "ig")}},
+            {"contact.email":  { $regex: new RegExp( target, "ig")}}
+          ]
+        };
       const options: PaginateOptions = {
         sort: sortDiggest,
         page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
@@ -50,7 +52,7 @@ class NewsController extends BaseController{
     const id: string = req.params.id;
     try{
       const news: INews | null = await News.findOne({_id: id});
-      if(!news) throw new GenericError({property:"News", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
+      if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(news);
     }catch(err){
       const handler = errorHandler(err);
@@ -64,7 +66,7 @@ class NewsController extends BaseController{
     try{
       const opts: any = { runValidators: true, new: true };
       const news: INews | null = await News.findOneAndUpdate({_id: id}, body, opts);
-      if(!news) throw new GenericError({property:"News", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
+      if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(news);
     }catch(err){
       const handler = errorHandler(err);
