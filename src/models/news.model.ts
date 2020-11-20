@@ -7,10 +7,10 @@ import { ObjectId } from 'mongodb';
 // Schema
 export const newsSchema = new Schema({
   dateFrom: {
-    type: Date
+    type: String
   },
   dateTo: {
-    type: Date
+    type: String
   },
   target: employeeSchema,
   concept: {

@@ -54,6 +54,7 @@ class PrivateRoutes{
 
     // news
     this.router.get('/news', hasPermissionIn('list', 'news'), NewsController.index);
+    this.router.get('/news-by-date', hasPermissionIn('list', 'news'), NewsController.getNewsByDate);
     this.router.post('/news',hasPermissionIn('create', 'news'), NewsController.create);
     this.router.get('/news/:id', hasPermissionIn('show', 'news'), NewsController.show);
     this.router.patch('/news/:id', hasPermissionIn('update', 'news'), NewsController.update);

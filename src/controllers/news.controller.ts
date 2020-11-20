@@ -37,6 +37,18 @@ class NewsController extends BaseController{
     }
   }
 
+  getNewsByDate = async (req: Request, res: Response): Promise<Response<INews[]>> => {
+    const {dateFrom, dateTo } = req.query;
+    // get all news by a period range
+    const news: INews[] = await News.find({
+      $and: [
+        { dateFrom: { $gte: dateFrom } },
+        { dateTo: { $lte: dateTo } }
+      ]
+    });
+    return res.status(200).json(news);
+  }
+
   create = async (req: Request, res: Response): Promise<Response<INews>> => {
     const body: INews = await this.filterNullValues(req.body, this.permitBody());
     try{
