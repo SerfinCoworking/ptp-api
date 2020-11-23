@@ -45,6 +45,44 @@ class ScheduleController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
+  
+  getScheduleById = async (req: Request, res: Response): Promise<Response<ICalendarList>> => {
+    const { id } = req.params; 
+    const {periodPage, objectiveId } = req.query; 
+    
+    try{
+  
+      const schedule: ISchedule | null = await Schedule.findOne({_id: id});
+
+      const calendarList: ICalendarList = {
+        docs: [],
+        total: 1,
+        limit: 1,
+        page: 1,
+        pages: 1
+      };
+
+
+      if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
+      
+      
+      const pPage: number = periodPage ? periodPage : 1;
+      
+console.log(pPage, "period PAGE=====================");
+
+      let period: PaginateResult<IPeriod> = await Period.paginate({"objective._id": schedule.objective._id}, { sort: { toDate: -1 }, page: pPage, limit: 1 });
+      let days: string[] = [];
+      if(period.total > 0){
+        days = this.getDaysObject(period.docs[0].fromDate, period.docs[0].toDate);
+      }
+      calendarList.docs.push({schedule, period, days});// set nested items
+
+      return res.status(200).json(calendarList);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
 
   newRecord = async (req: Request, res :Response): Promise<Response<any>> => {
     try{
