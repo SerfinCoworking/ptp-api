@@ -8,17 +8,18 @@ import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import moment from 'moment';
-import { ObjectID, ObjectId } from 'mongodb';
-import * as helpers  from '../utils/helpers';
-import { isLength } from 'lodash';
+import News from '../models/news.model';
+import INews from '../interfaces/news.interface';
 
 class LiquidationController extends BaseController{
 
   new = async (req: Request, res: Response): Promise<Response<ILiquidation[]>> => { 
-    const { fromDate, toDate } = req.query;
+    const { fromDate, toDate, employeeSearch } = req.query;
     try{
-      const fromDateFormat = moment(fromDate, "DD_MM_YYYY").format("YYYY-MM-DD");
-      const toDateFormat = moment(toDate, "DD_MM_YYYY").format("YYYY-MM-DD");
+      const fromDateMoment = moment(fromDate, "DD_MM_YYYY").startOf('day');
+      const toDateMoment = moment(toDate, "DD_MM_YYYY").endOf('day');
+      const fromDateFormat = fromDateMoment.format("YYYY-MM-DD");
+      const toDateFormat = toDateMoment.format("YYYY-MM-DD");
       const periods: IPeriod[] | null = await Period.find(
         {
           $and: [{
@@ -42,7 +43,82 @@ class LiquidationController extends BaseController{
           }]
         });
       
-        const employees: IEmployee[] = await Employee.find();
+        const employees: IEmployee[] = await Employee.find({
+          $or: [
+            {"profile.firstName":  { $regex: new RegExp( employeeSearch, "ig")}},
+            {"profile.lastName":  { $regex: new RegExp( employeeSearch, "ig")}},
+          ]
+        });
+
+        const queryByDate = {
+          
+            $or: [
+            {
+              $and: [
+                { dateFrom: { $lte: fromDateFormat } },
+                { dateTo: {$gte: fromDateFormat } }
+              ]
+            }, {
+              $and: [
+                { dateFrom: { $lte: toDateFormat } },
+                { dateTo: {$gte: toDateFormat } }
+              ]
+            },{
+              $and: [
+                { dateFrom: { $gte: fromDateFormat } },
+                { dateTo: {$lte: toDateFormat } }
+              ]
+            }]
+          };
+
+        const newsFeriados: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+            "concept.key": "FERIADO"
+          }],
+        });
+        
+        const newsSuspension: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+              "concept.key": "SUSPENSION"
+          }],
+        });
+        
+        const newsLicJustificada: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+              "concept.key": "LIC_JUSTIFICADA"
+          }],
+        });
+        
+        const newsLicNoJustificada: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+              "concept.key": "LIC_NO_JUSTIFICADA"
+          }],
+        });
+        
+        const newsVacaciones: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+              "concept.key": "VACACIONES"
+          }],
+        });
+        
+        const newsAdelanto: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+              "concept.key": "ADELANTO"
+          }],
+        });
+        
         // tenemos los periodos
         // 
         const liquidations: ILiquidation[] = [];
@@ -51,6 +127,12 @@ class LiquidationController extends BaseController{
           let night_hours: number = 0;
           let total_hours: number = 0;
           let total_extra: number = 0;
+          let total_feriado: number = 0;
+          let total_suspension: number = 0;
+          let total_lic_justificada: number = 0;
+          let total_lic_no_justificada: number = 0;
+          let total_days_vaciones: number = 0;
+          let total_adelanto: number = 0;
 
           await Promise.all(periods.map( async (period: IPeriod) => {
             await Promise.all(period.shifts.map( async (shift: IShift) => {
@@ -83,8 +165,7 @@ class LiquidationController extends BaseController{
                     dayHours = startDayFrom.diff(realFrom, 'hours');
                     nightHours = realTo.diff(startDayFrom, 'hours');
                     
-                    console.log(dayHours, nightHours, "DEBUG");
-                  }else {
+                  }else{
                     nightHours = realTo.diff(realFrom, 'hours');
                     // sino ninguna se encuentra entre las horas diurnas
                   }
@@ -93,11 +174,37 @@ class LiquidationController extends BaseController{
                   night_hours += nightHours;
                   total_hours += (dayHours + nightHours);
                   total_extra += 0;
+                  
+                  await Promise.all(newsFeriados.map( async (feriado: INews) => {
+                    total_feriado += this.calculateHours(feriado, employee, realFrom, realTo);                    
+                  }));
+                  
+                  await Promise.all(newsSuspension.map( async (suspension: INews) => {
+                    total_suspension += this.calculateHours(suspension, employee, realFrom, realTo);
+                  }));
+                  
+                  await Promise.all(newsLicJustificada.map( async (lic_justificada: INews) => {
+                    total_lic_justificada += this.calculateHours(lic_justificada, employee, realFrom, realTo);
+                  }));
+                  
+                  await Promise.all(newsLicNoJustificada.map( async (lic_no_justificada: INews) => {
+                    total_lic_no_justificada += this.calculateHours(lic_no_justificada, employee, realFrom, realTo);
+                  }));
+                  
+                  
                 }
-
-              }));
+                
+              }));//map events
             }));
-          }));
+          }));// map period
+
+          await Promise.all(newsVacaciones.map( async (vaciones: INews) => {
+            total_days_vaciones += this.calculateDays(vaciones, employee, fromDateMoment, toDateMoment);
+         }));
+         
+         await Promise.all(newsAdelanto.map( async (adelanto: INews) => {
+            total_adelanto += this.calculateImport(adelanto, employee, fromDateMoment, toDateMoment);
+         }));
 
           const employeeLiq: IEmployeeLiq = {
             _id: employee._id,
@@ -109,14 +216,19 @@ class LiquidationController extends BaseController{
           } as IEmployeeLiq;
           liquidations.push({
             employee: employeeLiq,
-            day_hours: day_hours,
-            night_hours: night_hours,
-            total_hours: total_hours,
-            total_extra: total_extra,
+            total_day_in_hours: day_hours,
+            total_night_in_hours: night_hours,
+            total_in_hours: total_hours,
+            total_extra_in_hours: total_extra,
+            total_feriado_in_hours: total_feriado,
+            total_suspension_in_hours: total_suspension,
+            total_lic_justificada_in_hours: total_lic_justificada,
+            total_lic_no_justificada_in_hours: total_lic_no_justificada,
+            total_vaciones_in_days: total_days_vaciones,
+            total_adelanto_import: total_adelanto
           } as ILiquidation);
         }));
-                     
-        // console.log(liquidations, liquidations.length, "===LIQUIDATIONS");
+        
         return res.status(200).json(liquidations);
     }catch(err){
       const handler = errorHandler(err);
@@ -137,9 +249,64 @@ class LiquidationController extends BaseController{
     }
   }
 
+  private calculateHours = (news: INews, employee: IEmployee, from: moment.Moment, to: moment.Moment): number => {
+    let total:number = 0;
+    // si el la fecha de incio del evento se encuentra comprendida por las fechas del feriado
+    // entonces calculamos las horas 
+    // a tener en cuenta: que hay que tomar los minutos y no solo las horas
+    if(typeof(news.target) === 'undefined' || news.target?._id.equals(employee._id)){
+      if(from.isBetween(news.dateFrom, news.dateTo, "date", "[]") && to.isBetween(news.dateFrom, news.dateTo, "date", "[]")){
+        total += to.diff(from, 'hours');
+      }else if(from.isBetween(news.dateFrom, news.dateTo, "date", "[]")){
+        // se agregar 1 dia mas ya que los minutos no los toma como hora
+        const newsEnd = moment(news.dateTo).add(1, 'day').startOf('day');
+        total += newsEnd.diff(from, 'hours');
+      }else if(to.isBetween(news.dateFrom, news.dateTo, "date", "[]")){
+        const newsStart = moment(news.dateFrom).startOf('day');
+        total += to.diff(newsStart, 'hours');
+      }
+    }
+
+    return total;
+  }
+  
+  private calculateDays = (news: INews, employee: IEmployee, from: moment.Moment, to: moment.Moment): number => {
+    let total:number = 0;
+    const newsDateFrom: moment.Moment = moment(news.dateFrom).startOf('day');
+    const newsDateTo: moment.Moment = moment(news.dateTo).endOf('day');
+    // si el la fecha de incio del evento se encuentra comprendida por las fechas del feriado
+    // entonces calculamos las horas 
+    // a tener en cuenta: que hay que tomar los minutos y no solo las horas
+    if(typeof(news.target) === 'undefined' || news.target?._id.equals(employee._id)){
+      if(newsDateFrom.isBetween(from, to, "date", "[]") && newsDateTo.isBetween(from, to, "date", "[]")){
+        newsDateTo.add(1, 'day');
+        total += newsDateTo.diff(newsDateFrom, 'days');
+      }else if(newsDateFrom.isBetween(from, to, "date", "[]")){
+        to.add(1, 'day');
+        total += newsDateFrom.diff(to, 'days');
+      }else if(newsDateTo.isBetween(from, to, "date", "[]")){
+        from.add(1, 'day');
+        total += newsDateTo.diff(from, 'days');
+      }
+    }
+    return total;
+  }
+  
+  private calculateImport = (news: INews, employee: IEmployee, from: moment.Moment, to: moment.Moment): number => {
+    let total:number = 0;
+    const newsDateFrom: moment.Moment = moment(news.dateFrom).startOf('day');
+    // sumamos los adelantos recibidos
+    if(typeof(news.target) === 'undefined' || news.target?._id.equals(employee._id)){
+      if(newsDateFrom.isBetween(from, to, "date", "[]") && news.import){
+        total += news.import;
+      }
+    }
+    return total;
+  }
+
   private permitBody = (permit?: string[] | undefined): Array<string> => {
     return permit ? permit : [ 'objective', 'fromDate', 'toDate', 'shifts' ];
-  }
+    }
 }
 
-export default new LiquidationController();
+  export default new LiquidationController();

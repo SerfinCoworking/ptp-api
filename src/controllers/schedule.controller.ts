@@ -53,7 +53,6 @@ class ScheduleController extends BaseController{
     try{
   
       const schedule: ISchedule | null = await Schedule.findOne({_id: id});
-
       const calendarList: ICalendarList = {
         docs: [],
         total: 1,
@@ -62,13 +61,9 @@ class ScheduleController extends BaseController{
         pages: 1
       };
 
-
       if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
       
-      
       const pPage: number = periodPage ? periodPage : 1;
-      
-console.log(pPage, "period PAGE=====================");
 
       let period: PaginateResult<IPeriod> = await Period.paginate({"objective._id": schedule.objective._id}, { sort: { toDate: -1 }, page: pPage, limit: 1 });
       let days: string[] = [];
