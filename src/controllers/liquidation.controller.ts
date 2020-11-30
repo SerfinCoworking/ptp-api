@@ -212,7 +212,13 @@ class LiquidationController extends BaseController{
             firstName: employee.profile.firstName,
             lastName: employee.profile.lastName,
             avatar: employee.profile.avatar,
-            dni: employee.profile.dni
+            dni: employee.profile.dni,
+            cuilPrefix: employee.profile.cuilPrefix,
+            cuilDni: employee.profile.cuilDni,
+            cuilSufix: employee.profile.cuilSufix,
+            function: employee.profile.function,
+            employer: employee.profile.employer,
+            art: employee.profile.art
           } as IEmployeeLiq;
           liquidations.push({
             employee: employeeLiq,

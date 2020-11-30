@@ -8,6 +8,12 @@ export interface IEmployeeLiq extends Document {
   lastName: string;
   avatar: string;
   dni: string;
+  cuilPrefix: string;
+  cuilDni: string;
+  cuilSufix: string;
+  function: string;
+  employer: string;
+  art: string;
 }
 
 export default interface ILiquidation extends Document {
