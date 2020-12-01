@@ -10,6 +10,7 @@ import Employee from '../models/employee.model';
 import moment from 'moment';
 import News from '../models/news.model';
 import INews from '../interfaces/news.interface';
+import IHoursByWeek from '../interfaces/liquidation.interface';
 
 class LiquidationController extends BaseController{
 
@@ -133,7 +134,23 @@ class LiquidationController extends BaseController{
           let total_lic_no_justificada: number = 0;
           let total_days_vaciones: number = 0;
           let total_adelanto: number = 0;
+          let total_extra_hours: number = 0;
+          
+          const counterDay: moment.Moment = moment(fromDateMoment);
+          const weeks: IHoursByWeek[] = [];
 
+          while(counterDay.isBefore(toDateMoment, 'date')){
+            
+            const fromDate: moment.Moment = moment(counterDay).startOf('day');
+            const toDate: moment.Moment = moment(counterDay).add(6, 'days').endOf('day');
+            if(toDate.isAfter(toDateMoment)){
+              weeks.push(<IHoursByWeek>{from: fromDate, to: toDateMoment.endOf('day'), totalHours: 0, totalExtraHours: 0});
+            }else{
+              weeks.push(<IHoursByWeek>{from: fromDate, to: toDate, totalHours: 0, totalExtraHours: 0});
+            }
+            counterDay.add(7, 'days');
+          }
+          
           await Promise.all(periods.map( async (period: IPeriod) => {
             await Promise.all(period.shifts.map( async (shift: IShift) => {
               await Promise.all(shift.events.map( async (event: IEvent) => {
@@ -145,6 +162,25 @@ class LiquidationController extends BaseController{
                   let  dayHours: number = 0;
                   let  nightHours: number = 0;
 
+
+                  await Promise.all(weeks.map( async (week: any) => {
+                    let total: number = 0;
+
+                    if(realFrom.isBetween(week.from, week.to, "date", "[]") && realTo.isBetween(week.from, week.to, "date", "[]")){
+                      total += realTo.diff(realFrom, 'hours');
+                    }else if(realFrom.isBetween(week.from, week.to, "date", "[]")){
+                      // se agregar 1 dia mas ya que los minutos no los toma como hora
+                      const newsEnd = moment(week.to).add(1, 'minute');
+                      total += newsEnd.diff(realFrom, 'hours');
+                    }else if(realTo.isBetween(week.from, week.to, "date", "[]")){
+                      total += realTo.diff(week.from, 'hours');
+                    }
+                    week.totalHours += total;
+                    if(week.totalHours > 48){
+                      week.totalExtraHours = week.totalHours - 48;
+                    }
+                  }));
+                  
                   // Nocturno 21 - 6
                   // Diurno 6 - 21
                   const startDayFrom = moment(event.fromDatetime).set("hours", 6).set("minutes", 0);
@@ -205,7 +241,12 @@ class LiquidationController extends BaseController{
          await Promise.all(newsAdelanto.map( async (adelanto: INews) => {
             total_adelanto += this.calculateImport(adelanto, employee, fromDateMoment, toDateMoment);
          }));
+         
+         await Promise.all(weeks.map( async (week: IHoursByWeek) => {
+          total_extra += week.totalExtraHours;
+         }));
 
+         
           const employeeLiq: IEmployeeLiq = {
             _id: employee._id,
             enrollment: employee.enrollment,
@@ -231,9 +272,10 @@ class LiquidationController extends BaseController{
             total_lic_justificada_in_hours: total_lic_justificada,
             total_lic_no_justificada_in_hours: total_lic_no_justificada,
             total_vaciones_in_days: total_days_vaciones,
-            total_adelanto_import: total_adelanto
+            total_adelanto_import: total_adelanto,
+            total_hours_work_by_week: weeks,
           } as ILiquidation);
-        }));
+        }));// map employee
         
         return res.status(200).json(liquidations);
     }catch(err){
