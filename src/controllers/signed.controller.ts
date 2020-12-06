@@ -12,7 +12,6 @@ class SignedController extends BaseController{
 
   signedEmployee = async (req: Request, res: Response) => {
     const { objectiveId, rfid } = req.body;
-    console.log(objectiveId, rfid);
     try{
       const today = moment();
       // const today = moment("2020-09-27 20:50:00");
@@ -24,7 +23,7 @@ class SignedController extends BaseController{
       // const today = moment("2020-09-27 22:55:00");
       // const today = moment("2020-09-27 23:55:00");
       const employee: IEmployee | null = await Employee.findOne({ rfid: rfid}).select('_id');
-      if(!employee) throw new GenericError({property:"Empleado", message: 'Empleado no encontrado', type: "RESOURCE_NOT_FOUND"});
+      if(!employee) throw new GenericError({property:"Empleado", message: 'No se ha encontrado un empleado válido para esta tarjeta.', type: "RESOURCE_NOT_FOUND"});
             
       const period: IPeriod | null = await Period.findOne({"objective._id": objectiveId, 
         "fromDate": { 
@@ -35,24 +34,30 @@ class SignedController extends BaseController{
         }
       });
 
-      if(!period) throw new GenericError({property:"Periodo", message: 'periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      if(!period) throw new GenericError({property:"Periodo", message: 'No se ha encontrado una agenda válida para este objetivo.', type: "RESOURCE_NOT_FOUND"});
       
       await Promise.all( period.shifts.map( async (shift: IShift, index: number) => {
         if (shift.employee._id.equals(employee._id)){
           const content: ISigned[] = await this.getAllEventsByDate(today, shift);    
+
+          const firstEvent:  IEvent = await this.getFirstClosestEvent(today, shift.events);
+          console.log(firstEvent, "=====================DEBUG");
           if(content.length){
             let firstContent:  ISigned = await this.getClosestEvent(today, content);
             firstContent = await this.setSigend(today, firstContent);
             
             period.shifts[index].events[firstContent.eventIndex] = firstContent.event;
             period.shifts[index].signed?.push(today.toDate());
-            await period.save()    
+            await period.save();
+          }else{
+            throw new GenericError({property:"Employee", message: 'No se ha encontrado un horario asignado en este objetivo.', type: "RESOURCE_NOT_FOUND"});
           }
         }
       }));
       return res.status(200).json("period found successfully");
     }catch(err){
       const handler = errorHandler(err);
+      console.log(handler.getErrors());
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
@@ -91,7 +96,7 @@ class SignedController extends BaseController{
 
         // solo tenemos encuenta dos cosas:
         // 1: si no hay un evento asignado, entonces definimos el primero por defecto
-        // 2: si la diferencia entre la hora de "SALIDA" y la otra actual, es mayor a la diferencia entre la hora de "ENTRADA" y la hora actual.
+        // 2: si la diferencia entre la hora de "SALIDA" y la hora actual, es mayor a la diferencia entre la hora de "ENTRADA" y la hora actual.
         //      esto quiere decir que estaba más proximo a marcar el ingreso a la siguiente guardia que marcar el egreso de la guardia anterior
         if((currentDiffTo >= diffFrom) || typeof(signed) === 'undefined'){
           currentDiffTo = diffTo;
@@ -100,6 +105,30 @@ class SignedController extends BaseController{
         }
       });
       resolve(signed);
+    });
+      
+  }
+  private getFirstClosestEvent = async (target: moment.Moment, content: IEvent[]): Promise<IEvent> => {
+    
+    let event: IEvent;
+    
+    return new Promise((resolve, reject) => {
+      let currentDiffTo: number = 0;
+      content.map( async ( cont: IEvent, index: number) => {
+        const diffFrom: number = Math.abs(target.diff(cont.fromDatetime, 'minutes'));
+        const diffTo: number = Math.abs(target.diff(cont.toDatetime, 'minutes'));
+
+        // solo tenemos encuenta dos cosas:
+        // 1: si no hay un evento asignado, entonces definimos el primero por defecto
+        // 2: si la diferencia entre la hora de "SALIDA" y la hora actual, es mayor a la diferencia entre la hora de "ENTRADA" y la hora actual.
+        //      esto quiere decir que estaba más proximo a marcar el ingreso a la siguiente guardia que marcar el egreso de la guardia anterior
+        if((currentDiffTo >= diffFrom) || typeof(event) === 'undefined'){
+          currentDiffTo = diffTo;
+          console.log(diffFrom,  moment(cont.fromDatetime).format("YYYY-MM-DD HH:mm:ss"), target.format("YYYY-MM-DD HH:mm:ss"), target.isSameOrAfter(cont.fromDatetime));
+          event = cont;
+        }
+      });
+      resolve(event);
     });
       
   }
