@@ -35,6 +35,8 @@ export default interface ILiquidation extends Document {
   total_vaciones_in_days: number;
   total_adelanto_import: number;
   total_hours_work_by_week: IHoursByWeek[];
+  total_viaticos: number;
+  total_art_in_hours: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

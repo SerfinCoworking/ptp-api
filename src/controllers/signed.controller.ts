@@ -41,7 +41,6 @@ class SignedController extends BaseController{
           const content: ISigned[] = await this.getAllEventsByDate(today, shift);    
 
           const firstEvent:  IEvent = await this.getFirstClosestEvent(today, shift.events);
-          console.log(firstEvent, "=====================DEBUG");
           if(content.length){
             let firstContent:  ISigned = await this.getClosestEvent(today, content);
             firstContent = await this.setSigend(today, firstContent);

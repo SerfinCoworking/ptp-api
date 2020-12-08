@@ -120,6 +120,14 @@ class LiquidationController extends BaseController{
           }],
         });
         
+        const newsArt: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+              "concept.key": "ART"
+          }],
+        });
+        
         // tenemos los periodos
         // 
         const liquidations: ILiquidation[] = [];
@@ -134,7 +142,8 @@ class LiquidationController extends BaseController{
           let total_lic_no_justificada: number = 0;
           let total_days_vaciones: number = 0;
           let total_adelanto: number = 0;
-          let total_extra_hours: number = 0;
+          let total_viaticos: number = 0;
+          let total_art_in_hours: number = 0;
           
           const counterDay: moment.Moment = moment(fromDateMoment);
           const weeks: IHoursByWeek[] = [];
@@ -161,6 +170,10 @@ class LiquidationController extends BaseController{
                   
                   let  dayHours: number = 0;
                   let  nightHours: number = 0;
+
+                  if(event.checkin){
+                    total_viaticos++; 
+                  }
 
 
                   await Promise.all(weeks.map( async (week: any) => {
@@ -227,7 +240,9 @@ class LiquidationController extends BaseController{
                     total_lic_no_justificada += this.calculateHours(lic_no_justificada, employee, realFrom, realTo);
                   }));
                   
-                  
+                  await Promise.all(newsArt.map( async (art: INews) => {
+                    total_art_in_hours += this.calculateHours(art, employee, realFrom, realTo);
+                  }));                  
                 }
                 
               }));//map events
@@ -246,7 +261,6 @@ class LiquidationController extends BaseController{
           total_extra += week.totalExtraHours;
          }));
 
-         
           const employeeLiq: IEmployeeLiq = {
             _id: employee._id,
             enrollment: employee.enrollment,
@@ -274,6 +288,8 @@ class LiquidationController extends BaseController{
             total_vaciones_in_days: total_days_vaciones,
             total_adelanto_import: total_adelanto,
             total_hours_work_by_week: weeks,
+            total_viaticos: total_viaticos,
+            total_art_in_hours: total_art_in_hours
           } as ILiquidation);
         }));// map employee
         
