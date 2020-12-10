@@ -98,7 +98,7 @@ class NewsController extends BaseController{
   }
 
   private permitBody = (): Array<string> => {
-    return [ 'dateFrom','dateTo','target','concept','reason','acceptEventAssign','acceptEmployeeUpdate','import','observation' ];
+    return [ 'dateFrom','dateTo','employee', 'employeeMultiple', 'concept','reason','acceptEventAssign','acceptEmployeeUpdate','import','observation' ];
   }
 }
 

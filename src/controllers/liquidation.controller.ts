@@ -318,7 +318,7 @@ class LiquidationController extends BaseController{
     // si el la fecha de incio del evento se encuentra comprendida por las fechas del feriado
     // entonces calculamos las horas 
     // a tener en cuenta: que hay que tomar los minutos y no solo las horas
-    if(typeof(news.target) === 'undefined' || news.target?._id.equals(employee._id)){
+    if(typeof(news.employee) === 'undefined' || news.employee?._id.equals(employee._id)){
       if(from.isBetween(news.dateFrom, news.dateTo, "date", "[]") && to.isBetween(news.dateFrom, news.dateTo, "date", "[]")){
         total += to.diff(from, 'hours');
       }else if(from.isBetween(news.dateFrom, news.dateTo, "date", "[]")){
@@ -341,7 +341,7 @@ class LiquidationController extends BaseController{
     // si el la fecha de incio del evento se encuentra comprendida por las fechas del feriado
     // entonces calculamos las horas 
     // a tener en cuenta: que hay que tomar los minutos y no solo las horas
-    if(typeof(news.target) === 'undefined' || news.target?._id.equals(employee._id)){
+    if(typeof(news.employee) === 'undefined' || news.employee?._id.equals(employee._id)){
       if(newsDateFrom.isBetween(from, to, "date", "[]") && newsDateTo.isBetween(from, to, "date", "[]")){
         newsDateTo.add(1, 'day');
         total += newsDateTo.diff(newsDateFrom, 'days');
@@ -360,7 +360,7 @@ class LiquidationController extends BaseController{
     let total:number = 0;
     const newsDateFrom: moment.Moment = moment(news.dateFrom).startOf('day');
     // sumamos los adelantos recibidos
-    if(typeof(news.target) === 'undefined' || news.target?._id.equals(employee._id)){
+    if(typeof(news.employee) === 'undefined' || news.employee?._id.equals(employee._id)){
       if(newsDateFrom.isBetween(from, to, "date", "[]") && news.import){
         total += news.import;
       }

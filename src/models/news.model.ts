@@ -12,7 +12,8 @@ export const newsSchema = new Schema({
   dateTo: {
     type: String
   },
-  target: employeeSchema,
+  employee: employeeSchema,
+  employeeMultiple: [employeeSchema],
   concept: {
     _id: ObjectId,
     name: {

@@ -15,7 +15,8 @@ export default interface INews extends Document {
   _id: ObjectID;
   dateFrom: string; // fecha incio novedad
   dateTo: string; // fecha fin novedad: puede ser la misma que la de inicio (1 dia)
-  target?: IEmployee; // 1 empleado o todos
+  employee?: IEmployee; // 1 empleado o todos
+  employeeMultiple?: IEmployee[]; // 1 empleado o todos
   concept: {
     _id: ObjectId;
     name: string;
