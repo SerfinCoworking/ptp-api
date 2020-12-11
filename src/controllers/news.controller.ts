@@ -59,7 +59,7 @@ class NewsController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
-
+  
   show = async (req: Request, res: Response): Promise<Response<INews>> => {
     const id: string = req.params.id;
     try{
@@ -71,7 +71,7 @@ class NewsController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
-
+  
   update = async (req: Request, res: Response): Promise<Response<INews>> => {
     const id: string = req.params.id;
     const body = await this.filterNullValues(req.body, this.permitBody());
@@ -98,7 +98,7 @@ class NewsController extends BaseController{
   }
 
   private permitBody = (): Array<string> => {
-    return [ 'dateFrom','dateTo','employee', 'employeeMultiple', 'concept','reason','acceptEventAssign','acceptEmployeeUpdate','import','observation' ];
+    return [ 'dateFrom','dateTo','employee', 'employeeMultiple', 'concept', 'reason', 'acceptEventAssign', 'acceptEmployeeUpdate', 'import', 'capacitationHours', 'observation' ];
   }
 }
 

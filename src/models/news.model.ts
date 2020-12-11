@@ -37,6 +37,9 @@ export const newsSchema = new Schema({
   import: {
     type: Number
   },    
+  capacitationHours: {
+    type: Number
+  },    
   observation:{
     type: String    
   }
