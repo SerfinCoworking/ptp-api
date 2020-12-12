@@ -128,6 +128,14 @@ class LiquidationController extends BaseController{
           }],
         });
         
+        const newsCapacitation: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+              "concept.key": "CAPACITACIONES"
+          }],
+        });
+        
         // tenemos los periodos
         // 
         const liquidations: ILiquidation[] = [];
@@ -144,6 +152,7 @@ class LiquidationController extends BaseController{
           let total_adelanto: number = 0;
           let total_viaticos: number = 0;
           let total_art_in_hours: number = 0;
+          let total_capacitation_hours: number = 0;
           
           const counterDay: moment.Moment = moment(fromDateMoment);
           const weeks: IHoursByWeek[] = [];
@@ -242,58 +251,71 @@ class LiquidationController extends BaseController{
                   
                   await Promise.all(newsArt.map( async (art: INews) => {
                     total_art_in_hours += this.calculateHours(art, employee, realFrom, realTo);
-                  }));                  
+                  }));    
                 }
                 
               }));//map events
             }));
           }));// map period
 
-          await Promise.all(newsVacaciones.map( async (vaciones: INews) => {
+        // vacaciones
+        await Promise.all(newsVacaciones.map( async (vaciones: INews) => {
             total_days_vaciones += this.calculateDays(vaciones, employee, fromDateMoment, toDateMoment);
-         }));
+        }));
          
-         await Promise.all(newsAdelanto.map( async (adelanto: INews) => {
-            total_adelanto += this.calculateImport(adelanto, employee, fromDateMoment, toDateMoment);
-         }));
+        //  adelantos
+        await Promise.all(newsAdelanto.map( async (adelanto: INews) => {
+          total_adelanto += this.calculateImport(adelanto, employee, fromDateMoment, toDateMoment);
+        }));
          
-         await Promise.all(weeks.map( async (week: IHoursByWeek) => {
+        //  extra hours
+        await Promise.all(weeks.map( async (week: IHoursByWeek) => {
           total_extra += week.totalExtraHours;
-         }));
+        }));
 
-          const employeeLiq: IEmployeeLiq = {
-            _id: employee._id,
-            enrollment: employee.enrollment,
-            firstName: employee.profile.firstName,
-            lastName: employee.profile.lastName,
-            avatar: employee.profile.avatar,
-            dni: employee.profile.dni,
-            cuilPrefix: employee.profile.cuilPrefix,
-            cuilDni: employee.profile.cuilDni,
-            cuilSufix: employee.profile.cuilSufix,
-            function: employee.profile.function,
-            employer: employee.profile.employer,
-            art: employee.profile.art
-          } as IEmployeeLiq;
-          liquidations.push({
-            employee: employeeLiq,
-            total_day_in_hours: day_hours,
-            total_night_in_hours: night_hours,
-            total_in_hours: total_hours,
-            total_extra_in_hours: total_extra,
-            total_feriado_in_hours: total_feriado,
-            total_suspension_in_hours: total_suspension,
-            total_lic_justificada_in_hours: total_lic_justificada,
-            total_lic_no_justificada_in_hours: total_lic_no_justificada,
-            total_vaciones_in_days: total_days_vaciones,
-            total_adelanto_import: total_adelanto,
-            total_hours_work_by_week: weeks,
-            total_viaticos: total_viaticos,
-            total_art_in_hours: total_art_in_hours
-          } as ILiquidation);
-        }));// map employee
-        
-        return res.status(200).json(liquidations);
+        //  hours capacitation
+        await Promise.all(newsCapacitation.map( async (capacitation: INews) => {
+          const employeeFiltered = capacitation.employeeMultiple?.find( (employeeCap: IEmployee) => employeeCap._id.equals(employee._id));
+          if(capacitation.capacitationHours && employeeFiltered ){
+            total_capacitation_hours += capacitation.capacitationHours;
+          }
+        }));
+
+
+        const employeeLiq: IEmployeeLiq = {
+          _id: employee._id,
+          enrollment: employee.enrollment,
+          firstName: employee.profile.firstName,
+          lastName: employee.profile.lastName,
+          avatar: employee.profile.avatar,
+          dni: employee.profile.dni,
+          cuilPrefix: employee.profile.cuilPrefix,
+          cuilDni: employee.profile.cuilDni,
+          cuilSufix: employee.profile.cuilSufix,
+          function: employee.profile.function,
+          employer: employee.profile.employer,
+          art: employee.profile.art
+        } as IEmployeeLiq;
+        liquidations.push({
+          employee: employeeLiq,
+          total_day_in_hours: day_hours,
+          total_night_in_hours: night_hours,
+          total_in_hours: total_hours,
+          total_extra_in_hours: total_extra,
+          total_feriado_in_hours: total_feriado,
+          total_suspension_in_hours: total_suspension,
+          total_lic_justificada_in_hours: total_lic_justificada,
+          total_lic_no_justificada_in_hours: total_lic_no_justificada,
+          total_vaciones_in_days: total_days_vaciones,
+          total_adelanto_import: total_adelanto,
+          total_hours_work_by_week: weeks,
+          total_viaticos: total_viaticos,
+          total_art_in_hours: total_art_in_hours,
+          total_capacitation_hours: total_capacitation_hours
+        } as ILiquidation);
+      }));// map employee
+      
+      return res.status(200).json(liquidations);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
@@ -373,4 +395,4 @@ class LiquidationController extends BaseController{
     }
 }
 
-  export default new LiquidationController();
+export default new LiquidationController();
