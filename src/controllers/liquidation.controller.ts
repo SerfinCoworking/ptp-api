@@ -136,6 +136,14 @@ class LiquidationController extends BaseController{
           }],
         });
         
+        const newsLicSinSueldo: INews[] = await News.find({
+          $and: [
+            queryByDate,
+            {
+              "concept.key": "LIC_SIN_SUELDO"
+          }],
+        });
+        
         // tenemos los periodos
         // 
         const liquidations: ILiquidation[] = [];
@@ -153,6 +161,7 @@ class LiquidationController extends BaseController{
           let total_viaticos: number = 0;
           let total_art_in_hours: number = 0;
           let total_capacitation_hours: number = 0;
+          let total_lic_sin_sueldo_days: number = 0;
           
           const counterDay: moment.Moment = moment(fromDateMoment);
           const weeks: IHoursByWeek[] = [];
@@ -260,7 +269,12 @@ class LiquidationController extends BaseController{
 
         // vacaciones
         await Promise.all(newsVacaciones.map( async (vaciones: INews) => {
-            total_days_vaciones += this.calculateDays(vaciones, employee, fromDateMoment, toDateMoment);
+          total_days_vaciones += this.calculateDays(vaciones, employee, fromDateMoment, toDateMoment);
+        }));
+        
+        // licencia sin goce de sueldo
+        await Promise.all(newsLicSinSueldo.map( async (licSinSueldo: INews) => {
+          total_lic_sin_sueldo_days += this.calculateDays(licSinSueldo, employee, fromDateMoment, toDateMoment);
         }));
          
         //  adelantos
@@ -311,7 +325,8 @@ class LiquidationController extends BaseController{
           total_hours_work_by_week: weeks,
           total_viaticos: total_viaticos,
           total_art_in_hours: total_art_in_hours,
-          total_capacitation_hours: total_capacitation_hours
+          total_capacitation_hours: total_capacitation_hours,
+          total_lic_sin_sueldo_days: total_lic_sin_sueldo_days
         } as ILiquidation);
       }));// map employee
       

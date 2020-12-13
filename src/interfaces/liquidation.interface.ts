@@ -38,6 +38,7 @@ export default interface ILiquidation extends Document {
   total_viaticos: number;
   total_art_in_hours: number;
   total_capacitation_hours: number;
+  total_lic_sin_sueldo_days: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
