@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
 import Period from '../models/period.model';
-import IEmployee from '../interfaces/employee.interface';
-import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
+import Schedule from '../models/schedule.model';
+import IEmployee, { Status } from '../interfaces/employee.interface';
+import { IPeriod, IShift, IEvent, ISchedule} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import { ObjectId } from 'mongodb';
@@ -105,11 +106,14 @@ class PeriodController extends BaseController{
     try{
       const id: string = req.params.id;
       const period: IPeriod | null = await Period.findOne({_id: id});
-  
       if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      
+      const schedule: ISchedule | null = await Schedule.findOne({"objective._id": period.objective._id});
+      if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
+  
   
       const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
-      return res.status(200).json({period: periodDigest, shifts});
+      return res.status(200).json({period: periodDigest, shifts, schedule});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
@@ -228,7 +232,7 @@ class PeriodController extends BaseController{
         }]
       });
 
-    const employees: IEmployee[] | null = await Employee.find();
+    const employees: IEmployee[] | null = await Employee.find({status: { $ne: Status.BAJA}});
 
     
     await Promise.all(employees.map( async (employee: IEmployee ) => {
