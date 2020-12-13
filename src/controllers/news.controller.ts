@@ -5,6 +5,8 @@ import News from '../models/news.model';
 import INews from '../interfaces/news.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
 import moment from 'moment';
+import Employee from '../models/employee.model';
+import IEmployee, { Status } from '../interfaces/employee.interface';
 
 class NewsController extends BaseController{
 
@@ -53,6 +55,14 @@ class NewsController extends BaseController{
     const body: INews = await this.filterNullValues(req.body, this.permitBody());
     try{
       const news: INews = await News.create(body);
+      // "BAJA", update user data
+      if(news.concept.key == "BAJA"){
+        const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
+        if(employee){
+          employee.status = Status.BAJA;
+          await employee.save();
+        }
+      }
       return res.status(200).json(news);
     }catch(err){
       const handler = errorHandler(err);
@@ -77,8 +87,30 @@ class NewsController extends BaseController{
     const body = await this.filterNullValues(req.body, this.permitBody());
     try{
       const opts: any = { runValidators: true, new: true };
+      // find the new
+      const newsOld: INews | null = await News.findOne({_id: id});
+      if(!newsOld) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
+
+      // update employee data of the oldNew
+      const employeeOld: IEmployee | null = await Employee.findOne({_id: newsOld.employee?._id});
+      if(employeeOld){
+        const now = moment();
+        employeeOld.status = now.diff(employeeOld.profile.admissionDate, "days") > 30  ?  Status.ACTIVO : Status.ALTA;
+        await employeeOld.save();
+      }
+
+      // update news data and old employee o noew employee (if it changed)
       const news: INews | null = await News.findOneAndUpdate({_id: id}, body, opts);
       if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
+      // "BAJA", update user data
+      if(news.concept.key == "BAJA"){
+        const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
+        if(employee){
+          employee.status = Status.BAJA;
+          await employee.save();
+        }
+      }
+
       return res.status(200).json(news);
     }catch(err){
       const handler = errorHandler(err);
@@ -89,7 +121,18 @@ class NewsController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      await News.findByIdAndDelete(id);
+      const news: INews | null = await News.findOne({_id: id});
+      if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
+      // "BAJA", update user data
+      if(news.concept.key == "BAJA"){
+        const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
+        if(employee){
+          const now = moment();
+          employee.status = now.diff(employee.profile.admissionDate, "days") > 30  ?  Status.ACTIVO : Status.ALTA;
+          await employee.save();
+        }
+      }
+      await News.findByIdAndDelete(news._id);
       return res.status(200).json("news deleted successfully");
     }catch(err){
       const handler = errorHandler(err);

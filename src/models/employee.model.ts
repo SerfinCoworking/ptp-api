@@ -12,6 +12,9 @@ export const employeeSchema = new Schema({
   rfid: {
     type: Number
   },
+  status: {
+    type: String
+  },
   profile: profileSchema,
   contact: contactSchema
 },{
