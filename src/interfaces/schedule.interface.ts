@@ -7,7 +7,9 @@ export interface IEvent{
   fromDatetime: Date;
   toDatetime: Date;
   checkin?: Date;
+  checkinDescription?: string;
   checkout?: Date;
+  checkoutDescription?: string;
 }
 
 export interface ISigned{

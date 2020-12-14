@@ -170,12 +170,16 @@ class PeriodController extends BaseController{
             if(typeof(body.eventsDay[0]) !== 'undefined' && moment(body.eventsDay[0].fromDatetime).isSame(event.fromDatetime) && moment(body.eventsDay[0].toDatetime).isSame(event.toDatetime)){
               period.shifts[sIndex].events[eIndex].checkin = typeof(body.eventsDay[0].checkin) !== 'undefined' ? body.eventsDay[0].checkin : '';
               period.shifts[sIndex].events[eIndex].checkout = typeof(body.eventsDay[0].checkout) !== 'undefined' ? body.eventsDay[0].checkout : '';
+              period.shifts[sIndex].events[eIndex].checkinDescription = typeof(body.eventsDay[0].checkinDescription) !== 'undefined' ? body.eventsDay[0].checkinDescription : '';
+              period.shifts[sIndex].events[eIndex].checkoutDescription = typeof(body.eventsDay[0].checkoutDescription) !== 'undefined' ? body.eventsDay[0].checkoutDescription : '';
             }
 
             // find correct event 2
             if(typeof(body.eventsDay[1]) !== 'undefined' && moment(body.eventsDay[1].fromDatetime).isSame(event.fromDatetime) && moment(body.eventsDay[1].toDatetime).isSame(event.toDatetime)){
               period.shifts[sIndex].events[eIndex].checkin = typeof(body.eventsDay[1].checkin) !== 'undefined' ? body.eventsDay[1].checkin : '';
               period.shifts[sIndex].events[eIndex].checkout = typeof(body.eventsDay[1].checkout) !== 'undefined' ? body.eventsDay[1].checkout : '';
+              period.shifts[sIndex].events[eIndex].checkinDescription = typeof(body.eventsDay[1].checkinDescription) !== 'undefined' ? body.eventsDay[1].checkinDescription : '';
+              period.shifts[sIndex].events[eIndex].checkoutDescription = typeof(body.eventsDay[1].checkoutDescription) !== 'undefined' ? body.eventsDay[1].checkoutDescription : '';
             }
           }));
         }

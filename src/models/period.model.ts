@@ -16,8 +16,14 @@ export const eventSchema = new Schema({
   checkin: {
     type: Date
   },
+  checkinDescription:{
+    type: String
+  },
   checkout: {
     type: Date
+  },
+  checkoutDescription:{
+    type: String
   }
 },{ _id : false });
 
