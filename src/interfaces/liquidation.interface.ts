@@ -1,5 +1,6 @@
 import { Document } from 'mongoose';
 import { ObjectID } from 'mongodb';
+import INews from './news.interface';
 
 export interface IEmployeeLiq extends Document {
   _id: ObjectID;
@@ -39,6 +40,11 @@ export default interface ILiquidation extends Document {
   total_art_in_hours: number;
   total_capacitation_hours: number;
   total_lic_sin_sueldo_days: number;
+  suspensiones: INews[];
+  lic_justificadas: INews[];
+  lic_no_justificadas: INews[];
+  arts: INews[];
+  presentismo: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

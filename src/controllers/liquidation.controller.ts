@@ -11,6 +11,7 @@ import moment from 'moment';
 import News from '../models/news.model';
 import INews from '../interfaces/news.interface';
 import IHoursByWeek from '../interfaces/liquidation.interface';
+import { ObjectId } from 'mongodb';
 
 class LiquidationController extends BaseController{
 
@@ -80,53 +81,7 @@ class LiquidationController extends BaseController{
           }],
         });
         
-        const newsSuspension: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-              "concept.key": "SUSPENSION"
-          }],
-        });
         
-        const newsLicJustificada: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-              "concept.key": "LIC_JUSTIFICADA"
-          }],
-        });
-        
-        const newsLicNoJustificada: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-              "concept.key": "LIC_NO_JUSTIFICADA"
-          }],
-        });
-        
-        const newsVacaciones: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-              "concept.key": "VACACIONES"
-          }],
-        });
-        
-        const newsAdelanto: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-              "concept.key": "ADELANTO"
-          }],
-        });
-        
-        const newsArt: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-              "concept.key": "ART"
-          }],
-        });
         
         const newsCapacitation: INews[] = await News.find({
           $and: [
@@ -162,9 +117,82 @@ class LiquidationController extends BaseController{
           let total_art_in_hours: number = 0;
           let total_capacitation_hours: number = 0;
           let total_lic_sin_sueldo_days: number = 0;
+          let presentismo: number = 100;
           
           const counterDay: moment.Moment = moment(fromDateMoment);
           const weeks: IHoursByWeek[] = [];
+
+          const newsSuspension: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "SUSPENSION"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ],
+          }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
+          
+          const newsLicJustificada: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "LIC_JUSTIFICADA"
+              },{
+                "employee._id": employee._id
+              }
+            ],
+          }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
+          
+          const newsLicNoJustificada: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "LIC_NO_JUSTIFICADA"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ],
+          }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
+          
+          const newsVacaciones: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "VACACIONES"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ],
+          }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
+          
+          const newsAdelanto: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "ADELANTO"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ],
+          }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
+          
+          const newsArt: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "ART"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ],
+          }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
+
 
           while(counterDay.isBefore(toDateMoment, 'date')){
             
@@ -242,24 +270,34 @@ class LiquidationController extends BaseController{
                   total_hours += (dayHours + nightHours);
                   total_extra += 0;
                   
-                  await Promise.all(newsFeriados.map( async (feriado: INews) => {
-                    total_feriado += this.calculateHours(feriado, employee, realFrom, realTo);                    
+                  await Promise.all(newsFeriados.map( async (feriado: INews, index: number) => {
+                    const total: number = this.calculateHours(feriado, employee, realFrom, realTo);
+                    Object.assign(newsFeriados[index],{ worked_hours: ((feriado.worked_hours || 0) + total) });
+                    total_feriado += total;
                   }));
                   
-                  await Promise.all(newsSuspension.map( async (suspension: INews) => {
-                    total_suspension += this.calculateHours(suspension, employee, realFrom, realTo);
+                  await Promise.all(newsSuspension.map( async (suspension: INews, index: number) => {
+                    const total: number = this.calculateHours(suspension, employee, realFrom, realTo);
+                    Object.assign(newsSuspension[index],{ worked_hours: ((suspension.worked_hours || 0) + total) });
+                    total_suspension += total;
+                  }));
+                    
+                  await Promise.all(newsLicJustificada.map( async (lic_justificada: INews, index: number) => {
+                    const total: number = this.calculateHours(lic_justificada, employee, realFrom, realTo);
+                    Object.assign(newsLicJustificada[index],{ worked_hours: ((lic_justificada.worked_hours || 0) + total) });
+                    total_lic_justificada += total;
                   }));
                   
-                  await Promise.all(newsLicJustificada.map( async (lic_justificada: INews) => {
-                    total_lic_justificada += this.calculateHours(lic_justificada, employee, realFrom, realTo);
+                  await Promise.all(newsLicNoJustificada.map( async (lic_no_justificada: INews, index: number) => {
+                    const total: number = this.calculateHours(lic_no_justificada, employee, realFrom, realTo);
+                    Object.assign(newsLicNoJustificada[index],{ worked_hours: ((lic_no_justificada.worked_hours || 0) + total) });
+                    total_lic_no_justificada += total;
                   }));
                   
-                  await Promise.all(newsLicNoJustificada.map( async (lic_no_justificada: INews) => {
-                    total_lic_no_justificada += this.calculateHours(lic_no_justificada, employee, realFrom, realTo);
-                  }));
-                  
-                  await Promise.all(newsArt.map( async (art: INews) => {
-                    total_art_in_hours += this.calculateHours(art, employee, realFrom, realTo);
+                  await Promise.all(newsArt.map( async (art: INews, index: number) => {
+                    const total: number = this.calculateHours(art, employee, realFrom, realTo);
+                    Object.assign(newsArt[index],{ worked_hours: ((art.worked_hours || 0) + total) });
+                    total_art_in_hours += total;
                   }));    
                 }
                 
@@ -295,6 +333,19 @@ class LiquidationController extends BaseController{
           }
         }));
 
+        if(newsSuspension.length || newsLicNoJustificada.length){
+          presentismo = 0;
+        }else if(newsLicJustificada.length){
+          // si hay licencias por emfermedad descontamos presentismo segun corresponda
+          const totalEmfermedad: INews[] = await Promise.all(newsLicJustificada.filter((lic: INews) => { return lic.reason?.toUpperCase() == 'EMFERMEDAD'}));
+          if(totalEmfermedad.length == 2){
+             presentismo -= 10;
+          }else if(totalEmfermedad.length == 3){ 
+            presentismo -= 20;
+          }else if(totalEmfermedad.length > 3){
+            presentismo -= 30;
+          };
+        }
 
         const employeeLiq: IEmployeeLiq = {
           _id: employee._id,
@@ -326,7 +377,12 @@ class LiquidationController extends BaseController{
           total_viaticos: total_viaticos,
           total_art_in_hours: total_art_in_hours,
           total_capacitation_hours: total_capacitation_hours,
-          total_lic_sin_sueldo_days: total_lic_sin_sueldo_days
+          total_lic_sin_sueldo_days: total_lic_sin_sueldo_days,
+          suspensiones: newsSuspension,
+          lic_justificadas: newsLicJustificada,
+          lic_no_justificadas: newsLicNoJustificada,
+          arts: newsArt,
+          presentismo: presentismo 
         } as ILiquidation);
       }));// map employee
       

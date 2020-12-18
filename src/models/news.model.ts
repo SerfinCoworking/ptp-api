@@ -40,6 +40,10 @@ export const newsSchema = new Schema({
   capacitationHours: {
     type: Number
   },    
+  worked_hours: {
+    type: Number,
+    default: 0
+  },    
   observation:{
     type: String    
   }
