@@ -46,6 +46,9 @@ export const newsSchema = new Schema({
   },    
   observation:{
     type: String    
+  }, 
+  docLink:{
+    type: String    
   }
 },{
   timestamps: true

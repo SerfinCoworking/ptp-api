@@ -28,6 +28,7 @@ export default interface INews extends Document {
   import?: number; // importe en pesos opcional
   capacitationHours?: number; // horas de capacitacion
   observation?: string;
+  docLink?: string;
   worked_hours?: number;
   createdAt?: Date;
   updatedAt?: Date;
