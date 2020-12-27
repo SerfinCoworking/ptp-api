@@ -52,26 +52,25 @@ class LiquidationController extends BaseController{
           ]
         });
 
-        const queryByDate = {
-          
-            $or: [
-            {
-              $and: [
-                { dateFrom: { $lte: fromDateFormat } },
-                { dateTo: {$gte: fromDateFormat } }
-              ]
-            }, {
-              $and: [
-                { dateFrom: { $lte: toDateFormat } },
-                { dateTo: {$gte: toDateFormat } }
-              ]
-            },{
-              $and: [
-                { dateFrom: { $gte: fromDateFormat } },
-                { dateTo: {$lte: toDateFormat } }
-              ]
-            }]
-          };
+        const queryByDate = {          
+          $or: [
+          {
+            $and: [
+              { dateFrom: { $lte: fromDateFormat } },
+              { dateTo: {$gte: fromDateFormat } }
+            ]
+          }, {
+            $and: [
+              { dateFrom: { $lte: toDateFormat } },
+              { dateTo: {$gte: toDateFormat } }
+            ]
+          },{
+            $and: [
+              { dateFrom: { $gte: fromDateFormat } },
+              { dateTo: {$lte: toDateFormat } }
+            ]
+          }]
+        };
 
         const newsFeriados: INews[] = await News.find({
           $and: [
@@ -118,6 +117,7 @@ class LiquidationController extends BaseController{
           let total_capacitation_hours: number = 0;
           let total_lic_sin_sueldo_days: number = 0;
           let presentismo: number = 100;
+          let quantity_of_events: number = 0;
           
           const counterDay: moment.Moment = moment(fromDateMoment);
           const weeks: IHoursByWeek[] = [];
@@ -282,7 +282,16 @@ class LiquidationController extends BaseController{
                     total_suspension += total;
                   }));
                     
+                  // licencias justificadas
                   await Promise.all(newsLicJustificada.map( async (lic_justificada: INews, index: number) => {
+                    // debemos filtrar las emfermedades
+                    if(lic_justificada.reason?.toUpperCase() === 'EMFERMEDAD'){ 
+                      // se cuentan la cantidad de eventos que poseen las licencias por emfermedad
+                      // entre los dias de la novedad
+                      if(realFrom.isBetween(lic_justificada.dateFrom, lic_justificada.dateTo, 'date', '[]') || realTo.isBetween(lic_justificada.dateFrom, lic_justificada.dateTo, 'date', '[]')){
+                        quantity_of_events++;
+                      }
+                    }
                     const total: number = this.calculateHours(lic_justificada, employee, realFrom, realTo);
                     Object.assign(newsLicJustificada[index],{ worked_hours: ((lic_justificada.worked_hours || 0) + total) });
                     total_lic_justificada += total;
@@ -304,6 +313,11 @@ class LiquidationController extends BaseController{
               }));//map events
             }));
           }));// map period
+
+        // buscamos todos los periodos segun rango de fecha de la lic justificada por emfermedad
+        // filtramos por empleado
+        // y hacemos count de eventos entre fechas
+
 
         // vacaciones
         await Promise.all(newsVacaciones.map( async (vaciones: INews) => {
@@ -335,14 +349,13 @@ class LiquidationController extends BaseController{
 
         if(newsSuspension.length || newsLicNoJustificada.length){
           presentismo = 0;
-        }else if(newsLicJustificada.length){
-          // si hay licencias por emfermedad descontamos presentismo segun corresponda
-          const totalEmfermedad: INews[] = await Promise.all(newsLicJustificada.filter((lic: INews) => { return lic.reason?.toUpperCase() == 'EMFERMEDAD'}));
-          if(totalEmfermedad.length == 2){
+        }else if(quantity_of_events > 0){
+          // si hay licencias por emfermedad descontamos presentismo segun corresponda          
+          if(quantity_of_events == 2){
              presentismo -= 10;
-          }else if(totalEmfermedad.length == 3){ 
+          }else if(quantity_of_events == 3){ 
             presentismo -= 20;
-          }else if(totalEmfermedad.length > 3){
+          }else if(quantity_of_events > 3){
             presentismo -= 30;
           };
         }
