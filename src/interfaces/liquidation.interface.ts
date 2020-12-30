@@ -42,6 +42,7 @@ export default interface ILiquidation extends Document {
   total_lic_sin_sueldo_days: number;
   suspensiones: INews[];
   lic_justificadas: INews[];
+  lic_justificada_group_by_reason: any,
   lic_no_justificadas: INews[];
   arts: INews[];
   presentismo: number;

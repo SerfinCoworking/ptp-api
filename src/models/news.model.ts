@@ -24,7 +24,12 @@ export const newsSchema = new Schema({
     }
   },
   reason: {
-    type: String
+    name: {
+      type: String
+    },
+    key: {
+      type: String
+    }
   },
   acceptEventAssign:{
     type: Boolean,
@@ -41,6 +46,10 @@ export const newsSchema = new Schema({
     type: Number
   },    
   worked_hours: {
+    type: Number,
+    default: 0
+  },    
+  assigned_hours: {
     type: Number,
     default: 0
   },    

@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import moment from 'moment';
 import News from '../models/news.model';
-import INews from '../interfaces/news.interface';
+import INews, { _ljReasons } from '../interfaces/news.interface';
 import IHoursByWeek from '../interfaces/liquidation.interface';
 import { ObjectId } from 'mongodb';
 
@@ -109,6 +109,43 @@ class LiquidationController extends BaseController{
           let total_feriado: number = 0;
           let total_suspension: number = 0;
           let total_lic_justificada: number = 0;
+          let lic_justificada_group_by_reason: any = [
+            {
+              key: "FALLEC_ESPOSA_HIJOS_PADRES",
+              name: "Fallecimiento de esposa, hijos o padres",
+              assigned_hours: 0
+            },
+            {
+              key: "FALLEC_SUEGROS_HERMANOS",
+              name: "Fallecimiento de suegros o hermanos",
+              assigned_hours: 0
+            },
+            {
+              key: "NAC_HIJO_ADOPCION",
+              name: "Nacimiento de hijo o adopción",
+              assigned_hours: 0
+            },
+            {
+              key: "FALLEC_YERNO_NUERA",
+              name: "Fallecimiento de yerno o nuera",
+              assigned_hours: 0
+            },
+            {
+              key: "MATRIMONIO",
+              name: "Matrimonio",
+              assigned_hours: 0
+            },
+            {
+              key: "EXAMEN",
+              name: "Exámenes",
+              assigned_hours: 0
+            },
+            {
+              key: "EMFERMEDAD",
+              name: "Emfermedad",
+              assigned_hours: 0
+            } 
+          ];
           let total_lic_no_justificada: number = 0;
           let total_days_vaciones: number = 0;
           let total_adelanto: number = 0;
@@ -284,19 +321,27 @@ class LiquidationController extends BaseController{
                     
                   // licencias justificadas
                   await Promise.all(newsLicJustificada.map( async (lic_justificada: INews, index: number) => {
-                    // debemos filtrar las emfermedades
-                    if(lic_justificada.reason?.toUpperCase() === 'EMFERMEDAD'){ 
+                    
+                    const total: number = this.calculateHours(lic_justificada, employee, realFrom, realTo);
+                    Object.assign(newsLicJustificada[index], { assigned_hours: ((lic_justificada.assigned_hours || 0) + total) });
+                    // asignamos la cantidad de horaas segun agrupacion por "reason"
+                    if(lic_justificada.reason?.key.toUpperCase() === 'EMFERMEDAD'){ 
                       // se cuentan la cantidad de eventos que poseen las licencias por emfermedad
                       // entre los dias de la novedad
                       if(realFrom.isBetween(lic_justificada.dateFrom, lic_justificada.dateTo, 'date', '[]') || realTo.isBetween(lic_justificada.dateFrom, lic_justificada.dateTo, 'date', '[]')){
                         quantity_of_events++;
                       }
                     }
-                    const total: number = this.calculateHours(lic_justificada, employee, realFrom, realTo);
-                    Object.assign(newsLicJustificada[index],{ worked_hours: ((lic_justificada.worked_hours || 0) + total) });
+                    await Promise.all(lic_justificada_group_by_reason.map(( reason: any) => {
+                      if(lic_justificada.reason?.key.toUpperCase() === reason.key){ 
+                        reason.assigned_hours += total;
+                      }
+                    }));
+
                     total_lic_justificada += total;
                   }));
                   
+                  // licencias no justificadas
                   await Promise.all(newsLicNoJustificada.map( async (lic_no_justificada: INews, index: number) => {
                     const total: number = this.calculateHours(lic_no_justificada, employee, realFrom, realTo);
                     Object.assign(newsLicNoJustificada[index],{ worked_hours: ((lic_no_justificada.worked_hours || 0) + total) });
@@ -359,7 +404,7 @@ class LiquidationController extends BaseController{
             presentismo -= 30;
           };
         }
-
+        
         const employeeLiq: IEmployeeLiq = {
           _id: employee._id,
           enrollment: employee.enrollment,
@@ -393,6 +438,7 @@ class LiquidationController extends BaseController{
           total_lic_sin_sueldo_days: total_lic_sin_sueldo_days,
           suspensiones: newsSuspension,
           lic_justificadas: newsLicJustificada,
+          lic_justificada_group_by_reason: lic_justificada_group_by_reason,
           lic_no_justificadas: newsLicNoJustificada,
           arts: newsArt,
           presentismo: presentismo 
