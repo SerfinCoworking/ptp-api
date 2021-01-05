@@ -149,6 +149,7 @@ class LiquidationController extends BaseController{
           let total_lic_no_justificada: number = 0;
           let total_days_vaciones: number = 0;
           let total_adelanto: number = 0;
+          let total_plus_responsabilidad: number = 0;
           let total_viaticos: number = 0;
           let total_art_in_hours: number = 0;
           let total_capacitation_hours: number = 0;
@@ -218,6 +219,18 @@ class LiquidationController extends BaseController{
             ],
           }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
           
+          const newPlusResponsabilidad: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "PLUS_RESPONSABILIDAD"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ],
+          }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
+          
           const newsArt: INews[] = await News.find({
             $and: [
               queryByDate,
@@ -229,6 +242,18 @@ class LiquidationController extends BaseController{
               }
             ],
           }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation');
+          
+          const newsEmbargos: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "EMBARGO"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ],
+          }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation docLink');
 
 
           while(counterDay.isBefore(toDateMoment, 'date')){
@@ -257,8 +282,7 @@ class LiquidationController extends BaseController{
                   if(event.checkin){
                     total_viaticos++; 
                   }
-
-
+                  
                   await Promise.all(weeks.map( async (week: any) => {
                     let total: number = 0;
 
@@ -378,6 +402,11 @@ class LiquidationController extends BaseController{
         await Promise.all(newsAdelanto.map( async (adelanto: INews) => {
           total_adelanto += this.calculateImport(adelanto, employee, fromDateMoment, toDateMoment);
         }));
+        
+        // plus por responsabilidad
+        await Promise.all(newPlusResponsabilidad.map( async (plus_responsabilidad: INews) => {
+          total_plus_responsabilidad += this.calculateImport(plus_responsabilidad, employee, fromDateMoment, toDateMoment);
+        }));
          
         //  extra hours
         await Promise.all(weeks.map( async (week: IHoursByWeek) => {
@@ -431,6 +460,8 @@ class LiquidationController extends BaseController{
           total_lic_no_justificada_in_hours: total_lic_no_justificada,
           total_vaciones_in_days: total_days_vaciones,
           total_adelanto_import: total_adelanto,
+          total_plus_responsabilidad: total_plus_responsabilidad,
+          plus_responsabilidad: newPlusResponsabilidad,
           total_hours_work_by_week: weeks,
           total_viaticos: total_viaticos,
           total_art_in_hours: total_art_in_hours,
@@ -441,7 +472,8 @@ class LiquidationController extends BaseController{
           lic_justificada_group_by_reason: lic_justificada_group_by_reason,
           lic_no_justificadas: newsLicNoJustificada,
           arts: newsArt,
-          presentismo: presentismo 
+          presentismo: presentismo,
+          embargos: newsEmbargos 
         } as ILiquidation);
       }));// map employee
       

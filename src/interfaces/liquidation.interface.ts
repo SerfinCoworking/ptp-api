@@ -35,6 +35,8 @@ export default interface ILiquidation extends Document {
   total_lic_no_justificada_in_hours: number;
   total_vaciones_in_days: number;
   total_adelanto_import: number;
+  total_plus_responsabilidad: number;
+  plus_responsabilidad: INews[];
   total_hours_work_by_week: IHoursByWeek[];
   total_viaticos: number;
   total_art_in_hours: number;
@@ -46,6 +48,7 @@ export default interface ILiquidation extends Document {
   lic_no_justificadas: INews[];
   arts: INews[];
   presentismo: number;
+  embargos: INews[];
   createdAt?: Date;
   updatedAt?: Date;
 }
