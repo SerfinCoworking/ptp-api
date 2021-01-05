@@ -19,9 +19,9 @@ class NewsController extends BaseController{
         const query = {
           $or: [
             {"concept.name":  { $regex: new RegExp( target, "ig")}},
-            {"target.profile.lastName":  { $regex: new RegExp( target, "ig")}},
-            {"target.profile.firstName":  { $regex: new RegExp( target, "ig")}},
-            {"target.profile.dni":  { $regex: new RegExp( target, "ig")}},
+            {"employee.profile.lastName":  { $regex: new RegExp( target, "ig")}},
+            {"employee.profile.firstName":  { $regex: new RegExp( target, "ig")}},
+            {"employee.profile.dni":  { $regex: new RegExp( target, "ig")}},
             {"contact.email":  { $regex: new RegExp( target, "ig")}}
           ]
         };
