@@ -9,6 +9,8 @@ import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
+import IObjective from '../interfaces/objective.interface';
+import Objective from '../models/objective.model';
 
 class PeriodController extends BaseController{
 
@@ -102,18 +104,21 @@ class PeriodController extends BaseController{
     }
   }
 
-  getPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
+  getPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[], schedule: ISchedule, objective: IObjective}>> => {
     try{
       const id: string = req.params.id;
       const period: IPeriod | null = await Period.findOne({_id: id});
       if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      
+      const objective: IObjective | null = await Objective.findOne({"_id": period.objective._id}).select("name defaultSchedules");
+      if(!objective) throw new GenericError({property:"Objective", message: 'Objectivo no encontrada', type: "RESOURCE_NOT_FOUND"});
       
       const schedule: ISchedule | null = await Schedule.findOne({"objective._id": period.objective._id});
       if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
   
   
       const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
-      return res.status(200).json({period: periodDigest, shifts, schedule});
+      return res.status(200).json({period: periodDigest, shifts, schedule, objective});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
