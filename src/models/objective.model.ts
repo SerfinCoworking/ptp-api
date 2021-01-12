@@ -1,7 +1,7 @@
 import { Schema, model, PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate';
 
-import { serviceTypeSchema, addressSchema } from './embedded.documents';
+import { serviceTypeSchema, addressSchema, defaultSchedulesSchema } from './embedded.documents';
 import IObjective from '../interfaces/objective.interface';
 import bcrypt from 'bcryptjs';
 import IRole from '../interfaces/role.interface';
@@ -51,7 +51,7 @@ export const objectiveSchema = new Schema({
     set: objectiveIdentifier
   },
   address: addressSchema,
-  serviceType: [serviceTypeSchema],
+  serviceType: [serviceTypeSchema],  
   description: {
     type: String
   },
@@ -74,7 +74,8 @@ export const objectiveSchema = new Schema({
   loginCount:{
     type: Number,
     default: 0
-  }
+  },
+  defaultSchedules: [defaultSchedulesSchema]
 },{
   timestamps: true
 });

@@ -47,3 +47,14 @@ export interface IServiceType {
   name: string;
   hours: number;
 }
+
+export interface IDefaultSchedule {
+  fromTime:{
+    hour: number;
+    minute: number;    
+  },
+  toTime:{
+    hour: number;
+    minute: number;    
+  }
+}

@@ -1,7 +1,6 @@
 import { Document } from 'mongoose';
 import { ObjectID } from 'mongodb';
-import { IAddress, IServiceType } from './embedded.documents.inteface';
-
+import { IAddress, IServiceType, IDefaultSchedule } from './embedded.documents.inteface';
 
 export default interface IObjective extends Document {
   _id: ObjectID;
@@ -15,6 +14,7 @@ export default interface IObjective extends Document {
   role:  string;
   refreshToken?: string;
   loginCount: number;
+  defaultSchedules: IDefaultSchedule[];
   createdAt?: Date;
   updatedAt?: Date;
 }

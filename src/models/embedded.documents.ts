@@ -132,4 +132,27 @@ export const serviceTypeSchema = new Schema({
   }
 }, { _id : false });
 
+export const defaultSchedulesSchema = new Schema({
+  fromTime: {
+    hour: {
+      type: Number,
+      required: '{PATH} is required'
+    },
+    minute: {
+      type: Number,
+      required: '{PATH} is required'
+    },
+  },
+  toTime: {
+    hour: {
+      type: Number,
+      required: '{PATH} is required'
+    },
+    minute: {
+      type: Number,
+      required: '{PATH} is required'
+    },
+  }
+}, { _id : false });
+
 

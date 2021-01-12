@@ -49,7 +49,7 @@ class ObjectiveController extends BaseController{
   show = async (req: Request, res: Response): Promise<Response<IObjective>> => {
     const id: string = req.params.id;
     try{
-      const objective: IObjective | null = await Objective.findOne({_id: id}).select("_id name address serviceType description avatar identifier");
+      const objective: IObjective | null = await Objective.findOne({_id: id}).select("_id name address serviceType description avatar identifier defaultSchedules");
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(objective);
     }catch(err){
@@ -87,7 +87,7 @@ class ObjectiveController extends BaseController{
   }
 
   private permitBody = (permit?: string[] | undefined): Array<string> => {
-    return permit ? permit : [ 'name', 'serviceType', 'address', 'description', 'password', 'identifier', 'avatar' ];
+    return permit ? permit : [ 'name', 'serviceType', 'address', 'description', 'password', 'identifier', 'avatar' , 'defaultSchedules'];
   }
 }
 
