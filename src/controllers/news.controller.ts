@@ -39,6 +39,16 @@ class NewsController extends BaseController{
     }
   }
 
+  newRecord = async (req: Request, res: Response): Promise<Response<IEmployee>> => {
+    try{
+      const employees: IEmployee[] | null = await Employee.find({status:  { $ne: Status.BAJA}});
+      return res.status(200).json(employees);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
   getNewsByDate = async (req: Request, res: Response): Promise<Response<INews[]>> => {
     const {dateFrom, dateTo } = req.query;
     // get all news by a period range
