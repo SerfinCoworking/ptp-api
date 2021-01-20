@@ -1,6 +1,8 @@
 import { Document } from 'mongoose';
 import { ObjectID } from 'mongodb';
 import INews from './news.interface';
+import { IEvent } from './schedule.interface';
+import IObjective from './objective.interface';
 
 export interface IEmployeeLiq extends Document {
   _id: ObjectID;
@@ -17,11 +19,19 @@ export interface IEmployeeLiq extends Document {
   art: string;
 }
 
-export default interface IHoursByWeek extends Document {
+export interface IEventWithObjective {
+  event: IEvent,
+  objectiveName: string;
+  diffInHours: number;
+  dayHours: number;
+  nightHours: number;
+}
+export interface IHoursByWeek {
   from: moment.Moment;
   to: moment.Moment;
   totalHours: number;
   totalExtraHours: number;
+  events?: IEventWithObjective[];
 }
 export default interface ILiquidation extends Document {
   employee: IEmployeeLiq;

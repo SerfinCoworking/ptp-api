@@ -3,14 +3,13 @@ import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
 import Period, { periodSchema } from '../models/period.model';
 import IEmployee from '../interfaces/employee.interface';
-import ILiquidation, { IEmployeeLiq } from '../interfaces/liquidation.interface';
+import ILiquidation, { IEmployeeLiq, IHoursByWeek,IEventWithObjective } from '../interfaces/liquidation.interface';
 import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import moment from 'moment';
 import News from '../models/news.model';
 import INews, { _ljReasons } from '../interfaces/news.interface';
-import IHoursByWeek from '../interfaces/liquidation.interface';
 import { ObjectId } from 'mongodb';
 
 class LiquidationController extends BaseController{
@@ -261,9 +260,20 @@ class LiquidationController extends BaseController{
             const fromDate: moment.Moment = moment(counterDay).startOf('day');
             const toDate: moment.Moment = moment(counterDay).add(6, 'days').endOf('day');
             if(toDate.isAfter(toDateMoment)){
-              weeks.push(<IHoursByWeek>{from: fromDate, to: toDateMoment.endOf('day'), totalHours: 0, totalExtraHours: 0});
+              weeks.push(<IHoursByWeek>{
+                from: fromDate,
+                to: toDateMoment.endOf('day'),
+                totalHours: 0,
+                totalExtraHours: 0,
+                events: []
+              });
             }else{
-              weeks.push(<IHoursByWeek>{from: fromDate, to: toDate, totalHours: 0, totalExtraHours: 0});
+              weeks.push(<IHoursByWeek>{from: fromDate,
+                to: toDate,
+                totalHours: 0,
+                totalExtraHours: 0,
+                events: []
+              });
             }
             counterDay.add(7, 'days');
           }
@@ -283,24 +293,7 @@ class LiquidationController extends BaseController{
                     total_viaticos++; 
                   }
                   
-                  await Promise.all(weeks.map( async (week: any) => {
-                    let total: number = 0;
-
-                    if(realFrom.isBetween(week.from, week.to, "date", "[]") && realTo.isBetween(week.from, week.to, "date", "[]")){
-                      total += realTo.diff(realFrom, 'hours');
-                    }else if(realFrom.isBetween(week.from, week.to, "date", "[]")){
-                      // se agregar 1 dia mas ya que los minutos no los toma como hora
-                      const newsEnd = moment(week.to).add(1, 'minute');
-                      total += newsEnd.diff(realFrom, 'hours');
-                    }else if(realTo.isBetween(week.from, week.to, "date", "[]")){
-                      total += realTo.diff(week.from, 'hours');
-                    }
-                    week.totalHours += total;
-                    if(week.totalHours > 48){
-                      week.totalExtraHours = week.totalHours - 48;
-                    }
-                  }));
-                  
+                  // Calculo de total horas diurnas y nocturnas
                   // Nocturno 21 - 6
                   // Diurno 6 - 21
                   const startDayFrom = moment(event.fromDatetime).set("hours", 6).set("minutes", 0);
@@ -329,7 +322,39 @@ class LiquidationController extends BaseController{
                   day_hours += dayHours;
                   night_hours += nightHours;
                   total_hours += (dayHours + nightHours);
-                  total_extra += 0;
+                  total_extra += 0;       
+                  // Fin calculo de total horas diurnas y nocturnas          
+                  
+                  // [Cantidad de horas / horas extras / eventos: por objetivo / horas / horas diurnas / horas nocturnas] Por semana
+                  const eventWithObjective: IEventWithObjective = {
+                    event: event,
+                    objectiveName: period.objective.name,
+                    diffInHours: realTo.diff(realFrom, 'hours'),
+                    dayHours,
+                    nightHours
+                  };
+
+                  await Promise.all(weeks.map( async (week: any) => {
+                    let total: number = 0;
+
+                    if(realFrom.isBetween(week.from, week.to, "date", "[]") && realTo.isBetween(week.from, week.to, "date", "[]")){
+                      total += realTo.diff(realFrom, 'hours');
+                      week.events.push(eventWithObjective);
+                    }else if(realFrom.isBetween(week.from, week.to, "date", "[]")){
+                      // se agregar 1 dia mas ya que los minutos no los toma como hora
+                      const newsEnd = moment(week.to).add(1, 'minute');
+                      week.events.push(eventWithObjective);
+                      total += newsEnd.diff(realFrom, 'hours');
+                    }else if(realTo.isBetween(week.from, week.to, "date", "[]")){
+                      total += realTo.diff(week.from, 'hours');
+                      week.events.push(eventWithObjective);
+                    }
+                    week.totalHours += total;
+                    if(week.totalHours > 48){
+                      week.totalExtraHours = week.totalHours - 48;
+                    }
+
+                  }));                  
                   
                   await Promise.all(newsFeriados.map( async (feriado: INews, index: number) => {
                     const total: number = this.calculateHours(feriado, employee, realFrom, realTo);
