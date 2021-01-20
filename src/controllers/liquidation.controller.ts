@@ -325,13 +325,23 @@ class LiquidationController extends BaseController{
                   total_extra += 0;       
                   // Fin calculo de total horas diurnas y nocturnas          
                   
+                  // calculo de horas feriados
+                  let feriadoHours: number = 0;
+                  await Promise.all(newsFeriados.map( async (feriado: INews, index: number) => {
+                    const total: number = this.calculateHours(feriado, employee, realFrom, realTo);
+                    feriadoHours = total;
+                    Object.assign(newsFeriados[index],{ worked_hours: ((feriado.worked_hours || 0) + total) });
+                    total_feriado += total;
+                  }));
+
                   // [Cantidad de horas / horas extras / eventos: por objetivo / horas / horas diurnas / horas nocturnas] Por semana
                   const eventWithObjective: IEventWithObjective = {
                     event: event,
                     objectiveName: period.objective.name,
                     diffInHours: realTo.diff(realFrom, 'hours'),
                     dayHours,
-                    nightHours
+                    nightHours,
+                    feriadoHours: feriadoHours
                   };
 
                   await Promise.all(weeks.map( async (week: any) => {
@@ -354,12 +364,6 @@ class LiquidationController extends BaseController{
                       week.totalExtraHours = week.totalHours - 48;
                     }
 
-                  }));                  
-                  
-                  await Promise.all(newsFeriados.map( async (feriado: INews, index: number) => {
-                    const total: number = this.calculateHours(feriado, employee, realFrom, realTo);
-                    Object.assign(newsFeriados[index],{ worked_hours: ((feriado.worked_hours || 0) + total) });
-                    total_feriado += total;
                   }));
                   
                   await Promise.all(newsSuspension.map( async (suspension: INews, index: number) => {
