@@ -52,6 +52,7 @@ export default interface ILiquidation extends Document {
   total_art_in_hours: number;
   total_capacitation_hours: number;
   total_lic_sin_sueldo_days: number;
+  capacitaciones: INews[];
   plus_responsabilidad: INews[];
   suspensiones: INews[];
   lic_justificadas: INews[];

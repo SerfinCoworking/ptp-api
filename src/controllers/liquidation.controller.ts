@@ -87,7 +87,7 @@ class LiquidationController extends BaseController{
             {
               "concept.key": "CAPACITACIONES"
           }],
-        });
+        }).select('capacitationHours concept dateFrom dateTo employeeMultiple');
         
         const newsLicSinSueldo: INews[] = await News.find({
           $and: [
@@ -155,6 +155,7 @@ class LiquidationController extends BaseController{
           let total_lic_sin_sueldo_days: number = 0;
           let presentismo: number = 100;
           let quantity_of_events: number = 0;
+          const capacitaciones: INews[] = [];
           
           const counterDay: moment.Moment = moment(fromDateMoment);
           const weeks: IHoursByWeek[] = [];
@@ -446,6 +447,7 @@ class LiquidationController extends BaseController{
         await Promise.all(newsCapacitation.map( async (capacitation: INews) => {
           const employeeFiltered = capacitation.employeeMultiple?.find( (employeeCap: IEmployee) => employeeCap._id.equals(employee._id));
           if(capacitation.capacitationHours && employeeFiltered ){
+            capacitaciones.push(capacitation);
             total_capacitation_hours += capacitation.capacitationHours;
           }
         }));
@@ -490,6 +492,7 @@ class LiquidationController extends BaseController{
           total_vaciones_in_days: total_days_vaciones,
           total_adelanto_import: total_adelanto,
           total_plus_responsabilidad: total_plus_responsabilidad,
+          capacitaciones: capacitaciones,
           plus_responsabilidad: newPlusResponsabilidad,
           total_hours_work_by_week: weeks,
           total_viaticos: total_viaticos,
