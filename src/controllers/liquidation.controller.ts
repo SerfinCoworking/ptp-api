@@ -330,7 +330,7 @@ class LiquidationController extends BaseController{
                   let feriadoHours: number = 0;
                   await Promise.all(newsFeriados.map( async (feriado: INews, index: number) => {
                     const total: number = this.calculateHours(feriado, employee, realFrom, realTo);
-                    feriadoHours = total;
+                    feriadoHours += total;
                     Object.assign(newsFeriados[index],{ worked_hours: ((feriado.worked_hours || 0) + total) });
                     total_feriado += total;
                   }));
