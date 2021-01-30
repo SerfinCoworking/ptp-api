@@ -191,7 +191,7 @@ class PeriodController extends BaseController{
       }));
 
       await period.save();
-      return res.status(200).json(period);
+      return res.status(200).json({msg: 'Fichaje guardado correctamente'});
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
