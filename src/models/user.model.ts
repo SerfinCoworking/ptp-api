@@ -1,9 +1,8 @@
-import { Schema, Model, model, PaginateModel } from 'mongoose';
+import { Schema, model, PaginateModel } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import IUser from '../interfaces/user.interface';
 import Role from '../models/role.model';
 import IRole from '../interfaces/role.interface';
-import {profileSchema} from './embedded.documents';
 import mongoosePaginate from 'mongoose-paginate';
 
 // Validation callbacks
@@ -56,15 +55,29 @@ export const userSchema = new Schema({
     type: String,
     unique: true,
   },
-  profile: profileSchema,
+
+  profile: {
+    firstName: {
+      type: String,
+      required: '{PATH} is required is required',
+    },
+    lastName: {
+      type: String,
+      required: '{PATH} is required is required',
+    },
+    dni: {
+      type: String,
+      required: '{PATH} is required is required',
+    },
+    avatar: {
+      type: String
+    },
+  },
   password: {
     type: String,
     required: '{PATH} is required is required',
     minlength: [8, '{PATH} required a minimum of 8 characters'],
     set: encryptPassword
-  },
-  avatar: {
-    type: String
   },
   role: {
     type: String,
