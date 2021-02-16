@@ -108,6 +108,7 @@ class LiquidationController extends BaseController{
           let total_feriado: number = 0;
           let total_suspension: number = 0;
           let total_lic_justificada: number = 0;
+          let total_lic_jus_by_working_day: Array<string> = [];
           let lic_justificada_group_by_reason: any = [
             {
               key: "FALLEC_ESPOSA_HIJOS_PADRES",
@@ -379,6 +380,12 @@ class LiquidationController extends BaseController{
                   await Promise.all(newsLicJustificada.map( async (lic_justificada: INews, index: number) => {
                     
                     const total: number = this.calculateHours(lic_justificada, employee, realFrom, realTo);
+                    const isInDate: boolean = (
+                      (realFrom.isBetween(lic_justificada.dateFrom, lic_justificada.dateTo, "date", "[]") && realTo.isBetween(lic_justificada.dateFrom, lic_justificada.dateTo, "date", "[]")) ||
+                      (realFrom.isBetween(lic_justificada.dateFrom, lic_justificada.dateTo, "date", "[]")) ||
+                      (realTo.isBetween(lic_justificada.dateFrom, lic_justificada.dateTo, "date", "[]"))
+                    )
+
                     Object.assign(newsLicJustificada[index], { assigned_hours: ((lic_justificada.assigned_hours || 0) + total) });
                     // asignamos la cantidad de horaas segun agrupacion por "reason"
                     if(lic_justificada.reason?.key.toUpperCase() === 'EMFERMEDAD'){ 
@@ -395,6 +402,10 @@ class LiquidationController extends BaseController{
                     }));
 
                     total_lic_justificada += total;
+
+                    if(!total_lic_jus_by_working_day.includes(realFrom.format("DD-MM-YYYY")) && isInDate){
+                      total_lic_jus_by_working_day.push(realFrom.format("DD-MM-YYYY"));
+                    }
                   }));
                   
                   // licencias no justificadas
@@ -475,7 +486,7 @@ class LiquidationController extends BaseController{
             presentismo -= 30;
           };
         }
-           
+        
         const employeeLiq: IEmployeeLiq = {
           _id: employee._id,
           enrollment: employee.enrollment,
@@ -499,6 +510,7 @@ class LiquidationController extends BaseController{
           total_feriado_in_hours: total_feriado,
           total_suspension_in_hours: total_suspension,
           total_lic_justificada_in_hours: total_lic_justificada,
+          total_lic_jus_by_working_day: total_lic_jus_by_working_day,
           total_lic_no_justificada_in_hours: total_lic_no_justificada,
           total_vaciones_in_days: total_days_vaciones,
           total_adelanto_import: total_adelanto,
