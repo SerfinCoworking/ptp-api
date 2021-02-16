@@ -50,6 +50,7 @@ export default interface ILiquidation extends Document {
   total_hours_work_by_week: IHoursByWeek[];
   total_viaticos: number;
   total_art_in_hours: number;
+  total_art_by_working_day: Array<string>;
   total_capacitation_hours: number;
   total_lic_sin_sueldo_days: number;
   capacitaciones: INews[];

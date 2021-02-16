@@ -151,6 +151,7 @@ class LiquidationController extends BaseController{
           let total_plus_responsabilidad: number = 0;
           let total_viaticos: number = 0;
           let total_art_in_hours: number = 0;
+          let total_art_by_working_day: Array<string> = [];
           let total_capacitation_hours: number = 0;
           let total_lic_sin_sueldo_days: number = 0;
           let presentismo: number = 100;
@@ -254,6 +255,7 @@ class LiquidationController extends BaseController{
               }
             ],
           }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation docLink');
+
 
 
           while(counterDay.isBefore(toDateMoment, 'date')){
@@ -406,6 +408,15 @@ class LiquidationController extends BaseController{
                     const total: number = this.calculateHours(art, employee, realFrom, realTo);
                     Object.assign(newsArt[index],{ worked_hours: ((art.worked_hours || 0) + total) });
                     total_art_in_hours += total;
+                    const isInDate: boolean = (
+                      (realFrom.isBetween(art.dateFrom, art.dateTo, "date", "[]") && realTo.isBetween(art.dateFrom, art.dateTo, "date", "[]")) ||
+                      (realFrom.isBetween(art.dateFrom, art.dateTo, "date", "[]")) ||
+                      (realTo.isBetween(art.dateFrom, art.dateTo, "date", "[]"))
+                    )
+
+                    if(!total_art_by_working_day.includes(realFrom.format("DD-MM-YYYY")) && isInDate){
+                      total_art_by_working_day.push(realFrom.format("DD-MM-YYYY"));
+                    }
                   }));    
                 }
                 
@@ -464,7 +475,7 @@ class LiquidationController extends BaseController{
             presentismo -= 30;
           };
         }
-        
+           
         const employeeLiq: IEmployeeLiq = {
           _id: employee._id,
           enrollment: employee.enrollment,
@@ -497,6 +508,7 @@ class LiquidationController extends BaseController{
           total_hours_work_by_week: weeks,
           total_viaticos: total_viaticos,
           total_art_in_hours: total_art_in_hours,
+          total_art_by_working_day: total_art_by_working_day,
           total_capacitation_hours: total_capacitation_hours,
           total_lic_sin_sueldo_days: total_lic_sin_sueldo_days,
           suspensiones: newsSuspension,
