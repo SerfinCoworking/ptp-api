@@ -293,9 +293,9 @@ class LiquidationController extends BaseController{
                   let  dayHours: number = 0;
                   let  nightHours: number = 0;
 
-                  if(event.checkin){
-                    total_viaticos++; 
-                  }
+                  // Obetencion de viatiacos:
+                  // 1 por cada guardia registrada
+                  total_viaticos++; 
                   
                   // Calculo de total horas diurnas y nocturnas
                   // Nocturno 21 - 6
