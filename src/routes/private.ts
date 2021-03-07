@@ -51,6 +51,7 @@ class PrivateRoutes{
     this.router.patch('/period/:id/update-signeds', hasPermissionIn('edit', 'period'), PeriodController.updateSigneds);
     this.router.delete('/period/:id', hasPermissionIn('delete', 'period'), PeriodController.delete);
     
+    this.router.get('/liquidations', hasPermissionIn('list', 'liquidation'), LiquidationController.index);
     this.router.get('/liquidation', hasPermissionIn('create', 'liquidation'), LiquidationController.new);
 
     // news

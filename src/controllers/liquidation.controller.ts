@@ -1,24 +1,65 @@
 import { Request, Response } from 'express';
 import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
-import Period, { periodSchema } from '../models/period.model';
+import Period from '../models/period.model';
 import IEmployee from '../interfaces/employee.interface';
-import ILiquidation, { IEmployeeLiq, IHoursByWeek,IEventWithObjective } from '../interfaces/liquidation.interface';
+import ILiquidation, {IEmployeeLiquidation, IEmployeeLiq, IHoursByWeek,IEventWithObjective, ILicReason } from '../interfaces/liquidation.interface';
 import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
 import moment from 'moment';
 import News from '../models/news.model';
 import INews, { _ljReasons } from '../interfaces/news.interface';
-import { ObjectId } from 'mongodb';
+import Liquidation from '../models/liquidation.model';
+import { PaginateOptions, PaginateResult } from 'mongoose';
 
 class LiquidationController extends BaseController{
 
-  new = async (req: Request, res: Response): Promise<Response<ILiquidation[]>> => { 
+  index = async (req: Request, res: Response): Promise<Response<INews[]>> => {
+    const { search, page, limit, sort } = req.query;
+
+    const target: string = await this.searchDigest(search);
+    const sortDiggest: any = await this.sortDigest(sort, {"dateFrom": 1});
+    try{
+        const query = {
+          $or: [
+            {"dateFrom":  { $regex: new RegExp( target, "ig")}},
+            {"dateTo":  { $regex: new RegExp( target, "ig")}},
+          ]
+        };
+      const options: PaginateOptions = {
+        sort: sortDiggest,
+        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
+        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10),
+        select: "dateFrom dateTo"
+      };
+
+      const liquidations: PaginateResult<ILiquidation> = await Liquidation.paginate(query, options);
+      console.log(liquidations);
+      return res.status(200).json(liquidations);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+  
+  new = async (req: Request, res: Response): Promise<Response<ILiquidation>> => { 
     const { fromDate, toDate, employeeSearch } = req.query;
     try{
       const fromDateMoment = moment(fromDate, "DD_MM_YYYY").startOf('day');
       const toDateMoment = moment(toDate, "DD_MM_YYYY").endOf('day');
+      
+      let liquidation: ILiquidation | null = await Liquidation.findOne({dateFrom: fromDateMoment.format("DD-MM-YYYY"), dateTo: toDateMoment.format("DD-MM-YYYY")});
+
+      if(liquidation){
+        return res.status(200).json(liquidation);
+      }
+
+      liquidation = {
+        dateFrom: fromDateMoment.format("DD-MM-YYYY"),
+        dateTo: toDateMoment.format("DD-MM-YYYY"),
+      } as ILiquidation;
+
       const fromDateFormat = fromDateMoment.format("YYYY-MM-DD");
       const toDateFormat = toDateMoment.format("YYYY-MM-DD");
       const periods: IPeriod[] | null = await Period.find(
@@ -44,62 +85,60 @@ class LiquidationController extends BaseController{
           }]
         });
       
-        const employees: IEmployee[] = await Employee.find({
-          $or: [
-            {"profile.firstName":  { $regex: new RegExp( employeeSearch, "ig")}},
-            {"profile.lastName":  { $regex: new RegExp( employeeSearch, "ig")}},
+      const employees: IEmployee[] = await Employee.find({
+        $or: [
+          {"profile.firstName":  { $regex: new RegExp( employeeSearch, "ig")}},
+          {"profile.lastName":  { $regex: new RegExp( employeeSearch, "ig")}},
+        ]
+      });
+
+      const queryByDate = {          
+        $or: [
+        {
+          $and: [
+            { dateFrom: { $lte: fromDateFormat } },
+            { dateTo: {$gte: fromDateFormat } }
           ]
-        });
+        }, {
+          $and: [
+            { dateFrom: { $lte: toDateFormat } },
+            { dateTo: {$gte: toDateFormat } }
+          ]
+        },{
+          $and: [
+            { dateFrom: { $gte: fromDateFormat } },
+            { dateTo: {$lte: toDateFormat } }
+          ]
+        }]
+      };
 
-        const queryByDate = {          
-          $or: [
+      const newsFeriados: INews[] = await News.find({
+        $and: [
+          queryByDate,
           {
-            $and: [
-              { dateFrom: { $lte: fromDateFormat } },
-              { dateTo: {$gte: fromDateFormat } }
-            ]
-          }, {
-            $and: [
-              { dateFrom: { $lte: toDateFormat } },
-              { dateTo: {$gte: toDateFormat } }
-            ]
-          },{
-            $and: [
-              { dateFrom: { $gte: fromDateFormat } },
-              { dateTo: {$lte: toDateFormat } }
-            ]
-          }]
-        };
-
-        const newsFeriados: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-            "concept.key": "FERIADO"
-          }],
-        });
+          "concept.key": "FERIADO"
+        }],
+      });
         
-        
-        
-        const newsCapacitation: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-              "concept.key": "CAPACITACIONES"
-          }],
-        }).select('capacitationHours concept dateFrom dateTo employeeMultiple');
-        
-        const newsLicSinSueldo: INews[] = await News.find({
-          $and: [
-            queryByDate,
-            {
-              "concept.key": "LIC_SIN_SUELDO"
-          }],
-        });
-        
+      const newsCapacitation: INews[] = await News.find({
+        $and: [
+          queryByDate,
+          {
+            "concept.key": "CAPACITACIONES"
+        }],
+      }).select('capacitationHours concept dateFrom dateTo employeeMultiple');
+      
+      const newsLicSinSueldo: INews[] = await News.find({
+        $and: [
+          queryByDate,
+          {
+            "concept.key": "LIC_SIN_SUELDO"
+        }],
+      });
+      
         // tenemos los periodos
         // 
-        const liquidations: ILiquidation[] = [];
+        const liquidations: IEmployeeLiquidation[] = [];
         await Promise.all(employees.map( async (employee: IEmployee, eIndex) => {
           let day_hours: number = 0;
           let night_hours: number = 0;
@@ -109,7 +148,7 @@ class LiquidationController extends BaseController{
           let total_suspension: number = 0;
           let total_lic_justificada: number = 0;
           let total_lic_jus_by_working_day: Array<string> = [];
-          let lic_justificada_group_by_reason: any = [
+          let lic_justificada_group_by_reason: ILicReason[] = [
             {
               key: "FALLEC_ESPOSA_HIJOS_PADRES",
               name: "Fallecimiento de esposa, hijos o padres",
@@ -530,17 +569,17 @@ class LiquidationController extends BaseController{
           arts: newsArt,
           presentismo: presentismo,
           embargos: newsEmbargos 
-        } as ILiquidation);
+        } as IEmployeeLiquidation);
       }));// map employee
-      
-      return res.status(200).json(liquidations);
+     
+      liquidation.employee_liquidation = liquidations;
+      await Liquidation.create(liquidation);
+      return res.status(200).json(liquidation);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
-  
-
 
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;

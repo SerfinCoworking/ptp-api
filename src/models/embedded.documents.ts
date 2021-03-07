@@ -1,5 +1,6 @@
 import { Schema } from 'mongoose';
 import { IProfile } from '../interfaces/embedded.documents.inteface';
+import { eventSchema } from './period.model';
 
 
 export const profileSchema: Schema<IProfile> = new Schema({
@@ -153,6 +154,44 @@ export const defaultSchedulesSchema = new Schema({
       required: '{PATH} is required'
     },
   }
+}, { _id : false });
+
+export const employeeLiqSchema = new Schema({
+  enrollment: { type: String },
+  firstName: { type: String },
+  lastName: { type: String },
+  avatar: { type: String },
+  dni: { type: String },
+  cuilPrefix: { type: String },
+  cuilDni: { type: String },
+  cuilSufix: { type: String },
+  function: { type: String },
+  employer: { type: String },
+  art: { type: String },
+}, { _id : true });
+
+
+export const licReasonSchema = new Schema({
+  key: { type: String },
+  name: { type: String },
+  assigned_hours: { type: Number },
+}, { _id : false });
+
+export const eventWithObjectiveSchema = new Schema({
+  event: eventSchema,
+  objectiveName: { type: String },
+  diffInHours: { type: Number },
+  dayHours: { type: Number },
+  nightHours: { type: Number },
+  feriadoHours: { type: Number },
+}, { _id : false });
+
+export const hoursByWeekSchema = new Schema({
+  from: { type: String},
+  to: { type: String},
+  totalHours: { type: Number },
+  totalExtraHours: { type: Number },
+  events: [eventWithObjectiveSchema],
 }, { _id : false });
 
 
