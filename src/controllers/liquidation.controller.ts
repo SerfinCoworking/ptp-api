@@ -35,7 +35,6 @@ class LiquidationController extends BaseController{
       };
 
       const liquidations: PaginateResult<ILiquidation> = await Liquidation.paginate(query, options);
-      console.log(liquidations);
       return res.status(200).json(liquidations);
     }catch(err){
       const handler = errorHandler(err);
@@ -584,8 +583,8 @@ class LiquidationController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      await Period.findByIdAndDelete(id);
-      return res.status(200).json("period deleted successfully");
+      await Liquidation.findByIdAndDelete(id);
+      return res.status(200).json("liquidation deleted successfully");
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
