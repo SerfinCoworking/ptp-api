@@ -13,7 +13,7 @@ export default interface IEmployee extends Document {
   _id: ObjectID;
   enrollment: string;
   rfid: number;
-  status:  Status;
+  status:  string;
   profile: IProfile;
   contact: IContact;
   createdAt?: Date;

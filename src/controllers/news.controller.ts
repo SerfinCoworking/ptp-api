@@ -2,11 +2,12 @@ import { Request, Response } from 'express';
 import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
 import News from '../models/news.model';
-import INews from '../interfaces/news.interface';
+import INews, { INewsConcept } from '../interfaces/news.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
 import moment from 'moment';
 import Employee from '../models/employee.model';
 import IEmployee, { Status } from '../interfaces/employee.interface';
+import NewsConcept from '../models/news-concept.model';
 
 class NewsController extends BaseController{
 
@@ -64,12 +65,15 @@ class NewsController extends BaseController{
   create = async (req: Request, res: Response): Promise<Response<INews>> => {
     const body: INews = await this.filterNullValues(req.body, this.permitBody());
     try{
+      const concept: INewsConcept | null = await NewsConcept.findOne({key: body.concept.key});
+      if(!concept) throw new GenericError({property:"NewsConcept", message: 'Concepto no encontrado', type: "RESOURCE_NOT_FOUND"});
+      body.concept = concept;
       const news: INews = await News.create(body);
       // "BAJA", update user data
-      if(news.concept.key == "BAJA"){
+      if(["BAJA", "ALTA", "ACTIVO"].includes(news.concept.key)){
         const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
         if(employee){
-          employee.status = Status.BAJA;
+          employee.status = news.concept.key;
           await employee.save();
         }
       }
