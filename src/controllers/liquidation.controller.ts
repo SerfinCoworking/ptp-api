@@ -537,7 +537,8 @@ class LiquidationController extends BaseController{
           cuilSufix: employee.profile.cuilSufix,
           function: employee.profile.function,
           employer: employee.profile.employer,
-          art: employee.profile.art
+          art: employee.profile.art,
+          status: employee.status
         } as IEmployeeLiq;
         liquidations.push({
           employee: employeeLiq,

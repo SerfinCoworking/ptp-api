@@ -17,6 +17,7 @@ export interface IEmployeeLiq extends Document {
   function: string;
   employer: string;
   art: string;
+  status: string;
 }
 
 export interface IEventWithObjective {
