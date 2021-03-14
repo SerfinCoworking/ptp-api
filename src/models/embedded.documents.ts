@@ -167,7 +167,7 @@ export const employeeLiqSchema = new Schema({
   cuilSufix: { type: String },
   function: { type: String },
   employer: { type: String },
-  art: { type: String },
+  art: { type: String }
 }, { _id : true });
 
 

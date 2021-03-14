@@ -40,7 +40,8 @@ export const liquidationSchema = new Schema({
     lic_no_justificadas: [newsSchema],
     arts: [newsSchema],
     presentismo: { type: Number },
-    embargos: [newsSchema]
+    embargos: [newsSchema],
+    currentStatus: newsSchema,
   }]
 },{
   timestamps: true

@@ -82,7 +82,7 @@ class LiquidationController extends BaseController{
               ]
             }]
           }]
-        });
+      });      
       
       const employees: IEmployee[] = await Employee.find({
         $or: [
@@ -294,6 +294,25 @@ class LiquidationController extends BaseController{
               }
             ],
           }).select('dateFrom dateTo employee._id concept reason import capacitationHours observation docLink');
+
+          const newsStatus: INews | null = await News.findOne({
+            $and: [
+              { 
+                $or: [
+                  {
+                    "concept.key": "BAJA"
+                  },{
+                    "concept.key": "ALTA"
+                  },{
+                    "concept.key": "ACTIVO"
+                  }
+                ]
+              },
+              {
+                "employee._id": employee._id
+              }
+            ]
+          }).sort( {"dateFrom": 1}).limit(1).select('dateFrom dateTo employee._id concept reason observation');
 
 
 
@@ -538,7 +557,6 @@ class LiquidationController extends BaseController{
           function: employee.profile.function,
           employer: employee.profile.employer,
           art: employee.profile.art,
-          status: employee.status
         } as IEmployeeLiq;
         liquidations.push({
           employee: employeeLiq,
@@ -568,10 +586,10 @@ class LiquidationController extends BaseController{
           lic_no_justificadas: newsLicNoJustificada,
           arts: newsArt,
           presentismo: presentismo,
-          embargos: newsEmbargos 
+          embargos: newsEmbargos,
+          currentStatus: newsStatus
         } as IEmployeeLiquidation);
       }));// map employee
-     
       liquidation.employee_liquidation = liquidations;
       await Liquidation.create(liquidation);
       return res.status(200).json(liquidation);
