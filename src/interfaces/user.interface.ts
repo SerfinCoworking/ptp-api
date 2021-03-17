@@ -1,4 +1,11 @@
 import { Document } from 'mongoose';
+export interface IUserRolePermission extends Document{
+    name: string;
+};
+export interface IUserRole extends Document{
+    name: string;
+    permissions: Array<IUserRolePermission>;
+};
 export default interface IUser extends Document{
     username: string;
     email: string;
@@ -10,7 +17,7 @@ export default interface IUser extends Document{
         avatar: string;        
     };
     password: string;
-    role:  string;
+    roles: Array<IUserRole>;
     refreshToken?: string;
     loginCount: number;
     createdAt?: Date;

@@ -10,7 +10,6 @@ import * as db from './database/dbconfig';
 import { env } from './config/config';
 
 import routes from './routes/routes';
-import { permissions } from './utils/permissions';
 
 class Server {
 
@@ -47,7 +46,6 @@ class Server {
     async start() {
         this.app.listen(this.app.get('port'), async () => {
             await db.initializeMongo();
-            await permissions.initialize();
             console.log(`Server on port ${this.app.get('port')}`);
         });
     }

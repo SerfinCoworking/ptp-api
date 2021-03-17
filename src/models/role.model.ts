@@ -14,21 +14,12 @@ export const roleSchema = new Schema({
     unique: true,
     required: '{PATH} is required'
   },
-  grants: [{
+  actions: [{
     _id: false,
-    resource: {
-      type: String,
-      required: '{PATH} is required'
-    },
-    action: {
-      type: String,
-      default: '*'
-    },
-    attributes: {
-      type: Array,
-      default: ["*"]
+    name: {
+      type: String
     }
-  }],
+  }]
 },{
   timestamps: true
 });

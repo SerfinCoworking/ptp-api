@@ -20,25 +20,25 @@ class PrivateRoutes{
     // });
 
     // employee
-    this.router.get('/employees', hasPermissionIn('list', 'employee'), EmployeeController.index);
+    this.router.get('/employees', hasPermissionIn('read', 'employee'), EmployeeController.index);
     this.router.post('/employees',hasPermissionIn('create', 'employee'), EmployeeController.create);
-    this.router.get('/employees/:id', hasPermissionIn('show', 'employee'), EmployeeController.show);
+    this.router.get('/employees/:id', hasPermissionIn('read', 'employee'), EmployeeController.show);
     this.router.patch('/employees/:id', hasPermissionIn('update', 'employee'), EmployeeController.update);
     this.router.delete('/employees/:id', hasPermissionIn('delete', 'employee'), EmployeeController.delete);
 
     // objective
-    this.router.get('/objectives', hasPermissionIn('list', 'objective'), ObjectiveController.index);
+    this.router.get('/objectives', hasPermissionIn('read', 'objective'), ObjectiveController.index);
     this.router.post('/objectives',hasPermissionIn('create', 'objective'), ObjectiveController.create);
-    this.router.get('/objectives/:id', hasPermissionIn('show', 'objective'), ObjectiveController.show);
+    this.router.get('/objectives/:id', hasPermissionIn('read', 'objective'), ObjectiveController.show);
     this.router.patch('/objectives/:id', hasPermissionIn('update', 'objective'), ObjectiveController.update);
     this.router.delete('/objectives/:id', hasPermissionIn('delete', 'objective'), ObjectiveController.delete);
     
     // schedule
-    this.router.get('/schedules', hasPermissionIn('list', 'schedule'), ScheduleController.index);
+    this.router.get('/schedules', hasPermissionIn('read', 'schedule'), ScheduleController.index);
     this.router.post('/schedules',hasPermissionIn('create', 'schedule'), ScheduleController.create);
     this.router.get('/schedules/new', hasPermissionIn('create', 'schedule'), ScheduleController.newRecord);
-    this.router.get('/schedule-by-id/:id',hasPermissionIn('show', 'schedule'), ScheduleController.getScheduleById);
-    this.router.get('/schedules/:id',hasPermissionIn('show', 'schedule'), ScheduleController.show);
+    this.router.get('/schedule-by-id/:id',hasPermissionIn('read', 'schedule'), ScheduleController.getScheduleById);
+    this.router.get('/schedules/:id',hasPermissionIn('read', 'schedule'), ScheduleController.show);
     
     // period
     this.router.get('/period/:id', hasPermissionIn('index', 'period'), PeriodController.getPeriod);
@@ -51,23 +51,23 @@ class PrivateRoutes{
     this.router.patch('/period/:id/update-signeds', hasPermissionIn('edit', 'period'), PeriodController.updateSigneds);
     this.router.delete('/period/:id', hasPermissionIn('delete', 'period'), PeriodController.delete);
     
-    this.router.get('/liquidations', hasPermissionIn('list', 'liquidation'), LiquidationController.index);
+    this.router.get('/liquidations', hasPermissionIn('read', 'liquidation'), LiquidationController.index);
     this.router.get('/liquidation', hasPermissionIn('create', 'liquidation'), LiquidationController.new);
     this.router.delete('/liquidation/:id', hasPermissionIn('delete', 'liquidation'), LiquidationController.delete);
 
     // news
-    this.router.get('/news', hasPermissionIn('list', 'news'), NewsController.index);
-    this.router.get('/news/new-record', hasPermissionIn('show', 'news'), NewsController.newRecord);
-    this.router.get('/news-by-date', hasPermissionIn('list', 'news'), NewsController.getNewsByDate);
+    this.router.get('/news', hasPermissionIn('read', 'news'), NewsController.index);
+    this.router.get('/news/new-record', hasPermissionIn('read', 'news'), NewsController.newRecord);
+    this.router.get('/news-by-date', hasPermissionIn('read', 'news'), NewsController.getNewsByDate);
     this.router.post('/news',hasPermissionIn('create', 'news'), NewsController.create);
-    this.router.get('/news/:id', hasPermissionIn('show', 'news'), NewsController.show);
+    this.router.get('/news/:id', hasPermissionIn('read', 'news'), NewsController.show);
     this.router.patch('/news/:id', hasPermissionIn('update', 'news'), NewsController.update);
     this.router.delete('/news/:id', hasPermissionIn('delete', 'news'), NewsController.delete);
     
     // newsConcept
-    this.router.get('/news-concept', hasPermissionIn('list', 'news-concept'), NewsConceptController.index);
+    this.router.get('/news-concept', hasPermissionIn('read', 'news-concept'), NewsConceptController.index);
     this.router.post('/news-concept',hasPermissionIn('create', 'news-concept'), NewsConceptController.create);
-    this.router.get('/news-concept/:id', hasPermissionIn('show', 'news-concept'), NewsConceptController.show);
+    this.router.get('/news-concept/:id', hasPermissionIn('read', 'news-concept'), NewsConceptController.show);
     this.router.patch('/news-concept/:id', hasPermissionIn('update', 'news-concept'), NewsConceptController.update);
     this.router.delete('/news-concept/:id', hasPermissionIn('delete', 'news-concept'), NewsConceptController.delete);
     

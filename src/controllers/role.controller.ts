@@ -61,7 +61,7 @@ class RoleController extends BaseController{
   }
 
   private permitBody(): Array<string>{
-    return ["name", "grants"];
+    return ["name", "actions"];
   }
 }
 

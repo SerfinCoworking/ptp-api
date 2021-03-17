@@ -46,23 +46,26 @@ class AuthController extends BaseController{
 
   public login = async (req: Request, res: Response): Promise<Response> => {
     const { _id } = req.user as IUser | IObjective;
+    let token;
+    let refreshToken;
+    let loginCount: number;
     try{
+      const user: IUser | null = await User.findOne({_id}).select("_id username roles loginCount");
 
-      let user: IUser | IObjective | null = await User.findOne({_id}).select("_id username role loginCount");
+      if(!user) {
+        const objective: IObjective | null = await Objective.findOne({_id}).select("_id name role loginCount"); // try to find by objective
+        if(!objective) throw new GenericError({property: 'User', message:'Debe iniciar sesión', tpye:'EXPECTATION_FAILED'});  
 
-      if(!user)  user = await Objective.findOne({_id}).select("_id name role loginCount"); // try to find by objective
-
-      if(!user) throw new GenericError({property: 'User', message:'Debe iniciar sesión', tpye:'EXPECTATION_FAILED'});
-
-      const token = this.signInToken(user._id, user.role);
-      const refreshToken = uuidv4();
-      const loginCount: number = ++user.loginCount;
-      if(user instanceof User){
+        token = this.signInToken(objective._id, objective.role);
+        refreshToken = uuidv4();
+        loginCount = ++objective.loginCount;
+        await Objective.updateOne({_id: objective._id}, {refreshToken: refreshToken, loginCount: loginCount});
+      }else{
+        token = this.signInToken(user._id, user.roles);
+        refreshToken = uuidv4();
+        loginCount = ++user.loginCount;
         await User.updateOne({_id: user._id}, {refreshToken: refreshToken, loginCount: loginCount});
-      }else if(user instanceof Objective){
-        await Objective.updateOne({_id: user._id}, {refreshToken: refreshToken, loginCount: loginCount});
       }
-
       return res.status(200).json({
         jwt: token,
         refreshToken: refreshToken
@@ -77,15 +80,15 @@ class AuthController extends BaseController{
   public logout = async (req: Request, res: Response): Promise<Response> => {
     const { refreshToken } = req.body;
     try{
-      let user: IUser | IObjective | null = await User.findOne({ refreshToken: refreshToken });
-      if(!user) user = await Objective.findOne({ refreshToken: refreshToken });
-
-      if(user instanceof User){
+      const user: IUser | null = await User.findOne({ refreshToken: refreshToken });
+      if(!user) {
+        const objective: IObjective | null = await Objective.findOne({ refreshToken: refreshToken });
+        if(objective) {
+          await Objective.updateOne({_id: objective._id},{refreshToken: ''});
+        }
+      }else{
         await User.updateOne({_id: user._id},{refreshToken: ''});
-      }else if(user instanceof Objective){
-        await Objective.updateOne({_id: user._id},{refreshToken: ''});
       }
-
 
       return res.status(204).json({message: 'Logged out successfully!'});
     }catch(err){
@@ -101,7 +104,7 @@ class AuthController extends BaseController{
 
       if(!user) throw new GenericError({property: 'User', message: 'Debe iniciar sesión', type: 'EXPECTATION_FAILED'});
 
-      const token = this.signInToken(user._id, user.role);
+      const token = this.signInToken(user._id, user.roles);
 
       // generate a new refresh_token
       const refreshToken = uuidv4();
@@ -135,11 +138,12 @@ class AuthController extends BaseController{
     return ["username", "email", "password", "role"];
   }
 
-  private signInToken = (userId: string, role: string): any => {
+  private signInToken = (userId: string, roles: any | string): any => {
+    console.log(roles, "DEBUG==========================>");
     const token = JWT.sign({
       iss: "ptp",
       sub: userId,
-      rl: role,
+      rl: roles,
       iat: new Date().getTime(),
       exp: new Date().setDate(new Date().getDate() + env.TOKEN_LIFETIME)
     }, (process.env.JWT_SECRET || env.JWT_SECRET), {

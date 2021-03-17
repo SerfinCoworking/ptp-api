@@ -9,19 +9,19 @@ class Permissions {
     this.access = new AccessControl();
   }
 
-  initialize = async () => {
-    const roles = await Role.find();
+  // initialize = async () => {
+  //   const roles = await Role.find();
 
-    const grantList: any = {};
-    await Promise.all( roles.map( async ( role: IRole) => {
-      grantList[`${role.name}`] = {grants: role.grants};
-    }));
+  //   const grantList: any = {};
+  //   await Promise.all( roles.map( async ( role: IRole) => {
+  //     grantList[`${role.name}`] = {grants: role.grants};
+  //   }));
 
-    let objList = JSON.parse(JSON.stringify(grantList)); //fix (lodash.clonedeep,is a dependencie of role-acl), https://github.com/Automattic/mongoose/issues/6507
+  //   let objList = JSON.parse(JSON.stringify(grantList)); //fix (lodash.clonedeep,is a dependencie of role-acl), https://github.com/Automattic/mongoose/issues/6507
 
-    this.access.setGrants(objList);
-    console.log("Grants initialized");
-  }
+  //   this.access.setGrants(objList);
+  //   console.log("Grants initialized");
+  // }
 
   getAccessControl(): AccessControl{
     return this.access;

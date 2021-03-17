@@ -23,9 +23,12 @@ const uniqueUsername = async function(username: string): Promise<boolean> {
   return !user;
 };
 
-const existInRole = async function(role: string): Promise<boolean> {
-  const roleDB: IRole | null = await Role.findOne({ name: role});
-  return !!roleDB;
+const existInRole = async function(roles: any): Promise<boolean> {
+  return await new Promise((resolve, reject) => {
+    return resolve(roles.find( async (role: any) => {
+      return !!await Role.findOne({ name: role.name});
+    }));
+  });
 };
 
 // Setter
@@ -79,10 +82,18 @@ export const userSchema = new Schema({
     minlength: [8, '{PATH} required a minimum of 8 characters'],
     set: encryptPassword
   },
-  role: {
-    type: String,
-    required: '{PATH} is required',
-  },
+  roles: [{
+    _id: false,
+    name:{
+      type: String,
+    },
+    permissions:[{
+      _id: false,
+      name: {
+        type: String
+      }
+    }]
+  }],
   refreshToken: {
     type: String,
   },
@@ -115,7 +126,7 @@ User.schema.method('isValidPassword', async function(thisUser: IUser, password: 
 User.schema.path('email').validate(uniqueEmail, 'El {PATH} está en uso');
 User.schema.path('email').validate(validEmail, 'El {PATH} debe ser de tipo email');
 User.schema.path('username').validate(uniqueUsername, 'Este {PATH} ya está en uso');
-User.schema.path('role').validate(existInRole, 'Este {PATH} es inválido');
+// User.schema.path('roles').validate(existInRole, 'Este {PATH} es inválido');
 
 
 export default User;

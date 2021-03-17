@@ -7,11 +7,6 @@ import { PaginateResult, PaginateOptions } from 'mongoose';
 
 class UserController extends BaseController{
 
-  // public index = async (req: Request, res: Response): Promise<Response> => {
-  //   const users: IUser[] = await User.find().select("username email role profile");
-  //   return res.status(200).json({users});
-  // }
-
   index = async (req: Request, res: Response): Promise<Response<IUser[]>> => {
     const { search, page, limit, sort } = req.query;
 
@@ -43,7 +38,7 @@ class UserController extends BaseController{
   show = async (req: Request, res: Response): Promise<Response<IUser>> => {
     try{
       const id: string = req.params.id;
-      const user: IUser | null = await User.findOne({_id: id}).select("username email role rfid profile");
+      const user: IUser | null = await User.findOne({_id: id}).select("username email roles rfid profile");
       if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(user);
     }catch(err){
@@ -55,6 +50,7 @@ class UserController extends BaseController{
   create = async (req: Request, res: Response): Promise<Response<IUser>> => {
     const body: IUser = await this.filterNullValues(req.body, this.permitBody());
     try{
+      console.log(body, "DEBUG");
       const user: IUser = await User.create(body);
       return res.status(200).json(user);
     }catch(err){
@@ -89,7 +85,7 @@ class UserController extends BaseController{
   }
 
   private permitBody(): Array<string>{
-    return ["username", "email", "password", "rfid", "role", "profile"];
+    return ["username", "email", "password", "rfid", "roles", "profile"];
   }
 }
 
