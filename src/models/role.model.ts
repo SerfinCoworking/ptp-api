@@ -1,5 +1,6 @@
-import { Schema, Model, model, Document } from 'mongoose';
+import { Schema, model, Document, PaginateModel } from 'mongoose';
 import IRole from '../interfaces/role.interface';
+import mongoosePaginate from 'mongoose-paginate';
 
 const uniqueRoleName = async function(name: string): Promise<boolean> {
   const _id = (this instanceof Document) ? undefined : this.getFilter()._id; //
@@ -25,7 +26,11 @@ export const roleSchema = new Schema({
 });
 
 // Model
-const Role: Model<IRole> = model<IRole>('Role', roleSchema);
+
+roleSchema.plugin(mongoosePaginate);
+
+// Model
+const Role: PaginateModel<IRole> = model<IRole>('Role', roleSchema);
 
 Role.schema.path('name').validate(uniqueRoleName, 'This role {PATH} is already registered');
 
