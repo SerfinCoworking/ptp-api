@@ -139,7 +139,6 @@ class AuthController extends BaseController{
   }
 
   private signInToken = (userId: string, roles: any | string): any => {
-    console.log(roles, "DEBUG==========================>");
     const token = JWT.sign({
       iss: "ptp",
       sub: userId,

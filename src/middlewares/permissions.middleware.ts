@@ -41,9 +41,11 @@ export const hasPermissionIn = (action: string, resource: string) => {
 }
 
 const checkByAction = async (roles: Array<IUserRole> | IUserRole, action: string, resource: string): Promise<boolean> => {
+  // Validamos primero que el rol y el permiso exista en DB
   const validateRole: boolean = await checkRoleAndPermission(resource, action);
   if(!validateRole) return validateRole;
   
+  // Luego validamos que el usuario tenga dichos permisos
   if(Array.isArray(roles)){
     const resourceFound: IUserRole | undefined = await new Promise((resolve, reject) => {
       resolve(roles.find((role: IUserRole) => {
