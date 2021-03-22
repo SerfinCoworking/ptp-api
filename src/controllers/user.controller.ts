@@ -50,7 +50,6 @@ class UserController extends BaseController{
   create = async (req: Request, res: Response): Promise<Response<IUser>> => {
     const body: IUser = await this.filterNullValues(req.body, this.permitBody());
     try{
-      console.log(body, "DEBUG");
       const user: IUser = await User.create(body);
       return res.status(200).json(user);
     }catch(err){
