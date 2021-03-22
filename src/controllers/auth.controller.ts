@@ -5,7 +5,7 @@ import { errorHandler, GenericError } from '../common/errors.handler';
 import { env } from '../config/config';
 import { v4 as uuidv4 } from 'uuid';
 
-import IUser from '../interfaces/user.interface';
+import IUser, { IUserRole } from '../interfaces/user.interface';
 import User from '../models/user.model';
 import IObjective from '../interfaces/objective.interface';
 import Objective from '../models/objective.model';
@@ -55,7 +55,6 @@ class AuthController extends BaseController{
       if(!user) {
         const objective: IObjective | null = await Objective.findOne({_id}).select("_id name role loginCount"); // try to find by objective
         if(!objective) throw new GenericError({property: 'User', message:'Debe iniciar sesión', tpye:'EXPECTATION_FAILED'});  
-
         token = this.signInToken(objective._id, objective.role);
         refreshToken = uuidv4();
         loginCount = ++objective.loginCount;
@@ -138,7 +137,7 @@ class AuthController extends BaseController{
     return ["username", "email", "password", "role"];
   }
 
-  private signInToken = (userId: string, roles: any | string): any => {
+  private signInToken = (userId: string, roles: Array<IUserRole> | IUserRole): any => {
     const token = JWT.sign({
       iss: "ptp",
       sub: userId,

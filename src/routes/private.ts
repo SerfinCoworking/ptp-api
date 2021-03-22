@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { hasPermissionIn } from '../middlewares/permissions.middleware';
+import RoleController from '../controllers/role.controller';
+import UserController from '../controllers/user.controller';
 import EmployeeController from '../controllers/employee.controller';
 import ObjectiveController from '../controllers/objective.controller';
 import ScheduleController from '../controllers/schedule.controller';
@@ -19,11 +21,27 @@ class PrivateRoutes{
     //   return res.status(200).json('test OK!');
     // });
 
+    // Role
+    this.router.get('/roles', hasPermissionIn('read', 'role'), RoleController.index);
+    this.router.post('/roles', hasPermissionIn('create', 'role'), RoleController.create);
+    this.router.get('/roles/:id', hasPermissionIn('read', 'role'), RoleController.show);
+    this.router.patch('/roles/:id', hasPermissionIn('update', 'role'), RoleController.update);
+    this.router.delete('/roles/:id', hasPermissionIn('delete', 'role'), RoleController.delete);
+
+    // user
+    this.router.get('/users', hasPermissionIn('read', 'user'), UserController.index);
+    this.router.post('/users', hasPermissionIn('create', 'user'), UserController.create);
+    this.router.get('/users/:id', hasPermissionIn('read', 'user'), UserController.show);
+    this.router.patch('/users/:id', hasPermissionIn('update', 'user'), UserController.update);
+    this.router.patch('/users/:id/permissions', hasPermissionIn('permission', 'user'), UserController.updatePermissions);
+    this.router.delete('/users/:id', hasPermissionIn('delete', 'user'), UserController.delete);
+
     // employee
     this.router.get('/employees', hasPermissionIn('read', 'employee'), EmployeeController.index);
     this.router.post('/employees', hasPermissionIn('create', 'employee'), EmployeeController.create);
     this.router.get('/employees/:id', hasPermissionIn('read', 'employee'), EmployeeController.show);
     this.router.patch('/employees/:id', hasPermissionIn('update', 'employee'), EmployeeController.update);
+    this.router.patch('/employees/:id/status', hasPermissionIn('status', 'employee'), EmployeeController.updateStatus);
     this.router.delete('/employees/:id', hasPermissionIn('delete', 'employee'), EmployeeController.delete);
 
     // objective

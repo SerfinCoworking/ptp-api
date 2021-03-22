@@ -4,6 +4,9 @@ import { BaseController } from './base.controllers.interface';
 import Employee from '../models/employee.model';
 import IEmployee from '../interfaces/employee.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
+import INews, { INewsConcept } from '../interfaces/news.interface';
+import NewsConcept from '../models/news-concept.model';
+import News from '../models/news.model';
 
 class EmployeeController extends BaseController{
 
@@ -77,6 +80,34 @@ class EmployeeController extends BaseController{
     try{
       await Employee.findByIdAndDelete(id);
       return res.status(200).json("Employee deleted successfully");
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
+  updateStatus = async (req: Request, res: Response): Promise<Response<INews>> => {
+    const body: INews = await this.filterNullValues(req.body, [ 
+    'dateFrom',
+    'dateTo',
+    'employee',
+    'concept',
+    'observation' ]);
+    const { id } = req.params;
+    try{
+      const concept: INewsConcept | null = await NewsConcept.findOne({key: body.concept.key});
+      if(!concept) throw new GenericError({property:"NewsConcept", message: 'Concepto no encontrado', type: "RESOURCE_NOT_FOUND"});
+      body.concept = concept;
+      const news: INews = await News.create(body);
+      // "BAJA", update user data
+      if(["BAJA", "ALTA", "ACTIVO"].includes(news.concept.key)){
+        const employee: IEmployee | null = await Employee.findOne({_id: id});
+        if(employee){
+          employee.status = news.concept.key;
+          await employee.save();
+        }
+      }
+      return res.status(200).json(news);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());

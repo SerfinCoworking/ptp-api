@@ -72,6 +72,20 @@ class UserController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
+  
+  updatePermissions = async (req: Request, res: Response): Promise<Response<IUser>> => {
+    const id: string = req.params.id;
+    const body = await this.filterNullValues(req.body, ['roles']);
+    try{
+      const opts: any = { runValidators: true, new: true };
+      const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts);
+      if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
+      return res.status(200).json(user);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
 
   public delete = async (req: Request, res: Response): Promise<Response> => {
     try{
@@ -85,7 +99,7 @@ class UserController extends BaseController{
   }
 
   private permitBody(): Array<string>{
-    return ["username", "email", "password", "rfid", "roles", "profile"];
+    return ["username", "email", "password", "rfid", "profile"];
   }
 }
 
