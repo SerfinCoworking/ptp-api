@@ -38,7 +38,7 @@ class ObjectiveController extends BaseController{
   create = async (req: Request, res: Response): Promise<Response<IObjective>> => {
     const body: IObjective = await this.filterNullValues(req.body, this.permitBody());
     try{
-      const objective: IObjective = await Objective.create({...body, role: 'objective'});
+      const objective: IObjective = await Objective.create({...body, role: {name: 'objective', permissions: [{name: 'signed'}]} });
       return res.status(200).json(objective);
     }catch(err){
       const handler = errorHandler(err);
