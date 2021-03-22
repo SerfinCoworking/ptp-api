@@ -90,7 +90,7 @@ class PrivateRoutes{
     this.router.delete('/news-concept/:id', hasPermissionIn('delete', 'news-concept'), NewsConceptController.delete);
     
     // signed
-    this.router.post('/signed', hasPermissionIn('signing', 'singed'), SignedController.signedEmployee);
+    this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.signedEmployee);
 
     return this.router;
   }

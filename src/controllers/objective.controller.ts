@@ -11,10 +11,10 @@ class ObjectiveController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<IObjective[]>> => {
     const { search, page, limit, sort } = req.query;
-
+    
     const target: string = await this.searchDigest(search);
     const sortDiggest: any = await this.sortDigest(sort, {"name": 1});
-
+    
     try{
       const query = {
         $or: [
@@ -22,11 +22,12 @@ class ObjectiveController extends BaseController{
         ]
       };
       const options: PaginateOptions = {
+        select: '_id name identifier address serviceType description avatar defaultSchedules createdAt updatedAt',
         sort: sortDiggest,
         page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
         limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
       };
-
+      
       const objective: PaginateResult<IObjective> = await Objective.paginate(query, options);
       return res.status(200).json(objective);
     }catch(err){
