@@ -84,11 +84,11 @@ class PrivateRoutes{
     this.router.delete('/news/:id', hasPermissionIn('delete', 'news'), NewsController.delete);
     
     // newsConcept
-    this.router.get('/news-concept', hasPermissionIn('read', 'news-concept'), NewsConceptController.index);
-    this.router.post('/news-concept',hasPermissionIn('create', 'news-concept'), NewsConceptController.create);
-    this.router.get('/news-concept/:id', hasPermissionIn('read', 'news-concept'), NewsConceptController.show);
-    this.router.patch('/news-concept/:id', hasPermissionIn('update', 'news-concept'), NewsConceptController.update);
-    this.router.delete('/news-concept/:id', hasPermissionIn('delete', 'news-concept'), NewsConceptController.delete);
+    this.router.get('/news-concept', hasPermissionIn('read', 'news'), NewsConceptController.index);
+    this.router.post('/news-concept',hasPermissionIn('create', 'news'), NewsConceptController.create);
+    this.router.get('/news-concept/:id', hasPermissionIn('read', 'news'), NewsConceptController.show);
+    this.router.patch('/news-concept/:id', hasPermissionIn('update', 'news'), NewsConceptController.update);
+    this.router.delete('/news-concept/:id', hasPermissionIn('delete', 'news'), NewsConceptController.delete);
     
     // signed
     this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.signedEmployee);
