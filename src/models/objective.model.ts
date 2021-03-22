@@ -65,8 +65,16 @@ export const objectiveSchema = new Schema({
     set: encryptPassword
   },
   role: {
-    type: String,
-    required: '{PATH} is required',
+    _id: false,
+    name:{
+      type: String,
+    },
+    permissions:[{
+      _id: false,
+      name: {
+        type: String
+      }
+    }]
   },
   refreshToken: {
     type: String,
@@ -95,5 +103,5 @@ Objective.schema.method('isValidPassword', async function(thisObjective: IObject
 });
 
 Objective.schema.path('identifier').validate(uniqueIdentifier, 'Este {PATH} ya está en uso');
-Objective.schema.path('role').validate(existInRole, 'Este {PATH} es inválido');
+// Objective.schema.path('role').validate(existInRole, 'Este {PATH} es inválido');
 export default Objective;
