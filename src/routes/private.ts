@@ -59,15 +59,15 @@ class PrivateRoutes{
     this.router.get('/schedules/:id',hasPermissionIn('read', 'schedule'), ScheduleController.show);
     
     // period
-    this.router.get('/period/:id', hasPermissionIn('read', 'period'), PeriodController.getPeriod);
-    this.router.get('/period/:id/print', hasPermissionIn('read', 'period'), PeriodController.getPrintPeriod);
-    this.router.post('/period', hasPermissionIn('create', 'period'), PeriodController.create);
-    this.router.patch('/period/:id', hasPermissionIn('update', 'period'), PeriodController.update);
+    this.router.get('/period/:id', hasPermissionIn('read', 'schedule'), PeriodController.getPeriod);
+    this.router.get('/period/:id/print', hasPermissionIn('read', 'schedule'), PeriodController.getPrintPeriod);
+    this.router.post('/period', hasPermissionIn('create', 'schedule'), PeriodController.create);
+    this.router.patch('/period/:id', hasPermissionIn('update', 'schedule'), PeriodController.update);
 
-    this.router.post('/period/:id/create-shifts',hasPermissionIn('create', 'period'), PeriodController.createShifts);
-    this.router.patch('/period/:id/update-shifts', hasPermissionIn('update', 'period'), PeriodController.updateShifts);
-    this.router.patch('/period/:id/update-signeds', hasPermissionIn('update', 'period'), PeriodController.updateSigneds);
-    this.router.delete('/period/:id', hasPermissionIn('delete', 'period'), PeriodController.delete);
+    this.router.post('/period/:id/create-shifts',hasPermissionIn('create', 'schedule'), PeriodController.createShifts);
+    this.router.patch('/period/:id/update-shifts', hasPermissionIn('update', 'schedule'), PeriodController.updateShifts);
+    this.router.patch('/period/:id/update-signeds', hasPermissionIn('update', 'schedule'), PeriodController.updateSigneds);
+    this.router.delete('/period/:id', hasPermissionIn('delete', 'schedule'), PeriodController.delete);
     
     this.router.get('/liquidations', hasPermissionIn('read', 'liquidation'), LiquidationController.index);
     this.router.get('/liquidation', hasPermissionIn('create', 'liquidation'), LiquidationController.new);
