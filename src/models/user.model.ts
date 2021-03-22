@@ -6,8 +6,9 @@ import IRole from '../interfaces/role.interface';
 import mongoosePaginate from 'mongoose-paginate';
 
 // Validation callbacks
-const uniqueEmail = async (email: string): Promise<boolean> => {
-  const user = await User.findOne({ email });
+const uniqueEmail = async function(email: string): Promise<boolean> {
+  const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
+  const user = await User.findOne({ email, _id: { $nin: [_id] } });
   return !user;
 };
 

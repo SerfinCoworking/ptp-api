@@ -31,7 +31,6 @@ export const hasPermissionIn = (action: string, resource: string) => {
 
         if(!canAccess) throw new GenericError({property: "Permissions", message: "You have not permissions to perform this action", type: "FORBIDDEN"})
         
-
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
