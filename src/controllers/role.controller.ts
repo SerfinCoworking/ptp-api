@@ -12,7 +12,7 @@ class RoleController extends BaseController{
     const { search, page, limit, sort } = req.query;
 
     const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"name": 1});
+    const sortDiggest: any = await this.sortDigest(sort, {"nameDisplay": 1});
 
     try{
       const query = {
@@ -23,7 +23,7 @@ class RoleController extends BaseController{
       const options: PaginateOptions = {
         sort: sortDiggest,
         page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 100)
       };
 
       const roles: PaginateResult<IRole> = await Role.paginate(query, options);
@@ -85,7 +85,7 @@ class RoleController extends BaseController{
   }
 
   private permitBody(): Array<string>{
-    return ["name", "actions"];
+    return ["name", "nameDisplay", "actions"];
   }
 }
 

@@ -15,9 +15,20 @@ export const roleSchema = new Schema({
     unique: true,
     required: '{PATH} is required'
   },
+  nameDisplay: {
+    type: String,
+    unique: true,
+    required: '{PATH} is required'
+  },
   actions: [{
     _id: false,
     name: {
+      type: String
+    },
+    nameDisplay: {
+      type: String
+    },
+    observation: {
       type: String
     }
   }]
