@@ -32,6 +32,7 @@ export default interface INews extends Document {
   capacitationHours?: number; // horas de capacitacion
   observation?: string;
   docLink?: string;
+  telegramDate?: string;
   worked_hours?: number; // horas trabajadas
   assigned_hours?: number; // horas que debieron ser trabajadas
   createdAt?: Date;

@@ -58,6 +58,9 @@ export const newsSchema = new Schema({
   }, 
   docLink:{
     type: String    
+  }, 
+  telegramDate:{
+    type: String    
   }
 },{
   timestamps: true
