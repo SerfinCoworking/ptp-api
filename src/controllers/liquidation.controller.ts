@@ -41,6 +41,18 @@ class LiquidationController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
+
+  show = async (req: Request, res: Response): Promise<Response<ILiquidation>> => {
+    const id: string = req.params.id;
+    try{
+      const liquidation: ILiquidation | null = await Liquidation.findOne({_id: id});
+      if(!liquidation) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrado', type: "RESOURCE_NOT_FOUND"});
+      return res.status(200).json(liquidation);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
   
   new = async (req: Request, res: Response): Promise<Response<ILiquidation>> => { 
     const { fromDate, toDate, employeeSearch } = req.query;

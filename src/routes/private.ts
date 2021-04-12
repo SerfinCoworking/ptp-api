@@ -72,6 +72,7 @@ class PrivateRoutes{
     // liquidation
     this.router.get('/liquidations', hasPermissionIn('read', 'liquidation'), LiquidationController.index);
     this.router.get('/liquidation', hasPermissionIn('create', 'liquidation'), LiquidationController.new);
+    this.router.get('/liquidation/:id', hasPermissionIn('read', 'liquidation'), LiquidationController.show);
     this.router.delete('/liquidation/:id', hasPermissionIn('delete', 'liquidation'), LiquidationController.delete);
 
     // news
