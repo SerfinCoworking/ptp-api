@@ -60,15 +60,15 @@ class LiquidationController extends BaseController{
       const fromDateMoment = moment(fromDate, "DD_MM_YYYY").startOf('day');
       const toDateMoment = moment(toDate, "DD_MM_YYYY").endOf('day');
       
-      let liquidation: ILiquidation | null = await Liquidation.findOne({dateFrom: fromDateMoment.format("DD-MM-YYYY"), dateTo: toDateMoment.format("DD-MM-YYYY")});
+      let liquidation: ILiquidation | null = await Liquidation.findOne({dateFrom: fromDateMoment.format("YYYY-MM-DD"), dateTo: toDateMoment.format("YYYY-MM-DD")});
 
       if(liquidation){
         return res.status(200).json(liquidation);
       }
 
       liquidation = {
-        dateFrom: fromDateMoment.format("DD-MM-YYYY"),
-        dateTo: toDateMoment.format("DD-MM-YYYY"),
+        dateFrom: fromDateMoment.format("YYYY-MM-DD"),
+        dateTo: toDateMoment.format("YYYY-MM-DD"),
       } as ILiquidation;
 
       const fromDateFormat = fromDateMoment.format("YYYY-MM-DD");
@@ -334,15 +334,16 @@ class LiquidationController extends BaseController{
             const toDate: moment.Moment = moment(counterDay).add(6, 'days').endOf('day');
             if(toDate.isAfter(toDateMoment)){
               weeks.push(<IHoursByWeek>{
-                from: fromDate,
-                to: toDateMoment.endOf('day'),
+                from: fromDate.format("YYYY-MM-DD"),
+                to: toDateMoment.endOf('day').format("YYYY-MM-DD"),
                 totalHours: 0,
                 totalExtraHours: 0,
                 events: []
               });
             }else{
-              weeks.push(<IHoursByWeek>{from: fromDate,
-                to: toDate,
+              weeks.push(<IHoursByWeek>{
+                from: fromDate.format("YYYY-MM-DD"),
+                to: toDate.format("YYYY-MM-DD"),
                 totalHours: 0,
                 totalExtraHours: 0,
                 events: []
@@ -472,8 +473,8 @@ class LiquidationController extends BaseController{
 
                     total_lic_justificada += total;
 
-                    if(!total_lic_jus_by_working_day.includes(realFrom.format("DD-MM-YYYY")) && isInDate){
-                      total_lic_jus_by_working_day.push(realFrom.format("DD-MM-YYYY"));
+                    if(!total_lic_jus_by_working_day.includes(realFrom.format("YYYY-MM-DD")) && isInDate){
+                      total_lic_jus_by_working_day.push(realFrom.format("YYYY-MM-DD"));
                     }
                   }));
                   
@@ -494,8 +495,8 @@ class LiquidationController extends BaseController{
                       (realTo.isBetween(art.dateFrom, art.dateTo, "date", "[]"))
                     )
 
-                    if(!total_art_by_working_day.includes(realFrom.format("DD-MM-YYYY")) && isInDate){
-                      total_art_by_working_day.push(realFrom.format("DD-MM-YYYY"));
+                    if(!total_art_by_working_day.includes(realFrom.format("YYYY-MM-DD")) && isInDate){
+                      total_art_by_working_day.push(realFrom.format("YYYY-MM-DD"));
                     }
                   }));    
                 }
@@ -603,8 +604,8 @@ class LiquidationController extends BaseController{
         } as IEmployeeLiquidation);
       }));// map employee
       liquidation.employee_liquidation = liquidations;
-      await Liquidation.create(liquidation);
-      return res.status(200).json(liquidation);
+      const liq: ILiquidation  = await Liquidation.create(liquidation);
+      return res.status(200).json(liq);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());

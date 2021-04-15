@@ -27,8 +27,8 @@ export interface IEventWithObjective {
   feriadoHours: number;
 }
 export interface IHoursByWeek {
-  from: moment.Moment;
-  to: moment.Moment;
+  from: string;
+  to: string;
   totalHours: number;
   totalExtraHours: number;
   events?: IEventWithObjective[];
