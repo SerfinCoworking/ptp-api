@@ -159,6 +159,8 @@ class LiquidationController extends BaseController{
           let total_suspension: number = 0;
           let total_lic_justificada: number = 0;
           let total_lic_jus_by_working_day: Array<string> = [];
+          let total_lic_no_jus_by_working_day: Array<string> = [];
+          let total_suspension_by_working_day: Array<string> = [];
           let lic_justificada_group_by_reason: ILicReason[] = [
             {
               key: "FALLEC_ESPOSA_HIJOS_PADRES",
@@ -442,8 +444,17 @@ class LiquidationController extends BaseController{
                   
                   await Promise.all(newsSuspension.map( async (suspension: INews, index: number) => {
                     const total: number = this.calculateHours(suspension, employee, realFrom, realTo);
+                    const isInDate: boolean = (
+                      (realFrom.isBetween(suspension.dateFrom, suspension.dateTo, "date", "[]") && realTo.isBetween(suspension.dateFrom, suspension.dateTo, "date", "[]")) ||
+                      (realFrom.isBetween(suspension.dateFrom, suspension.dateTo, "date", "[]")) ||
+                      (realTo.isBetween(suspension.dateFrom, suspension.dateTo, "date", "[]"))
+                    )
                     Object.assign(newsSuspension[index],{ worked_hours: ((suspension.worked_hours || 0) + total) });
                     total_suspension += total;
+
+                    if(!total_suspension_by_working_day.includes(realFrom.format("YYYY-MM-DD")) && isInDate){
+                      total_suspension_by_working_day.push(realFrom.format("YYYY-MM-DD"));
+                    }                   
                   }));
                     
                   // licencias justificadas
@@ -481,8 +492,17 @@ class LiquidationController extends BaseController{
                   // licencias no justificadas
                   await Promise.all(newsLicNoJustificada.map( async (lic_no_justificada: INews, index: number) => {
                     const total: number = this.calculateHours(lic_no_justificada, employee, realFrom, realTo);
+                    const isInDate: boolean = (
+                      (realFrom.isBetween(lic_no_justificada.dateFrom, lic_no_justificada.dateTo, "date", "[]") && realTo.isBetween(lic_no_justificada.dateFrom, lic_no_justificada.dateTo, "date", "[]")) ||
+                      (realFrom.isBetween(lic_no_justificada.dateFrom, lic_no_justificada.dateTo, "date", "[]")) ||
+                      (realTo.isBetween(lic_no_justificada.dateFrom, lic_no_justificada.dateTo, "date", "[]"))
+                    )
                     Object.assign(newsLicNoJustificada[index],{ worked_hours: ((lic_no_justificada.worked_hours || 0) + total) });
                     total_lic_no_justificada += total;
+
+                    if(!total_lic_no_jus_by_working_day.includes(realFrom.format("YYYY-MM-DD")) && isInDate){
+                      total_lic_no_jus_by_working_day.push(realFrom.format("YYYY-MM-DD"));
+                    }
                   }));
                   
                   await Promise.all(newsArt.map( async (art: INews, index: number) => {
@@ -581,6 +601,8 @@ class LiquidationController extends BaseController{
           total_suspension_in_hours: total_suspension,
           total_lic_justificada_in_hours: total_lic_justificada,
           total_lic_jus_by_working_day: total_lic_jus_by_working_day,
+          total_lic_no_jus_by_working_day: total_lic_no_jus_by_working_day,
+          total_suspension_by_working_day: total_suspension_by_working_day,
           total_lic_no_justificada_in_hours: total_lic_no_justificada,
           total_vaciones_in_days: total_days_vaciones,
           total_adelanto_import: total_adelanto,

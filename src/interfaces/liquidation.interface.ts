@@ -49,6 +49,8 @@ export interface IEmployeeLiquidation {
   total_suspension_in_hours: number;
   total_lic_justificada_in_hours: number;
   total_lic_jus_by_working_day: Array<string>;
+  total_lic_no_jus_by_working_day: Array<string>;
+  total_suspension_by_working_day: Array<string>;
   total_lic_no_justificada_in_hours: number;
   total_vaciones_in_days: number;
   total_adelanto_import: number;
