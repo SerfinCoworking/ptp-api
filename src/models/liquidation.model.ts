@@ -43,6 +43,10 @@ export const liquidationSchema = new Schema({
     arts: [newsSchema],
     presentismo: { type: Number },
     embargos: [newsSchema],
+    feriados: [newsSchema],
+    adelantos: [newsSchema],
+    vacaciones: [newsSchema],
+    licSinSueldo: [newsSchema],
     currentStatus: newsSchema,
   }]
 },{

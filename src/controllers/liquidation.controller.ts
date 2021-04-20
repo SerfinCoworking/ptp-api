@@ -123,13 +123,7 @@ class LiquidationController extends BaseController{
         }]
       };
 
-      const newsFeriados: INews[] = await News.find({
-        $and: [
-          queryByDate,
-          {
-          "concept.key": "FERIADO"
-        }],
-      });
+      
         
       const newsCapacitation: INews[] = await News.find({
         $and: [
@@ -137,15 +131,9 @@ class LiquidationController extends BaseController{
           {
             "concept.key": "CAPACITACIONES"
         }],
-      }).select('capacitationHours concept dateFrom dateTo employeeMultiple');
+      }).select('capacitationHours concept dateFrom dateTo employeeMultiple observation');
       
-      const newsLicSinSueldo: INews[] = await News.find({
-        $and: [
-          queryByDate,
-          {
-            "concept.key": "LIC_SIN_SUELDO"
-        }],
-      });
+      
       
         // tenemos los periodos
         // 
@@ -213,6 +201,30 @@ class LiquidationController extends BaseController{
           
           const counterDay: moment.Moment = moment(fromDateMoment);
           const weeks: IHoursByWeek[] = [];
+
+          const newsFeriados: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+              "concept.key": "FERIADO"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ]
+          });
+
+          const newsLicSinSueldo: INews[] = await News.find({
+            $and: [
+              queryByDate,
+              {
+                "concept.key": "LIC_SIN_SUELDO"
+              },
+              {
+                "employee._id": employee._id
+              }
+            ],
+          });
 
           const newsSuspension: INews[] = await News.find({
             $and: [
@@ -622,6 +634,10 @@ class LiquidationController extends BaseController{
           arts: newsArt,
           presentismo: presentismo,
           embargos: newsEmbargos,
+          feriados: newsFeriados,
+          adelantos: newsAdelanto,
+          vacaciones: newsVacaciones,
+          licSinSueldo: newsLicSinSueldo,
           currentStatus: newsStatus
         } as IEmployeeLiquidation);
       }));// map employee
