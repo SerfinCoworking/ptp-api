@@ -96,9 +96,9 @@ class PrivateRoutes{
     this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.signedEmployee);
 
     // movement
-    this.router.get('/movement', hasPermissionIn('read', 'movement'), MovementController.index);
-    this.router.post('/movement',hasPermissionIn('create', 'movement'), MovementController.create);
-    this.router.get('/movement/:id', hasPermissionIn('read', 'movement'), MovementController.show);
+    this.router.get('/movements', hasPermissionIn('read', 'movement'), MovementController.index);
+    this.router.post('/movements',hasPermissionIn('create', 'movement'), MovementController.create);
+    this.router.get('/movements/:id', hasPermissionIn('read', 'movement'), MovementController.show);
 
     return this.router;
   }
