@@ -194,4 +194,19 @@ export const hoursByWeekSchema = new Schema({
   events: [eventWithObjectiveSchema],
 }, { _id : false });
 
+export const userMovementSchema = new Schema({
+  username: { type: String},
+  profile: {
+    firstName: {
+      type: String
+    },
+    lastName: {
+      type: String
+    },
+    dni: {
+      type: String
+    }
+  }
+});
+
 

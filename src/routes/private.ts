@@ -10,6 +10,7 @@ import NewsConceptController from '../controllers/newsConcept.controller';
 import NewsController from '../controllers/news.controller';
 import SignedController from '../controllers/signed.controller';
 import LiquidationController from '../controllers/liquidation.controller';
+import MovementController from '../controllers/movement.controller';
 
 class PrivateRoutes{
 
@@ -93,6 +94,11 @@ class PrivateRoutes{
     
     // signed
     this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.signedEmployee);
+
+    // movement
+    this.router.get('/movement', hasPermissionIn('read', 'movement'), MovementController.index);
+    this.router.post('/movement',hasPermissionIn('create', 'movement'), MovementController.create);
+    this.router.get('/movement/:id', hasPermissionIn('read', 'movement'), MovementController.show);
 
     return this.router;
   }
