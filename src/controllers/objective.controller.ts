@@ -5,6 +5,7 @@ import Objective from '../models/objective.model';
 import IObjective from '../interfaces/objective.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
 import _ from 'lodash';
+import { createMovement } from '../utils/helpers';
 
 
 class ObjectiveController extends BaseController{
@@ -40,6 +41,7 @@ class ObjectiveController extends BaseController{
     const body: IObjective = await this.filterNullValues(req.body, this.permitBody());
     try{
       const objective: IObjective = await Objective.create({...body, role: {name: 'objective', permissions: [{name: 'signed'}]} });
+      await createMovement(req.user, 'creó', 'objetivo', `${objective.name}`);
       return res.status(200).json(objective);
     }catch(err){
       const handler = errorHandler(err);
@@ -67,8 +69,8 @@ class ObjectiveController extends BaseController{
     try{
       const opts: any = { runValidators: true, new: true, context: 'query' };
       const objective: IObjective | null = await Objective.findOneAndUpdate({_id: id}, body, opts);
-
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'editó', 'objetivo', `${objective.name}`);
       return res.status(200).json(objective);
     }catch(err){
       const handler = errorHandler(err);
@@ -79,7 +81,9 @@ class ObjectiveController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      await Objective.findByIdAndDelete(id);
+      const objective: IObjective | null = await Objective.findOneAndDelete({_id: id});
+      if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'eliminó', 'objetivo', `${objective.name}`);
       return res.status(200).json("Objective deleted successfully");
     }catch(err){
       const handler = errorHandler(err);

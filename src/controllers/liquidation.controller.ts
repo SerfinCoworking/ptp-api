@@ -12,6 +12,7 @@ import News from '../models/news.model';
 import INews, { _ljReasons } from '../interfaces/news.interface';
 import Liquidation from '../models/liquidation.model';
 import { PaginateOptions, PaginateResult } from 'mongoose';
+import { createMovement } from '../utils/helpers';
 
 class LiquidationController extends BaseController{
 
@@ -643,6 +644,7 @@ class LiquidationController extends BaseController{
       }));// map employee
       liquidation.employee_liquidation = liquidations;
       const liq: ILiquidation  = await Liquidation.create(liquidation);
+      await createMovement(req.user, 'creó', 'liquidación', `Liquidación desde ${fromDateMoment.format("DD_MM_YYYY")} hasta ${toDateMoment.format("DD_MM_YYYY")}`);
       return res.status(200).json(liq);
     }catch(err){
       const handler = errorHandler(err);
@@ -653,7 +655,11 @@ class LiquidationController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      await Liquidation.findByIdAndDelete(id);
+      const liq: ILiquidation | null = await Liquidation.findOneAndDelete({_id: id});
+      if(!liq) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrado', type: "RESOURCE_NOT_FOUND"});
+      const fromDateMoment = moment(liq.dateFrom);
+      const toDateMoment = moment(liq.dateTo);
+      await createMovement(req.user, 'eliminó', 'liquidación', `Liquidación desde ${fromDateMoment.format("DD_MM_YYYY")} hasta ${toDateMoment.format("DD_MM_YYYY")}`);
       return res.status(200).json("liquidation deleted successfully");
     }catch(err){
       const handler = errorHandler(err);

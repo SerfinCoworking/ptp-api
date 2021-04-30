@@ -11,6 +11,7 @@ import { ObjectId } from 'mongodb';
 import moment from 'moment';
 import IObjective from '../interfaces/objective.interface';
 import Objective from '../models/objective.model';
+import { createMovement } from '../utils/helpers';
 
 class PeriodController extends BaseController{
 
@@ -28,7 +29,8 @@ class PeriodController extends BaseController{
       if(isInvalid){
         throw new GenericError({property:"Period", message: "No se pudo crear el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas.", type: "BAD_REQUEST"});
       }
-
+      
+      await createMovement(req.user, 'creó', 'período', `Período del objetivo: ${period.objective.name} desde ${body.fromDate} hasta ${body.toDate}`);
       await period.save();
       const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
       return res.status(200).json({period: periodDigest, shifts});
@@ -66,8 +68,8 @@ class PeriodController extends BaseController{
           }));
         })
       );
-
       await period.save();
+      await createMovement(req.user, 'editó', 'período', `Período del objetivo: ${period.objective.name} desde ${body.fromDate} hasta ${body.toDate}`);
       const {periodDigest, shifts } = await this.getPeriodWithEmployees(period);
       return res.status(200).json({period: periodDigest, shifts});
     }catch(err){
@@ -131,7 +133,7 @@ class PeriodController extends BaseController{
       const period: IPeriod | null = await Period.findOne({_id: id});
   
       if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
-  
+      
       const periodDigest = await this.getDaysObject(period);
       return res.status(200).json(periodDigest);
     }catch(err){
@@ -187,6 +189,7 @@ class PeriodController extends BaseController{
               period.shifts[sIndex].events[eIndex].checkoutDescription = typeof(body.eventsDay[1].checkoutDescription) !== 'undefined' ? body.eventsDay[1].checkoutDescription : '';
             }
           }));
+          await createMovement(req.user, 'editó', 'fichado', `de ${shift.employee.firstName} ${shift.employee.lastName}`);
         }
       }));
 
@@ -201,7 +204,10 @@ class PeriodController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      await Period.findByIdAndDelete(id);
+      const period: IPeriod | null = await Period.findOneAndDelete({_id: id});
+      if(!period) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'eliminó', 'período', `Período del objetivo: ${period.objective.name} desde ${period.fromDate} hasta ${period.toDate}`);
+
       return res.status(200).json("period deleted successfully");
     }catch(err){
       const handler = errorHandler(err);

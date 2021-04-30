@@ -4,6 +4,7 @@ import { errorHandler, GenericError } from '../common/errors.handler';
 import User from '../models/user.model';
 import IUser from '../interfaces/user.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
+import { createMovement } from '../utils/helpers';
 
 class UserController extends BaseController{
 
@@ -51,6 +52,7 @@ class UserController extends BaseController{
     const body: IUser = await this.filterNullValues(req.body, this.permitBody());
     try{
       const user: IUser = await User.create(body);
+      await createMovement(req.user, 'creó', 'usuario', `${user.username}`);
       return res.status(200).json(user);
     }catch(err){
       const handler = errorHandler(err);
@@ -65,6 +67,7 @@ class UserController extends BaseController{
       const opts: any = { runValidators: true, new: true, context: 'query' };
       const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts);
       if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'editó', 'usuario', `${user.username}`);
       return res.status(200).json(user);
     }catch(err){
       const handler = errorHandler(err);
@@ -79,6 +82,8 @@ class UserController extends BaseController{
       const opts: any = { runValidators: true, new: true };
       const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts);
       if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'actualizó permisos', 'usuario', `${user.username}`);
+
       return res.status(200).json(user);
     }catch(err){
       const handler = errorHandler(err);
@@ -89,7 +94,10 @@ class UserController extends BaseController{
   public delete = async (req: Request, res: Response): Promise<Response> => {
     try{
       const { id } = req.params;
-      await User.findByIdAndDelete(id);
+      const user: IUser | null = await User.findOneAndDelete({_id: id});
+      if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'eliminó', 'usuario', `${user.username}`);
+
       return res.status(200).json('User deleted successfully');
     }catch(err){
       const handler = errorHandler(err);

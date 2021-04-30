@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Document } from 'mongoose';
 export interface IUserRolePermission extends Document{
     name: string;

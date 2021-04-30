@@ -59,7 +59,7 @@ class MovementController extends BaseController{
   }
 
   private permitBody = (permit?: string[] | undefined): Array<string> => {
-    return permit ? permit : [ 'user', 'action', 'resource'];
+    return permit ? permit : [ 'user', 'action', 'resource', 'target'];
   }
 }
 

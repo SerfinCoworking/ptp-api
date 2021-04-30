@@ -12,6 +12,9 @@ export const movementSchema = new Schema({
   },
   resource: {
     type: String
+  },
+  target: {
+    type: String
   }
 },{
   timestamps: true

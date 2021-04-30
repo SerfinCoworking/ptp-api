@@ -7,6 +7,8 @@ import { PaginateResult, PaginateOptions } from 'mongoose';
 import INews, { INewsConcept } from '../interfaces/news.interface';
 import NewsConcept from '../models/news-concept.model';
 import News from '../models/news.model';
+import { createMovement } from '../utils/helpers';
+import IUser from '../interfaces/user.interface';
 
 class EmployeeController extends BaseController{
 
@@ -42,6 +44,7 @@ class EmployeeController extends BaseController{
     const body: IEmployee = await this.filterNullValues(req.body, this.permitBody());
     try{
       const employee: IEmployee = await Employee.create(body);
+      await createMovement(req.user, 'creó', 'empleado', `${employee.profile.lastName} ${employee.profile.lastName}`);
       return res.status(200).json(employee);
     }catch(err){
       const handler = errorHandler(err);
@@ -68,6 +71,7 @@ class EmployeeController extends BaseController{
       const opts: any = { runValidators: true, new: true };
       const employee: IEmployee | null = await Employee.findOneAndUpdate({_id: id}, body, opts);
       if(!employee) throw new GenericError({property:"Employee", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'editó', 'empleado', `${employee.profile.lastName} ${employee.profile.lastName}`);
       return res.status(200).json(employee);
     }catch(err){
       const handler = errorHandler(err);
@@ -78,7 +82,10 @@ class EmployeeController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      await Employee.findByIdAndDelete(id);
+      const employee: IEmployee | null = await Employee.findOneAndDelete({_id: id});
+      if(!employee) throw new GenericError({property:"Employee", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'eliminó', 'empleado', `${employee.profile.lastName} ${employee.profile.lastName}`);
+      
       return res.status(200).json("Employee deleted successfully");
     }catch(err){
       const handler = errorHandler(err);
@@ -105,6 +112,7 @@ class EmployeeController extends BaseController{
         if(employee){
           employee.status = news.concept.key;
           await employee.save();
+          await createMovement(req.user, 'cambió de estado', 'empleado', `${employee.profile.lastName} ${employee.profile.lastName} a ${news.concept.name}`);
         }
       }
       return res.status(200).json(news);

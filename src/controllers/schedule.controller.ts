@@ -9,6 +9,7 @@ import moment from 'moment';
 import * as _ from 'lodash';
 import Objective from '../models/objective.model';
 import IObjective from '../interfaces/objective.interface';
+import { createMovement } from '../utils/helpers';
 
 class ScheduleController extends BaseController{
 
@@ -106,6 +107,7 @@ class ScheduleController extends BaseController{
       }else{
         periods = await Period.find({"objective._id": objective._id}).select('objective fromDate toDate').sort({toDate: -1}).limit(10);
       }
+      await createMovement(req.user, 'creó', 'agenda', `Agenda al objetivo: ${schedule.objective.name}`);
       return res.status(200).json({schedule, objective, periods});
     }catch(err){
       const handler = errorHandler(err);

@@ -8,6 +8,7 @@ import moment from 'moment';
 import Employee from '../models/employee.model';
 import IEmployee, { Status } from '../interfaces/employee.interface';
 import NewsConcept from '../models/news-concept.model';
+import { createMovement } from '../utils/helpers';
 
 class NewsController extends BaseController{
 
@@ -77,6 +78,7 @@ class NewsController extends BaseController{
           await employee.save();
         }
       }
+      await createMovement(req.user, 'creó', 'novedad', `${news.concept.name}`);
       return res.status(200).json(news);
     }catch(err){
       const handler = errorHandler(err);
@@ -124,7 +126,7 @@ class NewsController extends BaseController{
           await employee.save();
         }
       }
-
+      await createMovement(req.user, 'editó', 'novedad', `de ${newsOld.concept.name} a ${news.concept.name}`);
       return res.status(200).json(news);
     }catch(err){
       const handler = errorHandler(err);
@@ -135,7 +137,7 @@ class NewsController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      const news: INews | null = await News.findOne({_id: id});
+      const news: INews | null = await News.findOneAndDelete({_id: id});
       if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
       // "BAJA", update user data
       if(news.concept.key == "BAJA"){
@@ -146,7 +148,8 @@ class NewsController extends BaseController{
           await employee.save();
         }
       }
-      await News.findByIdAndDelete(news._id);
+      if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'eliminó', 'novedad', `${news.concept.name}`);
       return res.status(200).json("news deleted successfully");
     }catch(err){
       const handler = errorHandler(err);

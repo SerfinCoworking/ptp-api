@@ -15,6 +15,7 @@ export default interface IMovement extends Document{
     user: IUserMovement;
     action: string;
     resource: string;
+    target: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
