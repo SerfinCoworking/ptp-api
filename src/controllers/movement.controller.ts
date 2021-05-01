@@ -13,7 +13,7 @@ class MovementController extends BaseController{
     const { search, page, limit, sort } = req.query;
     
     const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"resource": 1});
+    const sortDiggest: any = await this.sortDigest(sort, {"createdAt": -1});
     
     try{
       const query = {
