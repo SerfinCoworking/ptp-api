@@ -11,6 +11,7 @@ import NewsController from '../controllers/news.controller';
 import SignedController from '../controllers/signed.controller';
 import LiquidationController from '../controllers/liquidation.controller';
 import MovementController from '../controllers/movement.controller';
+import TemplateController from '../controllers/template.controller';
 
 class PrivateRoutes{
 
@@ -91,6 +92,13 @@ class PrivateRoutes{
     this.router.get('/news-concept/:id', hasPermissionIn('read', 'news'), NewsConceptController.show);
     this.router.patch('/news-concept/:id', hasPermissionIn('update', 'news'), NewsConceptController.update);
     this.router.delete('/news-concept/:id', hasPermissionIn('delete', 'news'), NewsConceptController.delete);
+    
+    // template
+    this.router.get('/templates', hasPermissionIn('read', 'news'), TemplateController.index);
+    this.router.post('/template',hasPermissionIn('create', 'news'), TemplateController.create);
+    this.router.get('/template/:id', hasPermissionIn('read', 'news'), TemplateController.show);
+    this.router.patch('/template/:id', hasPermissionIn('update', 'news'), TemplateController.update);
+    this.router.delete('/template/:id', hasPermissionIn('delete', 'news'), TemplateController.delete);
     
     // signed
     this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.signedEmployee);
