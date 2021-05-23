@@ -264,7 +264,12 @@ class LiquidationController extends BaseController{
           
           const newsVacaciones: INews[] = await News.find({
             $and: [
-              queryByDate,
+              {
+                $and: [
+                  { dateFrom: { $gte: fromDateFormat } },
+                  { dateFrom: { $lte: toDateFormat } }
+                ]
+              },
               {
                 "concept.key": "VACACIONES"
               },
@@ -545,7 +550,9 @@ class LiquidationController extends BaseController{
 
         // vacaciones
         await Promise.all(newsVacaciones.map( async (vaciones: INews) => {
-          total_days_vaciones += this.calculateDays(vaciones, employee, fromDateMoment, toDateMoment);
+          const newsDateFrom: moment.Moment = moment(vaciones.dateFrom).startOf('day');
+          const newsDateTo: moment.Moment = moment(vaciones.dateTo).endOf('day').add(1, 'day');
+          total_days_vaciones += newsDateTo.diff(newsDateFrom, 'days');
         }));
         
         // licencia sin goce de sueldo
