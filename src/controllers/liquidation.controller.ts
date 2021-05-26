@@ -56,7 +56,7 @@ class LiquidationController extends BaseController{
   }
   
   new = async (req: Request, res: Response): Promise<Response<ILiquidation>> => { 
-    const { fromDate, toDate, employeeSearch } = req.query;
+    const { fromDate, toDate, employeeSearch, employeeId } = req.query;
     try{
       const fromDateMoment = moment(fromDate, "DD_MM_YYYY").startOf('day');
       const toDateMoment = moment(toDate, "DD_MM_YYYY").endOf('day');
@@ -96,14 +96,18 @@ class LiquidationController extends BaseController{
             }]
           }]
       });      
-      
       const employees: IEmployee[] = await Employee.find({
-        $or: [
-          {"profile.firstName":  { $regex: new RegExp( employeeSearch, "ig")}},
-          {"profile.lastName":  { $regex: new RegExp( employeeSearch, "ig")}},
+        $and: [
+          {
+            $or: [
+            {"profile.firstName":  { $regex: new RegExp( employeeSearch, "ig")}},
+            {"profile.lastName":  { $regex: new RegExp( employeeSearch, "ig")}},
+            ]
+          },
+          {_id: { $in : employeeId}}
         ]
       });
-
+      
       const queryByDate = {          
         $or: [
         {
