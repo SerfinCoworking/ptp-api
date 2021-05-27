@@ -104,7 +104,7 @@ class LiquidationController extends BaseController{
             {"profile.lastName":  { $regex: new RegExp( employeeSearch, "ig")}},
             ]
           },
-          {_id: { $in : employeeId}}
+          {_id: { $in : employeeId.split("_")}}
         ]
       });
       
