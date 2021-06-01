@@ -18,7 +18,10 @@ class MovementController extends BaseController{
     try{
       const query = {
         $or: [
-          {"resource":  { $regex: new RegExp( target, "ig")}}
+          {"resource":  { $regex: new RegExp( target, "ig")}},
+          {"action":  { $regex: new RegExp( target, "ig")}},
+          {"user.profile.firstName":  { $regex: new RegExp( target, "ig")}},
+          {"user.profile.lastName":  { $regex: new RegExp( target, "ig")}}
         ]
       };
       const options: PaginateOptions = {
