@@ -394,27 +394,18 @@ class LiquidationController extends BaseController{
                   // Calculo de total horas diurnas y nocturnas
                   // Nocturno 21 - 6
                   // Diurno 6 - 21
-                  const startDayFrom = moment(event.fromDatetime).set("hours", 6).set("minutes", 0);
+                  // const startDayFrom = moment(event.fromDatetime).set("hours", 6).set("minutes", 0);
                   const endDayFrom = moment(event.fromDatetime).set("hours", 21).set("minutes", 0);
-
-
-                  // si ambas horas se encuentra entre las horas diurnas
-                  if(realFrom.isBetween(startDayFrom, endDayFrom, 'hour', '[]') && realTo.isBetween(startDayFrom, endDayFrom, 'hour', '[]')){
-                    dayHours = realTo.diff(realFrom, 'hours');
-
-                  }else if(realFrom.isBetween(startDayFrom, endDayFrom, 'hour', '[]')){
-                    // sino from se encuentra entre las horas diurnas
-                    dayHours = endDayFrom.diff(realFrom, 'hours');
-                    nightHours = realTo.diff(endDayFrom, 'hours');
-                    
-                  }else if(realTo.isBetween(startDayFrom, endDayFrom, 'hour', '[]')){
-                    // sino to se encuentra entre las horas diurnas
-                    dayHours = startDayFrom.diff(realFrom, 'hours');
-                    nightHours = realTo.diff(startDayFrom, 'hours');
-                    
+                  
+                  const totalHs: number = realTo.diff(realFrom, 'hours');
+                  dayHours = endDayFrom.diff(realFrom, 'hours');
+                  const maxNightHs: number = 9 // constante (21hs - 06hs)
+                  nightHours = maxNightHs;
+                  const diff: number = totalHs - (dayHours + maxNightHs);
+                  if(diff > 0){
+                    dayHours += diff;
                   }else{
-                    nightHours = realTo.diff(realFrom, 'hours');
-                    // sino ninguna se encuentra entre las horas diurnas
+                    nightHours = maxNightHs + diff;
                   }
 
                   day_hours += dayHours;
