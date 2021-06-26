@@ -384,29 +384,95 @@ class LiquidationController extends BaseController{
                   const realFrom = moment(event.fromDatetime);
                   const realTo = moment(event.toDatetime);
                   
+                  const maxHsDiurnas = 15;
+                  const maxHsNocturnas = 9;
+
                   let  dayHours: number = 0;
                   let  nightHours: number = 0;
-
                   // Obetencion de viatiacos:
                   // 1 por cada guardia registrada
                   total_viaticos++; 
-                  
+
+                  const totalHs: number = realTo.diff(realFrom, 'hours');
+
                   // Calculo de total horas diurnas y nocturnas
                   // Nocturno 21 - 6
                   // Diurno 6 - 21
-                  // const startDayFrom = moment(event.fromDatetime).set("hours", 6).set("minutes", 0);
-                  const endDayFrom = moment(event.fromDatetime).set("hours", 21).set("minutes", 0);
-                  
-                  const totalHs: number = realTo.diff(realFrom, 'hours');
-                  dayHours = endDayFrom.diff(realFrom, 'hours');
-                  const maxNightHs: number = 9 // constante (21hs - 06hs)
-                  nightHours = maxNightHs;
-                  const diff: number = totalHs - (dayHours + maxNightHs);
-                  if(diff > 0){
-                    dayHours += diff;
+                  const startFD_f = moment(event.fromDatetime).set("hours", 6).set("minutes", 0);
+                  const endFD_f = moment(event.fromDatetime).set("hours", 21).set("minutes", 0);
+                  const isSameDate = realFrom.isSame(realTo, 'day');
+
+                  const startFD_t = moment(event.toDatetime).set("hours", 6).set("minutes", 0);
+                  const endFD_t = moment(event.toDatetime).set("hours", 21).set("minutes", 0);
+                 
+                  // mi fecha de inicio comienza  dentro de la franja diurna
+                  if (realFrom.isBetween(startFD_f, endFD_f, undefined, '[)')){
+                    // si es el mismo dia
+                    if(isSameDate){
+                      dayHours = endFD_f.diff(realFrom, 'hours');
+                      if(dayHours < totalHs){
+                        // CASO: franja diurna / frnaja nocturna
+                        nightHours = totalHs - dayHours;
+                      }else{
+                        // CASO: franja diurna / franja diurna
+                        dayHours = realTo.diff(realFrom, 'hours');
+                      }
+                    }else{
+                      // son diferentes dias
+                      dayHours = endFD_f.diff(realFrom, 'hours');
+                      if((totalHs - dayHours) > maxHsNocturnas){
+                        // CASO: fraja diurna / franja nocturna / franja diurna
+                        nightHours =  maxHsNocturnas;
+                        dayHours +=  (totalHs - dayHours) - maxHsNocturnas;
+                      }else{
+                        // CASO: franja diurna / franja nocturna
+                        nightHours = totalHs - dayHours;
+                      }
+                    }
                   }else{
-                    nightHours = maxNightHs + diff;
+                    // mi fecha de inicio comienza dentro de la franja nocturna
+                    // mismo dia
+                    if(isSameDate){
+                      nightHours = startFD_f.diff(realFrom, 'hours');
+                      if(nightHours < totalHs){
+                        if((totalHs - nightHours) > maxHsDiurnas){
+                          // CASO: franja nocturna / franja diurna / franja nocturna
+                          dayHours =  maxHsDiurnas;
+                          nightHours +=  (totalHs - nightHours) - maxHsDiurnas;
+                        }else{
+                          // CASO: franja nocturna / franja diurna
+                          dayHours =  totalHs - nightHours;
+                        }
+                      }else{
+                        // CASO: franja nocturna / franja nocturna
+                        nightHours = realTo.diff(realFrom, 'hours');
+                      }
+                    }else{
+
+                      nightHours = startFD_t.diff(realFrom, 'hours');
+
+                      if((totalHs - nightHours) > maxHsDiurnas){
+                        // CASO: franja nocturna / franja diurna / franja nocturna
+                        dayHours =  maxHsDiurnas;
+                        nightHours +=  (totalHs - nightHours) - maxHsDiurnas;
+                      }else{
+                        // CASO: franja noctuna / franja diurna
+                        dayHours =  totalHs - nightHours;
+                      }
+                    }
                   }
+
+
+
+                  // return res.status(200).json({
+                  //   employee: `${employee.profile.firstName} ${employee.profile.lastName}`,
+                  //   totalHs,
+                  //   nightHours,
+                  //   dayHours
+                  // });
+
+
+          
 
                   day_hours += dayHours;
                   night_hours += nightHours;
