@@ -502,16 +502,12 @@ class LiquidationController extends BaseController{
                   await Promise.all(weeks.map( async (week: any) => {
                     let total: number = 0;
 
-                    if(realFrom.isBetween(week.from, week.to, "date", "[]") && realTo.isBetween(week.from, week.to, "date", "[]")){
+                    // el calculo se hace por la guardia completa, no corta entre semanas
+                    // si la guardia comienza en el ultimo dia de la semana, y termina en el comienzo
+                    // de la siguiente, se toma el total de horas de la guardia como parte de la semana
+                    // en la que inicio su guardia
+                    if(realFrom.isBetween(week.from, week.to, "date", "[]")){
                       total += realTo.diff(realFrom, 'hours');
-                      week.events.push(eventWithObjective);
-                    }else if(realFrom.isBetween(week.from, week.to, "date", "[]")){
-                      // se agregar 1 dia mas ya que los minutos no los toma como hora
-                      const newsEnd = moment(week.to).add(1, 'minute');
-                      week.events.push(eventWithObjective);
-                      total += newsEnd.diff(realFrom, 'hours');
-                    }else if(realTo.isBetween(week.from, week.to, "date", "[]")){
-                      total += realTo.diff(week.from, 'hours');
                       week.events.push(eventWithObjective);
                     }
                     week.totalHours += total;
