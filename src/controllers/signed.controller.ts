@@ -22,25 +22,53 @@ class SignedController extends BaseController{
       // const today = moment("2020-09-27 22:35:00");
       // const today = moment("2020-09-27 22:55:00");
       // const today = moment("2020-09-27 23:55:00");
+      
+      const yesterday = moment().subtract(1, 'day');
       const employee: IEmployee | null = await Employee.findOne({ rfid: rfid}).select('_id');
       if(!employee) throw new GenericError({property:"Empleado", message: 'No se ha encontrado un empleado válido para esta tarjeta.', type: "RESOURCE_NOT_FOUND"});
-            
-      const period: IPeriod | null = await Period.findOne({"objective._id": objectiveId, 
-        "fromDate": { 
-          $lte: today.format("YYYY-MM-DD")
-        }, 
-        "toDate": {
-          $gte: today.format("YYYY-MM-DD")
-        }
+
+      // Query, busca si el dia anterior tiene (como en el caso del día 26),
+      // Si el empleado que ficha tiene un evento asignado sin cerrar
+      // Es decir si debe hacer el checkout el día 26 de cada mes, 
+      // De lo contrario solo busca que exista un periodo que comprenda 
+      // la fecha actual.
+      const period: IPeriod | null = await Period.findOne({ 
+        "objective._id": objectiveId,
+        $or: [
+          {
+            "fromDate": {
+              $lte: yesterday.format('YYYY-MM-DD')
+            },
+            "toDate": {
+              $gte: yesterday.format("YYYY-MM-DD")
+            },
+            "shifts.employee._id": employee._id,
+            "shifts.events.toDatetime": {
+              $gte:  today.startOf('day').toDate(),
+              $lt:  today.endOf('day').toDate()
+            },
+            "shifts.events.checkout": {
+              $exists: false
+            }
+          },
+          {
+            "fromDate": { 
+              $lte: today.format("YYYY-MM-DD")
+            }, 
+            "toDate": {
+              $gte: today.format("YYYY-MM-DD")
+            }
+          }
+        ]
+        
       });
 
       if(!period) throw new GenericError({property:"Periodo", message: 'No se ha encontrado una agenda válida para este objetivo.', type: "RESOURCE_NOT_FOUND"});
-      
+
       await Promise.all( period.shifts.map( async (shift: IShift, index: number) => {
         if (shift.employee._id.equals(employee._id)){
           const content: ISigned[] = await this.getAllEventsByDate(today, shift);    
 
-          const firstEvent:  IEvent = await this.getFirstClosestEvent(today, shift.events);
           if(content.length){
             let firstContent:  ISigned = await this.getClosestEvent(today, content);
             firstContent = await this.setSigend(today, firstContent);
@@ -53,10 +81,9 @@ class SignedController extends BaseController{
           }
         }
       }));
-      return res.status(200).json("period found successfully");
+      return res.status(200).json({msg: "period found successfully", period});
     }catch(err){
       const handler = errorHandler(err);
-      console.log(handler.getErrors());
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
