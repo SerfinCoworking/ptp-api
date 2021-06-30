@@ -14,6 +14,7 @@ class SignedController extends BaseController{
     const { objectiveId, rfid } = req.body;
     try{
       const today = moment();
+      const todayFixEndOfPeriod = moment();
       // const today = moment("2020-09-27 20:50:00");
       // const today = moment("2020-09-27 20:59:00");
       // const today = moment("2020-09-27 21:59:00");
@@ -22,8 +23,8 @@ class SignedController extends BaseController{
       // const today = moment("2020-09-27 22:35:00");
       // const today = moment("2020-09-27 22:55:00");
       // const today = moment("2020-09-27 23:55:00");
-      
       const yesterday = moment().subtract(1, 'day');
+      
       const employee: IEmployee | null = await Employee.findOne({ rfid: rfid}).select('_id');
       if(!employee) throw new GenericError({property:"Empleado", message: 'No se ha encontrado un empleado válido para esta tarjeta.', type: "RESOURCE_NOT_FOUND"});
 
@@ -44,8 +45,8 @@ class SignedController extends BaseController{
             },
             "shifts.employee._id": employee._id,
             "shifts.events.toDatetime": {
-              $gte:  today.startOf('day').toDate(),
-              $lt:  today.endOf('day').toDate()
+              $gte:  todayFixEndOfPeriod.startOf('day').toDate(),
+              $lt:  todayFixEndOfPeriod.endOf('day').toDate()
             },
             "shifts.events.checkout": {
               $exists: false
