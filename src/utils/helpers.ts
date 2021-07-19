@@ -1,3 +1,4 @@
+import moment from "moment";
 import { GenericError } from "../common/errors.handler";
 import IMovement from "../interfaces/movement.interface";
 import IUser from "../interfaces/user.interface";
@@ -40,4 +41,110 @@ export const createMovement = async (userReq: any, action: string, resource: str
     resource,
     target
   });   
+}
+
+export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetimeTo: moment.Moment, dayStripeStartHs: number = 6, nightStripeStartHs: number = 21): Promise<{dayHours:number; nightHours: number}> => {
+  const maxHsDiurnas = nightStripeStartHs - dayStripeStartHs;
+  const maxHsNocturnas = (24 - nightStripeStartHs) + dayStripeStartHs;
+  
+  // Calculo de total horas diurnas y nocturnas
+  // Nocturno 21 - 6
+  // Diurno 6 - 21
+  const startFD_f = moment(datetimeFrom).set("hours", dayStripeStartHs).set("minutes", 0);
+  const endFD_f = moment(datetimeFrom).set("hours", nightStripeStartHs).set("minutes", 0);
+  const isSameDate = datetimeFrom.isSame(datetimeTo, 'day');
+  const startFD_t = moment(datetimeTo).set("hours", dayStripeStartHs).set("minutes", 0);
+  const totalHs: number = datetimeTo.diff(datetimeFrom, 'hours');
+  let  dayHours: number = 0;
+  let  nightHours: number = 0;
+  if(totalHs > 0){
+    // mi fecha de inicio comienza  dentro de la franja diurna
+    if (datetimeFrom.isBetween(startFD_f, endFD_f, undefined, '[)')){
+      // si es el mismo dia
+      if(isSameDate){
+        dayHours = endFD_f.diff(datetimeFrom, 'hours');
+        if(dayHours < totalHs){
+          // CASO: franja diurna / frnaja nocturna
+          nightHours = totalHs - dayHours;
+        }else{
+          // CASO: franja diurna / franja diurna
+          dayHours = datetimeTo.diff(datetimeFrom, 'hours');
+        }
+      }else{
+        // son diferentes dias
+        dayHours = endFD_f.diff(datetimeFrom, 'hours');
+        if((totalHs - dayHours) > maxHsNocturnas){
+          // CASO: fraja diurna / franja nocturna / franja diurna
+          nightHours =  maxHsNocturnas;
+          dayHours +=  (totalHs - dayHours) - maxHsNocturnas;
+        }else{
+          // CASO: franja diurna / franja nocturna
+          nightHours = totalHs - dayHours;
+        }
+        
+      }
+    }else{
+      // mi fecha de inicio comienza dentro de la franja nocturna
+      // mismo dia
+      if(isSameDate){
+        nightHours = startFD_f.diff(datetimeFrom, 'hours');
+        if(nightHours < totalHs){
+          if((totalHs - nightHours) > maxHsDiurnas){
+            // CASO: franja nocturna / franja diurna / franja nocturna
+            dayHours =  maxHsDiurnas;
+            nightHours +=  (totalHs - nightHours) - maxHsDiurnas;
+          }else{
+            // CASO: franja nocturna / franja diurna
+            dayHours =  totalHs - nightHours;
+          }
+        }else{
+          // CASO: franja nocturna / franja nocturna
+          nightHours = datetimeTo.diff(datetimeFrom, 'hours');
+        }
+      }else{
+
+        nightHours = startFD_t.diff(datetimeFrom, 'hours');
+
+        if((totalHs - nightHours) > maxHsDiurnas){
+          // CASO: franja nocturna / franja diurna / franja nocturna
+          dayHours =  maxHsDiurnas;
+          nightHours +=  (totalHs - nightHours) - maxHsDiurnas;
+        }else{
+          // CASO: franja noctuna / franja diurna
+          dayHours =  totalHs - nightHours;
+        }
+      }
+    }
+  }
+  return {dayHours, nightHours};
+}
+
+
+export const buildWeeks = (counterDay: moment.Moment, dateTo: moment.Moment, template: any): any => {
+  const weeks: any = [];
+  while(counterDay.isBefore(dateTo, 'date')){
+    
+    const fromDate: moment.Moment = moment(counterDay).startOf('day');
+    const toDate: moment.Moment = moment(counterDay).add(6, 'days').endOf('day');
+    if(toDate.isAfter(dateTo)){
+      weeks.push({
+        from: fromDate.format("YYYY-MM-DD"),
+        to: dateTo.endOf('day').format("YYYY-MM-DD"),
+        totalHours: 0,
+        totalExtraHours: 0,
+        events: []
+      });
+    }else{
+      weeks.push({
+        from: fromDate.format("YYYY-MM-DD"),
+        to: toDate.format("YYYY-MM-DD"),
+        totalHours: 0,
+        totalExtraHours: 0,
+        events: []
+      });
+    }
+
+    counterDay.add(7, 'days');
+  }
+  return weeks;
 }
