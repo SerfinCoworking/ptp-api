@@ -58,6 +58,7 @@ export interface CalculatedHours {
   total: number;
   by: {day: number; night: number};
   extras: number;
+  by_week: IHoursByWeek[];
 }
 
 export interface ILiquidatedEmployee {
@@ -73,7 +74,6 @@ export interface ILiquidatedEmployee {
       art: number;
       capacitaciones: number;
     };
-    by_week: IHoursByWeek[];
   },
   hours_by_working_day: {
 

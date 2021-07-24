@@ -1,6 +1,7 @@
 import moment from "moment";
+import { ObjectId } from "mongodb";
 import { GenericError } from "../common/errors.handler";
-import IMovement from "../interfaces/movement.interface";
+import { IEvent, IPeriod } from "../interfaces/schedule.interface";
 import IUser from "../interfaces/user.interface";
 import Movement from "../models/movement.model";
 import User from "../models/user.model";
@@ -120,8 +121,9 @@ export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetime
 }
 
 
-export const buildWeeks = (counterDay: moment.Moment, dateTo: moment.Moment, template: any): any => {
+export const buildWeeks = (dateFrom: moment.Moment, dateTo: moment.Moment, template: any): any => {
   const weeks: any = [];
+  const counterDay = moment(dateFrom);
   while(counterDay.isBefore(dateTo, 'date')){
     
     const fromDate: moment.Moment = moment(counterDay).startOf('day');
@@ -147,4 +149,22 @@ export const buildWeeks = (counterDay: moment.Moment, dateTo: moment.Moment, tem
     counterDay.add(7, 'days');
   }
   return weeks;
+}
+
+export const extractEvents = async (periods: IPeriod[]): Promise<IEvent[]> => {
+  const events: IEvent[] = [];
+  await Promise.all(periods.map( async (period: IPeriod) => {
+    await Promise.all(period.shifts.map( async (shift) => {
+      events.push(...shift.events);
+    }));
+  }));
+  return events;
+}
+
+export const sum = async (arr: any[], byField: string): Promise<number> => {
+  let total: number = 0;
+  await Promise.all(arr.map(( item: any) => {
+    total += item[byField] || 0;
+  }));
+  return total;
 }

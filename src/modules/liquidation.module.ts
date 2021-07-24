@@ -72,7 +72,7 @@ export default class LiquidationModule {
       liquidatedEmployees: []
     } as unknown as ILiquidation;
     liq.liquidatedEmployees = await Promise.all(employees.map( async (employee: IEmployee) => {
-      const period = new PeriodModule(range, this.periods, this.weeksBuilder);
+      const period = new PeriodModule(range, this.periods, JSON.parse(JSON.stringify(this.weeksBuilder)), JSON.parse(JSON.stringify(this.weeksBuilder)));
       return await period.liquidateEmployee(employee);
     }));
     return liq;
