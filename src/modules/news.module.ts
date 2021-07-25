@@ -37,7 +37,7 @@ export default class NewsModule {
     adelanto_import: 0,
     plus_responsabilidad: 0,
     lic_sin_sueldo_by_days: 0,
-    presentismo: 0,
+    presentismo: 100,
     embargo: 0
   };
 
@@ -82,7 +82,7 @@ export default class NewsModule {
   private currentStatus = {};
   private liquidated_news = {};
 
-  constructor(private events: IEvent[], range: PeriodRangeDate){
+  constructor(private events: IEvent[], private range: PeriodRangeDate){
     this.queryByDate = {          
       $or: [
       {
@@ -104,16 +104,25 @@ export default class NewsModule {
     };
   }
 
-  async buildNews(employee: IEmployee): Promise<{news: any, hours_by_working_day: any, total_of_news: any}>{
+  async buildNews(employee: IEmployee): Promise<{news: any, hours_by_working_day: any, total_of_news: any, lic_justificada_group_by_reason: any, liquidated_news: any}>{
     const feriados = await this.scopeFeriado(this.queryByDate);
     const suspensiones = await this.scopeNews(this.queryByDate, employee._id, "SUSPENSION");
     const lic_justificadas = await this.scopeNews(this.queryByDate, employee._id, "LIC_JUSTIFICADA");
     const lic_no_justificadas = await this.scopeNews(this.queryByDate, employee._id, "LIC_NO_JUSTIFICADA");
     const arts = await this.scopeNews(this.queryByDate, employee._id, "ART");
     const capacitaciones = await this.scopeNews(this.queryByDate, employee._id, "CAPACITACIONES");
-    const vacaciones = await this.scopeNews(this.queryByDate, employee._id, "VACACIONES");
+
+    
+    const queryVacaciones = {
+      $and: [
+        { dateFrom: { $gte: this.range.dateFrom.format("YYYY-MM-DD") } },
+        { dateFrom: { $lte: this.range.dateTo.format("YYYY-MM-DD") } }
+      ]};
+
+    const vacaciones = await this.scopeNews(queryVacaciones, employee._id, "VACACIONES");
     const adelantos = await this.scopeNews(this.queryByDate, employee._id, "ADELANTO");
     const plus_responsabilidad = await this.scopeNews(this.queryByDate, employee._id, "PLUS_RESPONSABILIDAD");
+    const embargos = await this.scopeNews(this.queryByDate, employee._id, "EMBARGO");
 
     const totalFeriado = await this.calcHours(this.events, feriados, 'minute');
     this.news.feriado = Math.round(totalFeriado / 60);
@@ -133,12 +142,28 @@ export default class NewsModule {
     this.total_of_news.plus_responsabilidad = await sum(plus_responsabilidad, 'import');
     this.total_of_news.vaciones_by_days = await this.sumDays(vacaciones);
     this.total_of_news.lic_sin_sueldo_by_days = await this.sumDays(plus_responsabilidad);
-    //   presentismo: 0,
     //   embargo: 0
+    await this.calcGroupByReason(lic_justificadas, this.events);
+    this.total_viaticos = await this.calcViaticos(this.events);
+    this.total_of_news.presentismo = await this.calcPresentimos(suspensiones.length, lic_no_justificadas.length, this.hours_by_working_day.lic_justificadas.length);
+    this.total_of_news.embargo = embargos.length;
+    this.liquidated_news = await this.getNews([
+      ...suspensiones,
+      ...lic_justificadas,
+      ...lic_no_justificadas,
+      ...arts,
+      ...capacitaciones,
+      ...vacaciones,
+      ...adelantos,
+      ...plus_responsabilidad,
+      ...embargos
+    ]);
     const result = {
       news: this.news,
       hours_by_working_day: this.hours_by_working_day,
-      total_of_news: this.total_of_news
+      total_of_news: this.total_of_news,
+      lic_justificada_group_by_reason: this.lic_justificada_group_by_reason,
+      liquidated_news: this.liquidated_news
     }
     return  result;
   }
@@ -238,11 +263,48 @@ export default class NewsModule {
     return total;
   }
 
-  private async calcGroupByReason(){
-    // await Promise.all(lic_justificada_group_by_reason.map(( reason: any) => {
-    //   if(lic_justificada.reason?.key.toUpperCase() === reason.key){ 
-    //     reason.assigned_hours += total;
-    //   }
-    // }));
+  private async calcGroupByReason(news: INews[], events: IEvent[]): Promise<void>{
+    await Promise.all(news.map( async ( news: INews) => {
+      await Promise.all(events.map( async (event: IEvent) => {
+        const from = moment(event.fromDatetime);
+        const to = moment(event.toDatetime);
+        const isInDate: boolean = (
+          (from.isBetween(news.dateFrom, news.dateTo, "date", "[]") && 
+          to.isBetween(news.dateFrom, news.dateTo, "date", "[]")) ||
+          (from.isBetween(news.dateFrom, news.dateTo, "date", "[]")) ||
+          (to.isBetween(news.dateFrom, news.dateTo, "date", "[]"))
+        )
+        if(isInDate){
+          await Promise.all(this.lic_justificada_group_by_reason.map((item) => {
+            if(item.key.toUpperCase() === news.reason?.key.toUpperCase()){ 
+              item.assigned_hours += to.diff(from, 'hours'); 
+            }
+          }));
+        }
+      }));
+    }));
+  }
+
+  private async calcViaticos(events: IEvent[]): Promise<number>{
+    const signedEvents: IEvent[] = events.filter(event => event.checkin);
+    return signedEvents.length
+  }
+
+  private async calcPresentimos(totalSuspension: number, totalLicNoJus: number, totalLicJusJornadas: number): Promise<number>{
+    let total: number = 100;
+    if(totalSuspension > 0 || totalLicNoJus > 0){
+      total = 0;
+    }else if(totalLicJusJornadas > 1){
+      if(totalLicJusJornadas == 2 ) total -= 10;
+      if(totalLicJusJornadas == 3 ) total -= 20;
+      if(totalLicJusJornadas > 3 ) total -= 30;
+    }
+    return total;
+  }
+
+  private async getNews(news: INews[]): Promise<ObjectId[]> {
+    return await Promise.all(news.map((news: INews) => {
+      return news._id;
+    }));
   }
 }

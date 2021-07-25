@@ -44,7 +44,7 @@ export const createMovement = async (userReq: any, action: string, resource: str
   });   
 }
 
-export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetimeTo: moment.Moment, dayStripeStartHs: number = 6, nightStripeStartHs: number = 21): Promise<{dayHours:number; nightHours: number}> => {
+export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetimeTo: moment.Moment, unit: moment.unitOfTime.Diff = 'hours', dayStripeStartHs: number = 6, nightStripeStartHs: number = 21): Promise<{dayHours:number; nightHours: number}> => {
   const maxHsDiurnas = nightStripeStartHs - dayStripeStartHs;
   const maxHsNocturnas = (24 - nightStripeStartHs) + dayStripeStartHs;
   
@@ -55,7 +55,7 @@ export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetime
   const endFD_f = moment(datetimeFrom).set("hours", nightStripeStartHs).set("minutes", 0);
   const isSameDate = datetimeFrom.isSame(datetimeTo, 'day');
   const startFD_t = moment(datetimeTo).set("hours", dayStripeStartHs).set("minutes", 0);
-  const totalHs: number = datetimeTo.diff(datetimeFrom, 'hours');
+  const totalHs: number = datetimeTo.diff(datetimeFrom, unit);
   let  dayHours: number = 0;
   let  nightHours: number = 0;
   if(totalHs > 0){
@@ -63,17 +63,17 @@ export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetime
     if (datetimeFrom.isBetween(startFD_f, endFD_f, undefined, '[)')){
       // si es el mismo dia
       if(isSameDate){
-        dayHours = endFD_f.diff(datetimeFrom, 'hours');
+        dayHours = endFD_f.diff(datetimeFrom, unit);
         if(dayHours < totalHs){
           // CASO: franja diurna / frnaja nocturna
           nightHours = totalHs - dayHours;
         }else{
           // CASO: franja diurna / franja diurna
-          dayHours = datetimeTo.diff(datetimeFrom, 'hours');
+          dayHours = datetimeTo.diff(datetimeFrom, unit);
         }
       }else{
         // son diferentes dias
-        dayHours = endFD_f.diff(datetimeFrom, 'hours');
+        dayHours = endFD_f.diff(datetimeFrom, unit);
         if((totalHs - dayHours) > maxHsNocturnas){
           // CASO: fraja diurna / franja nocturna / franja diurna
           nightHours =  maxHsNocturnas;
@@ -88,7 +88,7 @@ export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetime
       // mi fecha de inicio comienza dentro de la franja nocturna
       // mismo dia
       if(isSameDate){
-        nightHours = startFD_f.diff(datetimeFrom, 'hours');
+        nightHours = startFD_f.diff(datetimeFrom, unit);
         if(nightHours < totalHs){
           if((totalHs - nightHours) > maxHsDiurnas){
             // CASO: franja nocturna / franja diurna / franja nocturna
@@ -100,11 +100,11 @@ export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetime
           }
         }else{
           // CASO: franja nocturna / franja nocturna
-          nightHours = datetimeTo.diff(datetimeFrom, 'hours');
+          nightHours = datetimeTo.diff(datetimeFrom, unit);
         }
       }else{
 
-        nightHours = startFD_t.diff(datetimeFrom, 'hours');
+        nightHours = startFD_t.diff(datetimeFrom, unit);
 
         if((totalHs - nightHours) > maxHsDiurnas){
           // CASO: franja nocturna / franja diurna / franja nocturna

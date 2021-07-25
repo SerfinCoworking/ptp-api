@@ -3,7 +3,7 @@ import IEmployee from '../interfaces/employee.interface';
 import { ILiquidatedEmployee, CalculatedHours, IEventWithObjective, IHoursByWeek, PeriodRangeDate, IEmployeeLiq, ILiquidatedNews } from '../interfaces/liquidation.interface';
 import INews from '../interfaces/news.interface';
 import { IEvent, IPeriod, IShift } from '../interfaces/schedule.interface';
-import { calcDayAndNightHours, extractEvents } from '../utils/helpers';
+import { calcDayAndNightHours, extractEvents, sum } from '../utils/helpers';
 import NewsModule from './news.module';
 
 
@@ -39,7 +39,6 @@ export default class PeriodModule {
     },
     total_viaticos: 0,
     lic_justificada_group_by_reason: [],
-    currentStatus: {} as INews,
     liquidated_news: {} as ILiquidatedNews
   };
 
@@ -54,7 +53,6 @@ export default class PeriodModule {
       per.shifts = shifts;
       return per.shifts.length > 0;
     });
-    console.log(periods);
     const events: IEvent[] = await extractEvents(periods);
     const news = new NewsModule(events, this.range);
     const newsBuilder = await news.buildNews(employee);
@@ -63,10 +61,14 @@ export default class PeriodModule {
     this.liquidate.total_by_hours.signed = signed;
     this.liquidate.total_by_hours.schedule = schedule;
     this.liquidate.total_by_hours.signed.by_week = this.signedWeeks;
+    this.liquidate.total_by_hours.signed.extras = await sum(this.signedWeeks, 'totalExtraHours');
     this.liquidate.total_by_hours.schedule.by_week = this.scheduleWeeks;
+    this.liquidate.total_by_hours.schedule.extras = await sum(this.scheduleWeeks, 'totalExtraHours');
     this.liquidate.total_by_hours.news = newsBuilder.news;
     this.liquidate.hours_by_working_day = newsBuilder.hours_by_working_day;
     this.liquidate.total_of_news = newsBuilder.total_of_news;
+    this.liquidate.lic_justificada_group_by_reason = newsBuilder.lic_justificada_group_by_reason;
+    this.liquidate.liquidated_news = newsBuilder.liquidated_news;
     return this.liquidate; 
   }
 
@@ -87,7 +89,7 @@ export default class PeriodModule {
       await Promise.all(period.shifts.map( async (shift: IShift) => {
         const {signed: sigByEvents, schedule: schByEvents} = await this.calcTotalHours(shift, period.objective.name);
         schedule.total += schByEvents.total;
-        signed.total += sigByEvents.total;
+        signed.total += Math.round(sigByEvents.total / 60);
         
         schedule.extras += schByEvents.extras;
         signed.extras += sigByEvents.extras;
@@ -95,8 +97,8 @@ export default class PeriodModule {
         schedule.by.day += schByEvents.by.day;
         schedule.by.night += schByEvents.by.night;
         
-        signed.by.day += sigByEvents.by.day;
-        signed.by.night += sigByEvents.by.night;
+        signed.by.day += Math.round(sigByEvents.by.day / 60);
+        signed.by.night += Math.round(sigByEvents.by.night / 60);
       }));
     }));
     return { signed, schedule};
@@ -120,13 +122,13 @@ export default class PeriodModule {
       const signedDateTimeFrom = moment(event.checkin);
       const signedDateTimeTo = moment(event.checkout);
       schedule.total += scheduleDateTimeTo.diff(scheduleDateTimeFrom, "hours");
-      signed.total += signedDateTimeTo.diff(signedDateTimeFrom, "hours");
+      signed.total += signedDateTimeTo.diff(signedDateTimeFrom, "minutes");
 
       let { dayHours: scheduleDH, nightHours: scheduleNH }= await calcDayAndNightHours(scheduleDateTimeFrom, scheduleDateTimeTo);
       schedule.by.day += scheduleDH;
       schedule.by.night += scheduleNH;
       
-      let { dayHours: signedDH, nightHours: signedNH} = await calcDayAndNightHours(signedDateTimeFrom, signedDateTimeTo);
+      let { dayHours: signedDH, nightHours: signedNH} = await calcDayAndNightHours(signedDateTimeFrom, signedDateTimeTo, 'minutes');
       signed.by.day += signedDH;
       signed.by.night += signedNH;
 
@@ -134,9 +136,9 @@ export default class PeriodModule {
       const eventWithObjective: IEventWithObjective = {
           event: event,
           objectiveName: objectiveName,
-          diffInHours: signedDateTimeTo.diff(signedDateTimeFrom, 'hours'),
-          dayHours: signedDH,
-          nightHours: signedNH,
+          diffInHours: Math.round(signedDateTimeTo.diff(signedDateTimeFrom, 'minutes') / 60),
+          dayHours: Math.round(signedDH / 60),
+          nightHours: Math.round(signedNH / 60),
           feriadoHours: 0
         };
         const eventWithObjectiveSchedule: IEventWithObjective = {
@@ -162,7 +164,7 @@ export default class PeriodModule {
       // de la siguiente, se toma el total de horas de la guardia como parte de la semana
       // en la que inicio su guardia
       if(fromDate.isBetween(week.from, week.to, "date", "[]")){
-        week.totalHours += toDate.diff(fromDate, 'hours');
+        week.totalHours += Math.round(toDate.diff(fromDate, 'minutes') / 60);
         week.events?.push(eventWithObjective);
       }
       if(week.totalHours > 48){
@@ -184,7 +186,8 @@ export default class PeriodModule {
       cuilSufix: employee.profile.cuilSufix,
       function: employee.profile.function,
       employer: employee.profile.employer,
-      art: employee.profile.art
+      art: employee.profile.art,
+      status: employee.status
     } as IEmployeeLiq;
   }
 }

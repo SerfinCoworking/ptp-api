@@ -16,6 +16,7 @@ export interface IEmployeeLiq extends Document {
   function: string;
   employer: string;
   art: string;
+  status: string;
 }
 
 export interface IEventWithObjective {
@@ -76,7 +77,6 @@ export interface ILiquidatedEmployee {
     };
   },
   hours_by_working_day: {
-
     lic_justificadas: Array<string>;
     lic_no_justificas: Array<string>;
     suspension: Array<string>;
@@ -91,9 +91,7 @@ export interface ILiquidatedEmployee {
     embargo: number;
   }
   total_viaticos: number;
-
-  lic_justificada_group_by_reason: ILicReason[],
-  currentStatus: INews;
+  lic_justificada_group_by_reason: ILicReason[];
   liquidated_news: ILiquidatedNews;
 }
 

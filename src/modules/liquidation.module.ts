@@ -61,7 +61,7 @@ export default class LiquidationModule {
   private async scopeEmployees(employeeIds: string): Promise<IEmployee[]> {      
     return await Employee.find({
       _id: { $in : employeeIds.split("_")}
-    }).select("_id enrollment profile");
+    }).select("_id enrollment profile status");
   }
   // Se obtienen las horas diurnas / nocturnas / totales / extras
   private async generateLiquidation(employeeIds: string, range: PeriodRangeDate): Promise<ILiquidation>{
