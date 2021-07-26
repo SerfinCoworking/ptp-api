@@ -95,8 +95,7 @@ export interface ILiquidatedEmployee {
   liquidated_news_id: ObjectId;
 }
 
-export interface ILiquidatedNews {
-  _id?: ObjectID;
+export interface ILiquidatedNews extends Document{
   arts: INews[];
   capacitaciones: INews[];
   plus_responsabilidad: INews[];

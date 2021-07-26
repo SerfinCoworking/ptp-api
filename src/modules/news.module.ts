@@ -324,7 +324,7 @@ export default class NewsModule {
         adelantos,
         vacaciones,
         licSinSueldo,
-      }
+      } as ILiquidatedNews;
       const liqNews = await LiquidatedNews.create(liquidatedNews);
       return liqNews._id;
   }

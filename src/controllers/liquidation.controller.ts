@@ -3,7 +3,7 @@ import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
 import Period from '../models/period.model';
 import IEmployee from '../interfaces/employee.interface';
-import ILiquidation from '../interfaces/liquidation.interface';
+import ILiquidation, { ILiquidatedNews } from '../interfaces/liquidation.interface';
 import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
@@ -14,6 +14,7 @@ import Liquidation from '../models/liquidation.model';
 import { PaginateOptions, PaginateResult } from 'mongoose';
 import { createMovement } from '../utils/helpers';
 import LiquidationModule from '../modules/liquidation.module';
+import LiquidatedNews from '../models/liquidated-news.model';
 
 class LiquidationController extends BaseController{
 
@@ -66,11 +67,20 @@ class LiquidationController extends BaseController{
     return res.status(200).json(liquidation);
   }
 
+  liquidatedNews = async (req: Request, res: Response): Promise<Response<ILiquidatedNews>> => { 
+    const id: string = req.params.id;
+    const liquidatedNews: ILiquidatedNews | null = await LiquidatedNews.findOne({_id: id});
+    return res.status(200).json(liquidatedNews);
+  }
+
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
       const liq: ILiquidation | null = await Liquidation.findOneAndDelete({_id: id});
       if(!liq) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await Promise.all(liq.liquidatedEmployees.map( async (employeeLiq) => {
+        await LiquidatedNews.findOneAndDelete({ _id: employeeLiq.liquidated_news_id});
+      }));
       const fromDateMoment = moment(liq.dateFrom);
       const toDateMoment = moment(liq.dateTo);
       await createMovement(req.user, 'eliminó', 'liquidación', `Liquidación desde ${fromDateMoment.format("DD_MM_YYYY")} hasta ${toDateMoment.format("DD_MM_YYYY")}`);

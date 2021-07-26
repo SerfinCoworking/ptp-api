@@ -1,5 +1,5 @@
 import { Schema, model, PaginateModel } from 'mongoose';
-import ILiquidation from '../interfaces/liquidation.interface';
+import { ILiquidatedNews } from '../interfaces/liquidation.interface';
 import { newsSchema } from '../models/news.model';
 
 // Schema
@@ -21,6 +21,6 @@ export const liquidatedNewsSchema = new Schema({
 
 
 // Model
-const LiquidatedNews: PaginateModel<ILiquidation> = model('liquidatedNews', liquidatedNewsSchema);
+const LiquidatedNews: PaginateModel<ILiquidatedNews> = model('liquidatedNews', liquidatedNewsSchema);
 
 export default LiquidatedNews;
