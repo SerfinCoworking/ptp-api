@@ -1,8 +1,10 @@
+import { ObjectId } from 'bson';
 import { Schema, model, PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate';
 import ILiquidation from '../interfaces/liquidation.interface';
 import { newsSchema } from '../models/news.model';
-import { employeeLiqSchema, hoursByWeekSchema, licReasonSchema } from './embedded.documents';
+import { calculatedHoursSchema, employeeLiqSchema, licReasonSchema } from './embedded.documents';
+import { liquidatedNewsSchema } from './liquidated-news.model';
 
 // Schema
 export const liquidationSchema = new Schema({
@@ -12,42 +14,37 @@ export const liquidationSchema = new Schema({
   dateTo: {
     type: String
   },
-  employee_liquidation: [{
+  liquidatedEmployees: [{
     employee: employeeLiqSchema,
-    total_day_in_hours: {type: Number},
-    total_night_in_hours: {type: Number},
-    total_in_hours: {type: Number},
-    total_extra_in_hours: {type: Number},
-    total_feriado_in_hours: {type: Number},
-    total_suspension_in_hours: {type: Number},
-    total_lic_justificada_in_hours: {type: Number},
-    total_suspension_by_working_day: [{type: String}],
-    total_lic_jus_by_working_day: [{type: String}],
-    total_lic_no_jus_by_working_day: [{type: String}],
-    total_lic_no_justificada_in_hours: { type: Number },
-    total_vaciones_in_days: { type: Number },
-    total_adelanto_import: { type: Number },
-    total_plus_responsabilidad: { type: Number },
-    total_hours_work_by_week: [hoursByWeekSchema],
+    total_by_hours: {
+      signed: calculatedHoursSchema,
+      schedule: calculatedHoursSchema,
+      news: {
+        feriado: { type: Number },
+        suspension: { type: Number },
+        lic_justificada: { type: Number },
+        lic_no_justificada: { type: Number },
+        art: { type: Number },
+        capacitaciones: { type: Number },
+      },
+    },
+    hours_by_working_day: {
+      lic_justificadas: [ { type: String } ],
+      lic_no_justificas: [ { type: String } ],
+      suspension: [ { type: String } ],
+      art: [ { type: String } ],
+    },
+    total_of_news: {
+      vaciones_by_days: { type: Number },
+      adelanto_import: { type: Number },
+      plus_responsabilidad: { type: Number },
+      lic_sin_sueldo_by_days: { type: Number },
+      presentismo: { type: Number },
+      embargo: { type: Number },
+    },
     total_viaticos: { type: Number },
-    total_art_in_hours: { type: Number },
-    total_art_by_working_day: [{ type: String }],
-    total_capacitation_hours: { type: Number },
-    total_lic_sin_sueldo_days: { type: Number },
-    capacitaciones: [newsSchema],
-    plus_responsabilidad: [newsSchema],
-    suspensiones: [newsSchema],
-    lic_justificadas: [newsSchema],
     lic_justificada_group_by_reason: [licReasonSchema],
-    lic_no_justificadas: [newsSchema],
-    arts: [newsSchema],
-    presentismo: { type: Number },
-    embargos: [newsSchema],
-    feriados: [newsSchema],
-    adelantos: [newsSchema],
-    vacaciones: [newsSchema],
-    licSinSueldo: [newsSchema],
-    currentStatus: newsSchema,
+    liquidated_news_id: { type: ObjectId }
   }]
 },{
   timestamps: true

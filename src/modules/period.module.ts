@@ -1,11 +1,10 @@
+import { ObjectId } from 'bson';
 import moment from 'moment';
 import IEmployee from '../interfaces/employee.interface';
 import { ILiquidatedEmployee, CalculatedHours, IEventWithObjective, IHoursByWeek, PeriodRangeDate, IEmployeeLiq, ILiquidatedNews } from '../interfaces/liquidation.interface';
-import INews from '../interfaces/news.interface';
 import { IEvent, IPeriod, IShift } from '../interfaces/schedule.interface';
 import { calcDayAndNightHours, extractEvents, sum } from '../utils/helpers';
 import NewsModule from './news.module';
-
 
 export default class PeriodModule {
 
@@ -39,7 +38,7 @@ export default class PeriodModule {
     },
     total_viaticos: 0,
     lic_justificada_group_by_reason: [],
-    liquidated_news: {} as ILiquidatedNews
+    liquidated_news_id: {} as ObjectId
   };
 
   constructor(private range: PeriodRangeDate, private periods: IPeriod[], private signedWeeks: IHoursByWeek[], private scheduleWeeks: IHoursByWeek[]){
@@ -67,8 +66,9 @@ export default class PeriodModule {
     this.liquidate.total_by_hours.news = newsBuilder.news;
     this.liquidate.hours_by_working_day = newsBuilder.hours_by_working_day;
     this.liquidate.total_of_news = newsBuilder.total_of_news;
+    this.liquidate.total_viaticos = newsBuilder.total_viaticos;
     this.liquidate.lic_justificada_group_by_reason = newsBuilder.lic_justificada_group_by_reason;
-    this.liquidate.liquidated_news = newsBuilder.liquidated_news;
+    this.liquidate.liquidated_news_id = newsBuilder.liquidated_news;
     return this.liquidate; 
   }
 

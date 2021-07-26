@@ -1,9 +1,10 @@
 import moment from "moment";
 import { ObjectId } from "mongodb";
 import IEmployee from "../interfaces/employee.interface";
-import { ILicReason, PeriodRangeDate } from "../interfaces/liquidation.interface";
+import { ILicReason, ILiquidatedNews, PeriodRangeDate } from "../interfaces/liquidation.interface";
 import INews from "../interfaces/news.interface";
 import { IEvent } from "../interfaces/schedule.interface";
+import LiquidatedNews from "../models/liquidated-news.model";
 import News from "../models/news.model";
 import { sum } from "../utils/helpers";
 
@@ -79,7 +80,6 @@ export default class NewsModule {
       assigned_hours: 0
     } 
   ];
-  private currentStatus = {};
   private liquidated_news = {};
 
   constructor(private events: IEvent[], private range: PeriodRangeDate){
@@ -104,15 +104,13 @@ export default class NewsModule {
     };
   }
 
-  async buildNews(employee: IEmployee): Promise<{news: any, hours_by_working_day: any, total_of_news: any, lic_justificada_group_by_reason: any, liquidated_news: any}>{
+  async buildNews(employee: IEmployee): Promise<{news: any, hours_by_working_day: any, total_of_news: any, total_viaticos: any, lic_justificada_group_by_reason: any, liquidated_news: any}>{
     const feriados = await this.scopeFeriado(this.queryByDate);
     const suspensiones = await this.scopeNews(this.queryByDate, employee._id, "SUSPENSION");
     const lic_justificadas = await this.scopeNews(this.queryByDate, employee._id, "LIC_JUSTIFICADA");
     const lic_no_justificadas = await this.scopeNews(this.queryByDate, employee._id, "LIC_NO_JUSTIFICADA");
     const arts = await this.scopeNews(this.queryByDate, employee._id, "ART");
     const capacitaciones = await this.scopeNews(this.queryByDate, employee._id, "CAPACITACIONES");
-
-    
     const queryVacaciones = {
       $and: [
         { dateFrom: { $gte: this.range.dateFrom.format("YYYY-MM-DD") } },
@@ -123,6 +121,7 @@ export default class NewsModule {
     const adelantos = await this.scopeNews(this.queryByDate, employee._id, "ADELANTO");
     const plus_responsabilidad = await this.scopeNews(this.queryByDate, employee._id, "PLUS_RESPONSABILIDAD");
     const embargos = await this.scopeNews(this.queryByDate, employee._id, "EMBARGO");
+    const lic_sin_goce_sueldo = await this.scopeNews(this.queryByDate, employee._id, "LIC_SIN_SUELDO");
 
     const totalFeriado = await this.calcHours(this.events, feriados, 'minute');
     this.news.feriado = Math.round(totalFeriado / 60);
@@ -132,7 +131,6 @@ export default class NewsModule {
     this.news.art = await this.calcHours(this.events, arts, 'hour', false);
     this.news.capacitaciones = await this.calcCapacitacionesHours(capacitaciones);
     
-
     this.hours_by_working_day.lic_justificadas = await this.calcWorkedDay(lic_justificadas, this.events);
     this.hours_by_working_day.lic_no_justificas = await this.calcWorkedDay(lic_no_justificadas, this.events);
     this.hours_by_working_day.suspension = await this.calcWorkedDay(suspensiones, this.events);
@@ -141,27 +139,28 @@ export default class NewsModule {
     this.total_of_news.adelanto_import = await sum(adelantos, 'import');
     this.total_of_news.plus_responsabilidad = await sum(plus_responsabilidad, 'import');
     this.total_of_news.vaciones_by_days = await this.sumDays(vacaciones);
-    this.total_of_news.lic_sin_sueldo_by_days = await this.sumDays(plus_responsabilidad);
-    //   embargo: 0
-    await this.calcGroupByReason(lic_justificadas, this.events);
+    this.total_of_news.lic_sin_sueldo_by_days = await this.sumDays(lic_sin_goce_sueldo);
+    await this.calcGroupByReason(lic_justificadas, this.events); // calculo justif por grupo
     this.total_viaticos = await this.calcViaticos(this.events);
     this.total_of_news.presentismo = await this.calcPresentimos(suspensiones.length, lic_no_justificadas.length, this.hours_by_working_day.lic_justificadas.length);
     this.total_of_news.embargo = embargos.length;
-    this.liquidated_news = await this.getNews([
-      ...suspensiones,
-      ...lic_justificadas,
-      ...lic_no_justificadas,
-      ...arts,
-      ...capacitaciones,
-      ...vacaciones,
-      ...adelantos,
-      ...plus_responsabilidad,
-      ...embargos
-    ]);
+    this.liquidated_news = await this.getNews(
+      arts,
+      capacitaciones,
+      plus_responsabilidad,
+      suspensiones,
+      lic_justificadas,
+      lic_no_justificadas,
+      embargos,
+      feriados,
+      adelantos,
+      vacaciones,
+      lic_sin_goce_sueldo);
     const result = {
       news: this.news,
       hours_by_working_day: this.hours_by_working_day,
       total_of_news: this.total_of_news,
+      total_viaticos: this.total_viaticos,
       lic_justificada_group_by_reason: this.lic_justificada_group_by_reason,
       liquidated_news: this.liquidated_news
     }
@@ -302,9 +301,31 @@ export default class NewsModule {
     return total;
   }
 
-  private async getNews(news: INews[]): Promise<ObjectId[]> {
-    return await Promise.all(news.map((news: INews) => {
-      return news._id;
-    }));
+  private async getNews(arts: INews[], 
+    capacitaciones: INews[],
+    plus_responsabilidad: INews[], 
+    suspensiones: INews[],
+    lic_justificadas: INews[],
+    lic_no_justificadas: INews[], 
+    embargos: INews[],
+    feriados: INews[],
+    adelantos: INews[],
+    vacaciones: INews[],
+    licSinSueldo: INews[]): Promise<ObjectId> {
+      const liquidatedNews: ILiquidatedNews = {
+        arts,
+        capacitaciones,
+        plus_responsabilidad,
+        suspensiones,
+        lic_justificadas,
+        lic_no_justificadas,
+        embargos,
+        feriados,
+        adelantos,
+        vacaciones,
+        licSinSueldo,
+      }
+      const liqNews = await LiquidatedNews.create(liquidatedNews);
+      return liqNews._id;
   }
 }

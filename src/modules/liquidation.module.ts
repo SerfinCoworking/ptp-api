@@ -1,12 +1,11 @@
 import IEmployee from '../interfaces/employee.interface';
-import ILiquidation, { IEmployeeLiq, IHoursByWeek, PeriodRangeDate } from '../interfaces/liquidation.interface';
+import ILiquidation, { IHoursByWeek, PeriodRangeDate } from '../interfaces/liquidation.interface';
 import { IPeriod } from '../interfaces/schedule.interface';
 import Employee from '../models/employee.model';
 import Period from '../models/period.model';
 import PeriodModule from './period.module';
 import { buildWeeks } from '../utils/helpers';
-
-
+import Liquidation from '../models/liquidation.model';
 
 export default class LiquidationModule {
 
@@ -14,6 +13,7 @@ export default class LiquidationModule {
   private employeeIds: string;
   private periods: IPeriod[];
   private weeksBuilder: IHoursByWeek[];
+  private liquidation: ILiquidation;
 
   constructor(range: PeriodRangeDate, employeeIds: string){
     this.periods = [];
@@ -24,12 +24,21 @@ export default class LiquidationModule {
     });
     this.range = range;
     this.employeeIds = employeeIds;
+    this.liquidation = {} as ILiquidation;
   }
 
-  public async build(): Promise<ILiquidation>{
-    this.periods = await this.scopePeriods(this.range);
-    
-    return await this.generateLiquidation(this.employeeIds, this.range);
+  public async buildAndSave(): Promise<void>{
+    this.periods = await this.scopePeriods(this.range); 
+    const liquidation: ILiquidation = await this.generateLiquidation(this.employeeIds, this.range);
+    await this.saveLiquidation(liquidation);
+  }
+
+  public getLiquidation(): ILiquidation{
+    return this.liquidation;
+  }
+
+  private async saveLiquidation(liquidation: ILiquidation): Promise<void>{
+    this.liquidation = await Liquidation.create(liquidation);
   }
 
   private async scopePeriods(range: PeriodRangeDate): Promise<IPeriod[]>{
@@ -77,6 +86,5 @@ export default class LiquidationModule {
     }));
     return liq;
   }
-
 }
 

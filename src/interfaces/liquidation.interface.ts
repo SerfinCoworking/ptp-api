@@ -1,5 +1,5 @@
 import { Document } from 'mongoose';
-import { ObjectID } from 'mongodb';
+import { ObjectId, ObjectID } from 'mongodb';
 import INews from './news.interface';
 import { IEvent } from './schedule.interface';
 
@@ -92,7 +92,7 @@ export interface ILiquidatedEmployee {
   }
   total_viaticos: number;
   lic_justificada_group_by_reason: ILicReason[];
-  liquidated_news: ILiquidatedNews;
+  liquidated_news_id: ObjectId;
 }
 
 export interface ILiquidatedNews {

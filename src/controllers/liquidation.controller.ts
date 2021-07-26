@@ -61,7 +61,8 @@ class LiquidationController extends BaseController{
     const dateFrom = moment(fromDate, "DD_MM_YYYY").startOf('day');
     const dateTo = moment(toDate, "DD_MM_YYYY").endOf('day');
     const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
-    const liquidation: ILiquidation = await liq.build();
+    await liq.buildAndSave();
+    const liquidation: ILiquidation = liq.getLiquidation();
     return res.status(200).json(liquidation);
   }
 

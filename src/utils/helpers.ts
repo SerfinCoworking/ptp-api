@@ -1,5 +1,4 @@
 import moment from "moment";
-import { ObjectId } from "mongodb";
 import { GenericError } from "../common/errors.handler";
 import { IEvent, IPeriod } from "../interfaces/schedule.interface";
 import IUser from "../interfaces/user.interface";

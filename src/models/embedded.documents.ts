@@ -167,7 +167,8 @@ export const employeeLiqSchema = new Schema({
   cuilSufix: { type: String },
   function: { type: String },
   employer: { type: String },
-  art: { type: String }
+  art: { type: String },
+  status: { type: String }
 }, { _id : true });
 
 
@@ -186,12 +187,25 @@ export const eventWithObjectiveSchema = new Schema({
   feriadoHours: { type: Number },
 }, { _id : false });
 
+
+
+
 export const hoursByWeekSchema = new Schema({
   from: { type: String},
   to: { type: String},
   totalHours: { type: Number },
   totalExtraHours: { type: Number },
   events: [eventWithObjectiveSchema],
+}, { _id : false });
+
+export const calculatedHoursSchema = new Schema({
+  total: { type: Number },
+  by: {
+    day: { type: Number }, 
+    night: { type: Number },
+  },
+  extras: { type: Number },
+  by_week: [ hoursByWeekSchema ],
 }, { _id : false });
 
 export const userMovementSchema = new Schema({
