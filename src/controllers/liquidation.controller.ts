@@ -57,14 +57,14 @@ class LiquidationController extends BaseController{
     }
   }
   
-  new = async (req: Request, res: Response): Promise<Response<ILiquidation>> => { 
+  new = async (req: Request, res: Response): Promise<Response<any>> => { 
     const { fromDate, toDate, employeeSearch, employeeIds } = req.query;
     const dateFrom = moment(fromDate, "DD_MM_YYYY").startOf('day');
     const dateTo = moment(toDate, "DD_MM_YYYY").endOf('day');
     const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
     await liq.buildAndSave();
     const liquidation: ILiquidation = liq.getLiquidation();
-    return res.status(200).json(liquidation);
+    return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
   }
 
   liquidatedNews = async (req: Request, res: Response): Promise<Response<ILiquidatedNews>> => { 
@@ -89,61 +89,6 @@ class LiquidationController extends BaseController{
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
-  }
-
-  private calculateHours = (news: INews, employee: IEmployee, from: moment.Moment, to: moment.Moment): number => {
-    let total:number = 0;
-    // si el la fecha de incio del evento se encuentra comprendida por las fechas del feriado
-    // entonces calculamos las horas 
-    // a tener en cuenta: que hay que tomar los minutos y no solo las horas
-    if(typeof(news.employee) === 'undefined' || news.employee?._id.equals(employee._id)){
-      if(from.isBetween(news.dateFrom, news.dateTo, "date", "[]") && to.isBetween(news.dateFrom, news.dateTo, "date", "[]")){
-        total += to.diff(from, 'hours');
-      }else if(from.isBetween(news.dateFrom, news.dateTo, "date", "[]")){
-        // se agregar 1 dia mas ya que los minutos no los toma como hora
-        const newsEnd = moment(news.dateTo).add(1, 'day').startOf('day');
-        total += newsEnd.diff(from, 'hours');
-      }else if(to.isBetween(news.dateFrom, news.dateTo, "date", "[]")){
-        const newsStart = moment(news.dateFrom).startOf('day');
-        total += to.diff(newsStart, 'hours');
-      }
-    }
-
-    return total;
-  }
-  
-  private calculateDays = (news: INews, employee: IEmployee, from: moment.Moment, to: moment.Moment): number => {
-    let total:number = 0;
-    const newsDateFrom: moment.Moment = moment(news.dateFrom).startOf('day');
-    const newsDateTo: moment.Moment = moment(news.dateTo).endOf('day');
-    // si el la fecha de incio del evento se encuentra comprendida por las fechas del feriado
-    // entonces calculamos las horas 
-    // a tener en cuenta: que hay que tomar los minutos y no solo las horas
-    if(typeof(news.employee) === 'undefined' || news.employee?._id.equals(employee._id)){
-      if(newsDateFrom.isBetween(from, to, "date", "[]") && newsDateTo.isBetween(from, to, "date", "[]")){
-        newsDateTo.add(1, 'day');
-        total += newsDateTo.diff(newsDateFrom, 'days');
-      }else if(newsDateFrom.isBetween(from, to, "date", "[]")){
-        to.add(1, 'day');
-        total += newsDateFrom.diff(to, 'days');
-      }else if(newsDateTo.isBetween(from, to, "date", "[]")){
-        from.add(1, 'day');
-        total += newsDateTo.diff(from, 'days');
-      }
-    }
-    return total;
-  }
-  
-  private calculateImport = (news: INews, employee: IEmployee, from: moment.Moment, to: moment.Moment): number => {
-    let total:number = 0;
-    const newsDateFrom: moment.Moment = moment(news.dateFrom).startOf('day');
-    // sumamos los adelantos recibidos
-    if(typeof(news.employee) === 'undefined' || news.employee?._id.equals(employee._id)){
-      if(newsDateFrom.isBetween(from, to, "date", "[]") && news.import){
-        total += news.import;
-      }
-    }
-    return total;
   }
 
   private permitBody = (permit?: string[] | undefined): Array<string> => {
