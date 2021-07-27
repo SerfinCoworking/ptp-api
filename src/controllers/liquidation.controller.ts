@@ -64,6 +64,7 @@ class LiquidationController extends BaseController{
     const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
     await liq.buildAndSave();
     const liquidation: ILiquidation = liq.getLiquidation();
+    // const liquidation: ILiquidation = {} as ILiquidation;
     return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
   }
 

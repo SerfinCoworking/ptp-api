@@ -117,41 +117,44 @@ export default class PeriodModule {
     } as CalculatedHours;
     
     await Promise.all(shift.events.map(async(event: IEvent) => {
-      const scheduleDateTimeFrom = moment(event.fromDatetime);
-      const scheduleDateTimeTo = moment(event.toDatetime);
-      const signedDateTimeFrom = moment(event.checkin);
-      const signedDateTimeTo = moment(event.checkout);
-      schedule.total += scheduleDateTimeTo.diff(scheduleDateTimeFrom, "hours");
-      signed.total += signedDateTimeTo.diff(signedDateTimeFrom, "minutes");
-
-      let { dayHours: scheduleDH, nightHours: scheduleNH }= await calcDayAndNightHours(scheduleDateTimeFrom, scheduleDateTimeTo);
-      schedule.by.day += scheduleDH;
-      schedule.by.night += scheduleNH;
+      const scheduleDateTimeFrom: moment.Moment | null = event.fromDatetime ? moment(event.fromDatetime) : null;
+      const scheduleDateTimeTo: moment.Moment | null = event.toDatetime ? moment(event.toDatetime) : null;
+      const signedDateTimeFrom: moment.Moment | null = event.checkin ? moment(event.checkin) : null;
+      const signedDateTimeTo: moment.Moment | null = event.checkout ? moment(event.checkout) : null;
       
-      let { dayHours: signedDH, nightHours: signedNH} = await calcDayAndNightHours(signedDateTimeFrom, signedDateTimeTo, 'minutes');
-      signed.by.day += signedDH;
-      signed.by.night += signedNH;
-
-      // [Cantidad de horas / horas extras / eventos: por objetivo / horas / horas diurnas / horas nocturnas] Por semana
-      const eventWithObjective: IEventWithObjective = {
-          event: event,
-          objectiveName: objectiveName,
-          diffInHours: Math.round(signedDateTimeTo.diff(signedDateTimeFrom, 'minutes') / 60),
-          dayHours: Math.round(signedDH / 60),
-          nightHours: Math.round(signedNH / 60),
-          feriadoHours: 0
-        };
+      if(scheduleDateTimeFrom && scheduleDateTimeTo){
+        schedule.total += scheduleDateTimeTo.diff(scheduleDateTimeFrom, "hours");
+        let { dayHours: scheduleDH, nightHours: scheduleNH }= await calcDayAndNightHours(scheduleDateTimeFrom, scheduleDateTimeTo);
+        schedule.by.day += scheduleDH;
+        schedule.by.night += scheduleNH;
         const eventWithObjectiveSchedule: IEventWithObjective = {
           event: event,
           objectiveName: objectiveName,
-          diffInHours: scheduleDateTimeTo.diff(scheduleDateTimeFrom, 'hours'),
+          diffInHours: scheduleDateTimeTo.diff(scheduleDateTimeFrom, 'hours') || 0,
           dayHours: scheduleDH,
           nightHours: scheduleNH,
           feriadoHours: 0
         };
-          
-        await this.calcByWeeks(this.signedWeeks, signedDateTimeFrom, signedDateTimeTo, eventWithObjective);
+      
         await this.calcByWeeks(this.scheduleWeeks, scheduleDateTimeFrom, scheduleDateTimeTo, eventWithObjectiveSchedule);
+      }
+      
+      if(signedDateTimeFrom && signedDateTimeTo){
+        signed.total +=  signedDateTimeTo.diff(signedDateTimeFrom, "minutes");
+        let { dayHours: signedDH, nightHours: signedNH} = await calcDayAndNightHours(signedDateTimeFrom, signedDateTimeTo, 'minutes');
+        signed.by.day += signedDH;
+        signed.by.night += signedNH;
+        const eventWithObjective: IEventWithObjective = {
+          event: event,
+          objectiveName: objectiveName,
+          diffInHours: Math.round(signedDateTimeTo.diff(signedDateTimeFrom, 'minutes') / 60) || 0,
+          dayHours: Math.round(signedDH / 60),
+          nightHours: Math.round(signedNH / 60),
+          feriadoHours: 0
+        };
+        await this.calcByWeeks(this.signedWeeks, signedDateTimeFrom, signedDateTimeTo, eventWithObjective);
+      }
+
       
     }));
     return {signed, schedule};
