@@ -44,8 +44,8 @@ export const createMovement = async (userReq: any, action: string, resource: str
 }
 
 export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetimeTo: moment.Moment, unit: moment.unitOfTime.Diff = 'hours', dayStripeStartHs: number = 6, nightStripeStartHs: number = 21): Promise<{dayHours:number; nightHours: number}> => {
-  const maxHsDiurnas = nightStripeStartHs - dayStripeStartHs;
-  const maxHsNocturnas = (24 - nightStripeStartHs) + dayStripeStartHs;
+  const maxHsDiurnas = unit === 'minutes' ? (nightStripeStartHs - dayStripeStartHs) * 60 : (nightStripeStartHs - dayStripeStartHs);
+  const maxHsNocturnas = unit === 'minutes' ? ((24 - nightStripeStartHs) + dayStripeStartHs) * 60 : ((24 - nightStripeStartHs) + dayStripeStartHs);
   
   // Calculo de total horas diurnas y nocturnas
   // Nocturno 21 - 6
@@ -116,6 +116,9 @@ export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetime
       }
     }
   }
+
+  dayHours = unit === 'minutes' ? Math.round(dayHours / 60) : dayHours;
+  nightHours = unit === 'minutes' ? Math.round(nightHours / 60) : nightHours;
   return {dayHours, nightHours};
 }
 

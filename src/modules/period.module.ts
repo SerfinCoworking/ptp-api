@@ -89,7 +89,7 @@ export default class PeriodModule {
       await Promise.all(period.shifts.map( async (shift: IShift) => {
         const {signed: sigByEvents, schedule: schByEvents} = await this.calcTotalHours(shift, period.objective.name);
         schedule.total += schByEvents.total;
-        signed.total += Math.round(sigByEvents.total / 60);
+        signed.total += sigByEvents.total;
         
         schedule.extras += schByEvents.extras;
         signed.extras += sigByEvents.extras;
@@ -97,8 +97,8 @@ export default class PeriodModule {
         schedule.by.day += schByEvents.by.day;
         schedule.by.night += schByEvents.by.night;
         
-        signed.by.day += Math.round(sigByEvents.by.day / 60);
-        signed.by.night += Math.round(sigByEvents.by.night / 60);
+        signed.by.day += sigByEvents.by.day;
+        signed.by.night += sigByEvents.by.night;
       }));
     }));
     return { signed, schedule};
@@ -135,12 +135,12 @@ export default class PeriodModule {
           nightHours: scheduleNH,
           feriadoHours: 0
         };
-      
+        
         await this.calcByWeeks(this.scheduleWeeks, scheduleDateTimeFrom, scheduleDateTimeTo, eventWithObjectiveSchedule);
       }
       
       if(signedDateTimeFrom && signedDateTimeTo){
-        signed.total +=  signedDateTimeTo.diff(signedDateTimeFrom, "minutes");
+        signed.total +=  Math.round(signedDateTimeTo.diff(signedDateTimeFrom, "minutes") / 60);
         let { dayHours: signedDH, nightHours: signedNH} = await calcDayAndNightHours(signedDateTimeFrom, signedDateTimeTo, 'minutes');
         signed.by.day += signedDH;
         signed.by.night += signedNH;
@@ -148,8 +148,8 @@ export default class PeriodModule {
           event: event,
           objectiveName: objectiveName,
           diffInHours: Math.round(signedDateTimeTo.diff(signedDateTimeFrom, 'minutes') / 60) || 0,
-          dayHours: Math.round(signedDH / 60),
-          nightHours: Math.round(signedNH / 60),
+          dayHours: signedDH,
+          nightHours: signedNH,
           feriadoHours: 0
         };
         await this.calcByWeeks(this.signedWeeks, signedDateTimeFrom, signedDateTimeTo, eventWithObjective);
