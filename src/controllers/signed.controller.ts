@@ -13,9 +13,9 @@ class SignedController extends BaseController{
   signedEmployee = async (req: Request, res: Response) => {
     const { objectiveId, rfid } = req.body;
     try{
-      // const today = moment();
+      const today = moment();
       const todayFixEndOfPeriod = moment();
-      const today = moment("2021-06-20 20:58:00");
+      // const today = moment("2021-06-20 20:58:00");
       // const today = moment("2020-09-27 20:59:00");
       // const today = moment("2020-09-27 21:59:00");
       // const today = moment("2020-09-27 22:10:00");
@@ -84,6 +84,7 @@ class SignedController extends BaseController{
       }));
       return res.status(200).json({msg: "period found successfully", period});
     }catch(err){
+      console.log(err);
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
