@@ -4,6 +4,18 @@ import INews from '../interfaces/news.interface';
 import { employeeSchema } from '../models/employee.model';
 import { ObjectId } from 'mongodb';
 
+
+// Validation callbacks
+const feriadoUniqueByDay = async function(concepKey: string): Promise<boolean> {
+  const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
+  const news = await News.findOne({ 
+    'concept.key': concepKey, 
+    'dateFrom': { $eq: this.dateFrom},
+    'dateTo': { $eq: this.dateTo },
+    _id: { $nin: [_id] } 
+  });
+  return !news;
+};
 // Schema
 export const newsSchema = new Schema({
   dateFrom: {
@@ -71,5 +83,7 @@ newsSchema.plugin(mongoosePaginate);
 
 // Model
 const News: PaginateModel<INews> = model('News', newsSchema);
+
+News.schema.path('concept.key').validate(feriadoUniqueByDay, 'El concepto {VALUE} ya existe en las fechas ingresadas.');
 
 export default News;
