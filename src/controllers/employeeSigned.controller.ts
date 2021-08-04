@@ -14,8 +14,8 @@ class EmployeeSignedController extends BaseController{
       const dateFrom = moment(fromDate, "DD-MM-YYYY").startOf('day');
       const dateTo = moment(toDate, "DD-MM-YYYY").endOf('day');
       const employeeSigned = new EmployeeSignedModule({dateFrom, dateTo}, employeeId, employee_liquidated_id);
-      await employeeSigned.buildAndGet();
-      return res.status(200).json(employeeSigned);
+      const signeds = await employeeSigned.buildAndGet();
+      return res.status(200).json(signeds);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
