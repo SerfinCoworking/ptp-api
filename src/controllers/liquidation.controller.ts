@@ -67,6 +67,7 @@ class LiquidationController extends BaseController{
       const employee = liquidation?.liquidatedEmployees.find((empLiq: ILiquidatedEmployee) => {
         return empLiq.employee._id.equals(employee_id) 
       });
+      
       employeeDetail = await EmployeeLiquidated.create({
         liquidation_id: liquidation?._id,
         dateFrom: liquidation?.dateFrom,
@@ -94,10 +95,15 @@ class LiquidationController extends BaseController{
     return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
   }
 
-  liquidatedNews = async (req: Request, res: Response): Promise<Response<ILiquidatedNews>> => { 
-    const id: string = req.params.id;
-    const liquidatedNews: ILiquidatedNews | null = await LiquidatedNews.findOne({_id: id});
-    return res.status(200).json(liquidatedNews);
+  liquidatedNews = async (req: Request, res: Response): Promise<Response<ILiquidatedNews | null>> => {   
+    const {id} = req.params;
+    try{
+      const liquidatedNews: ILiquidatedNews | null = await LiquidatedNews.findOne({_id: id});
+      return res.status(200).json(liquidatedNews);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
   }
 
   delete = async (req: Request, res: Response): Promise<Response> => {
@@ -108,8 +114,11 @@ class LiquidationController extends BaseController{
       await Promise.all(liq.liquidatedEmployees.map( async (employeeLiq) => {
         await LiquidatedNews.findOneAndDelete({ _id: employeeLiq.liquidated_news_id});
       }));
-      const fromDateMoment = moment(liq.dateFrom);
-      const toDateMoment = moment(liq.dateTo);
+
+      await EmployeeLiquidated.deleteMany({liquidation_id: liq._id});
+
+      const fromDateMoment = moment(liq.dateFrom, "DD-MM-YYYY");
+      const toDateMoment = moment(liq.dateTo, "DD-MM-YYYY");
       await createMovement(req.user, 'eliminó', 'liquidación', `Liquidación desde ${fromDateMoment.format("DD_MM_YYYY")} hasta ${toDateMoment.format("DD_MM_YYYY")}`);
       return res.status(200).json("liquidation deleted successfully");
     }catch(err){

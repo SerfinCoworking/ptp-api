@@ -1,10 +1,9 @@
 import { Document } from 'mongoose';
-import { ObjectId } from 'mongodb';
 import { CalculatedHours, IEmployeeLiq, ILicReason } from './liquidation.interface';
 
 
 export default interface IEmployeeLiquidated extends Document {
-  liquidation_id: ObjectId;
+  liquidation_id: string;
   dateFrom: string;
   dateTo: string;
   employee: IEmployeeLiq;
@@ -36,7 +35,7 @@ export default interface IEmployeeLiquidated extends Document {
   }
   total_viaticos: number;
   lic_justificada_group_by_reason: ILicReason[];
-  liquidated_news_id: ObjectId;
+  liquidated_news_id: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

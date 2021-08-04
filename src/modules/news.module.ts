@@ -80,7 +80,7 @@ export default class NewsModule {
       assigned_hours: 0
     } 
   ];
-  private liquidated_news = {};
+  private liquidated_news: ObjectId | undefined;
 
   constructor(private events: IEvent[], private range: PeriodRangeDate){
     this.queryByDate = {          
@@ -311,7 +311,7 @@ export default class NewsModule {
     feriados: INews[],
     adelantos: INews[],
     vacaciones: INews[],
-    licSinSueldo: INews[]): Promise<ObjectId> {
+    licSinSueldo: INews[]): Promise<ObjectId | undefined> {
       const liquidatedNews: ILiquidatedNews = {
         arts,
         capacitaciones,
@@ -325,7 +325,10 @@ export default class NewsModule {
         vacaciones,
         licSinSueldo,
       } as ILiquidatedNews;
-      const liqNews = await LiquidatedNews.create(liquidatedNews);
-      return liqNews._id;
+      if (arts.length && capacitaciones.length && plus_responsabilidad.length && suspensiones.length && lic_justificadas.length && lic_no_justificadas.length && embargos.length && feriados.length && adelantos.length && vacaciones.length && licSinSueldo.length){
+        const liqNews = await LiquidatedNews.create(liquidatedNews);
+        return liqNews._id;
+      }      
+    return;
   }
 }

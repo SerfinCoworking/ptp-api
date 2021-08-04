@@ -38,7 +38,7 @@ export default class PeriodModule {
     },
     total_viaticos: 0,
     lic_justificada_group_by_reason: [],
-    liquidated_news_id: {} as ObjectId
+    liquidated_news_id: ''
   };
 
   constructor(private range: PeriodRangeDate, private periods: IPeriod[], private signedWeeks: IHoursByWeek[], private scheduleWeeks: IHoursByWeek[]){
