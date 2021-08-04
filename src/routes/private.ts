@@ -12,6 +12,7 @@ import SignedController from '../controllers/signed.controller';
 import LiquidationController from '../controllers/liquidation.controller';
 import MovementController from '../controllers/movement.controller';
 import TemplateController from '../controllers/template.controller';
+import EmployeeSignedController from '../controllers/employeeSigned.controller';
 
 class PrivateRoutes{
 
@@ -105,6 +106,9 @@ class PrivateRoutes{
     
     // signed
     this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.signedEmployee);
+    
+    // signedByEmployee
+    this.router.get('/get-employee-signeds', hasPermissionIn('read', 'liquidation'), EmployeeSignedController.getEmployeeSigneds);
 
     // movement
     this.router.get('/movements', hasPermissionIn('read', 'movement'), MovementController.index);
