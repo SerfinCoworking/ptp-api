@@ -3,7 +3,7 @@ import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
 import Period from '../models/period.model';
 import IEmployee from '../interfaces/employee.interface';
-import ILiquidation, { ILiquidatedNews } from '../interfaces/liquidation.interface';
+import ILiquidation, { ILiquidatedEmployee, ILiquidatedNews } from '../interfaces/liquidation.interface';
 import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import Employee from '../models/employee.model';
@@ -15,6 +15,8 @@ import { PaginateOptions, PaginateResult } from 'mongoose';
 import { createMovement } from '../utils/helpers';
 import LiquidationModule from '../modules/liquidation.module';
 import LiquidatedNews from '../models/liquidated-news.model';
+import EmployeeLiquidated from '../models/employee-liquidated.documents';
+import IEmployeeLiquidated from '../interfaces/employee-liquidated.interface';
 
 class LiquidationController extends BaseController{
 
@@ -56,7 +58,23 @@ class LiquidationController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
-  
+
+  employeeDetail  = async (req: Request, res: Response): Promise<Response<IEmployeeLiquidated>> => {
+    const { id, employee_id } = req.params;
+    let employeeDetail: IEmployeeLiquidated | null = await EmployeeLiquidated.findOne({liquidation_id: id, "employee._id": employee_id});
+    if(!employeeDetail){
+      const liquidation: ILiquidation | null = await Liquidation.findOne({_id: id});
+      const employee = liquidation?.liquidatedEmployees.find((empLiq: ILiquidatedEmployee) =>  empLiq.employee._id.equals(employee_id) );
+      employeeDetail = await EmployeeLiquidated.create({
+        liquidation_id: liquidation?._id,
+        dateFrom: liquidation?.dateFrom,
+        dateTo: liquidation?.dateTo,
+        ...employee
+      });
+    }
+    return res.status(200).json(employeeDetail);
+  }
+
   new = async (req: Request, res: Response): Promise<Response<any>> => { 
     const { fromDate, toDate, employeeSearch, employeeIds } = req.query;
     const dateFrom = moment(fromDate, "DD_MM_YYYY").startOf('day');
