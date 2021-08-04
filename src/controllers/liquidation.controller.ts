@@ -64,12 +64,20 @@ class LiquidationController extends BaseController{
     let employeeDetail: IEmployeeLiquidated | null = await EmployeeLiquidated.findOne({liquidation_id: id, "employee._id": employee_id});
     if(!employeeDetail){
       const liquidation: ILiquidation | null = await Liquidation.findOne({_id: id});
-      const employee = liquidation?.liquidatedEmployees.find((empLiq: ILiquidatedEmployee) =>  empLiq.employee._id.equals(employee_id) );
+      const employee = liquidation?.liquidatedEmployees.find((empLiq: ILiquidatedEmployee) => {
+        return empLiq.employee._id.equals(employee_id) 
+      });
       employeeDetail = await EmployeeLiquidated.create({
         liquidation_id: liquidation?._id,
         dateFrom: liquidation?.dateFrom,
         dateTo: liquidation?.dateTo,
-        ...employee
+        employee: employee?.employee,
+        total_by_hours: employee?.total_by_hours,
+        hours_by_working_day: employee?.hours_by_working_day,
+        total_of_news: employee?.total_of_news,
+        total_viaticos: employee?.total_viaticos,
+        lic_justificada_group_by_reason: employee?.lic_justificada_group_by_reason,
+        liquidated_news_id: employee?.liquidated_news_id,
       });
     }
     return res.status(200).json(employeeDetail);
