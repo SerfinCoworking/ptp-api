@@ -27,8 +27,6 @@ class EmployeeSignedController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
-
-
 }
 
 export default new EmployeeSignedController();
