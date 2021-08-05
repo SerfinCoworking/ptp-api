@@ -17,6 +17,7 @@ import LiquidationModule from '../modules/liquidation.module';
 import LiquidatedNews from '../models/liquidated-news.model';
 import EmployeeLiquidated from '../models/employee-liquidated.documents';
 import IEmployeeLiquidated from '../interfaces/employee-liquidated.interface';
+import EmployeeSigned from '../models/employee-signed.model';
 
 class LiquidationController extends BaseController{
 
@@ -115,8 +116,14 @@ class LiquidationController extends BaseController{
         await LiquidatedNews.findOneAndDelete({ _id: employeeLiq.liquidated_news_id});
       }));
 
-      await EmployeeLiquidated.deleteMany({liquidation_id: liq._id});
+      const employeeLiquidateds = await EmployeeLiquidated.find({liquidation_id: liq._id});
+      await Promise.all(employeeLiquidateds.map( async (eLiquidated) =>{
+        await EmployeeSigned.findOneAndDelete({ employee_liquidated_id: eLiquidated._id});
+      }));
 
+      await EmployeeLiquidated.deleteMany({liquidation_id: liq._id});
+      
+      
       const fromDateMoment = moment(liq.dateFrom, "DD-MM-YYYY");
       const toDateMoment = moment(liq.dateTo, "DD-MM-YYYY");
       await createMovement(req.user, 'eliminó', 'liquidación', `Liquidación desde ${fromDateMoment.format("DD_MM_YYYY")} hasta ${toDateMoment.format("DD_MM_YYYY")}`);

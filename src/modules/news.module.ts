@@ -221,9 +221,9 @@ export default class NewsModule {
             { "employeeMultiple": 
               { 
                 $elemMatch: {
-                _id: employeeId
+                  _id: employeeId
                 } 
-              } 
+              }     
             }
           ]
         }
