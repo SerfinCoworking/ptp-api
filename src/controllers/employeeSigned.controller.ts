@@ -8,6 +8,12 @@ import { BaseController } from './base.controllers.interface';
 
 class EmployeeSignedController extends BaseController{
 
+  show = async (req: Request, res: Response): Promise<Response<IEmployeeSigned | null>> => {   
+    const { employee_liquidated_id } = req.params;
+    const employeeSigned = await EmployeeSigned.findOne({employee_liquidated_id: employee_liquidated_id});
+    return res.status(200).json(employeeSigned);
+  }
+
   getEmployeeSigneds = async (req: Request, res: Response): Promise<Response<IEmployeeSigned | null>> => {   
     const {fromDate, toDate, employeeId, employee_liquidated_id} = req.query;
     try{

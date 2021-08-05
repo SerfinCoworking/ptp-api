@@ -108,6 +108,7 @@ class PrivateRoutes{
     this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.signedEmployee);
     
     // signedByEmployee
+    this.router.get('/show/:employee_liquidated_id', hasPermissionIn('read', 'liquidation'), EmployeeSignedController.show);
     this.router.get('/get-employee-signeds', hasPermissionIn('read', 'liquidation'), EmployeeSignedController.getEmployeeSigneds);
 
     // movement
