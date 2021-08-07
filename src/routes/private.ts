@@ -12,6 +12,7 @@ import SignedController from '../controllers/signed.controller';
 import LiquidationController from '../controllers/liquidation.controller';
 import MovementController from '../controllers/movement.controller';
 import TemplateController from '../controllers/template.controller';
+import EmployeeSignedController from '../controllers/employeeSigned.controller';
 
 class PrivateRoutes{
 
@@ -75,8 +76,10 @@ class PrivateRoutes{
     this.router.get('/liquidations', hasPermissionIn('read', 'liquidation'), LiquidationController.index);
     this.router.get('/liquidation', hasPermissionIn('create', 'liquidation'), LiquidationController.new);
     this.router.get('/liquidation/:id', hasPermissionIn('read', 'liquidation'), LiquidationController.show);
+    this.router.get('/liquidation/:id', hasPermissionIn('read', 'liquidation'), LiquidationController.show);
     this.router.delete('/liquidation/:id', hasPermissionIn('delete', 'liquidation'), LiquidationController.delete);
     this.router.get('/liquidation/liquidated-news/:id', hasPermissionIn('read', 'liquidation'), LiquidationController.liquidatedNews);
+    this.router.get('/liquidation/:id/:employee_id', hasPermissionIn('read', 'liquidation'), LiquidationController.employeeDetail);
     
     // news
     this.router.get('/news', hasPermissionIn('read', 'news'), NewsController.index);
@@ -103,6 +106,10 @@ class PrivateRoutes{
     
     // signed
     this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.signedEmployee);
+    
+    // signedByEmployee
+    this.router.get('/show/:employee_liquidated_id', hasPermissionIn('read', 'liquidation'), EmployeeSignedController.show);
+    this.router.get('/get-employee-signeds', hasPermissionIn('read', 'liquidation'), EmployeeSignedController.getEmployeeSigneds);
 
     // movement
     this.router.get('/movements', hasPermissionIn('read', 'movement'), MovementController.index);

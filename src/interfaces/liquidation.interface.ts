@@ -92,7 +92,7 @@ export interface ILiquidatedEmployee {
   }
   total_viaticos: number;
   lic_justificada_group_by_reason: ILicReason[];
-  liquidated_news_id: ObjectId;
+  liquidated_news_id: string;
 }
 
 export interface ILiquidatedNews extends Document{
