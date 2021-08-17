@@ -8,7 +8,6 @@ import INews, { INewsConcept } from '../interfaces/news.interface';
 import NewsConcept from '../models/news-concept.model';
 import News from '../models/news.model';
 import { createMovement } from '../utils/helpers';
-import IUser from '../interfaces/user.interface';
 
 class EmployeeController extends BaseController{
 
@@ -33,6 +32,20 @@ class EmployeeController extends BaseController{
       };
 
       const employees: PaginateResult<IEmployee> = await Employee.paginate(query, options);
+      return res.status(200).json(employees);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+  
+  availableEmployees = async (req: Request, res: Response): Promise<Response<IEmployee[]>> => {
+    try{
+      const employees: IEmployee[] = await Employee.find({
+        status: {
+          $ne: 'BAJA'
+        }
+      });
       return res.status(200).json(employees);
     }catch(err){
       const handler = errorHandler(err);

@@ -102,7 +102,7 @@ class NewsController extends BaseController{
     const id: string = req.params.id;
     const body = await this.filterNullValues(req.body, this.permitBody());
     try{
-      const opts: any = { runValidators: true, new: true };
+      const opts: any = { runValidators: true, context: 'query' };
       // find the new
       const newsOld: INews | null = await News.findOne({_id: id});
       if(!newsOld) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
@@ -119,13 +119,13 @@ class NewsController extends BaseController{
       const news: INews | null = await News.findOneAndUpdate({_id: id}, body, opts);
       if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
       // "BAJA", update user data
-      if(news.concept.key == "BAJA"){
-        const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
-        if(employee){
-          employee.status = Status.BAJA;
-          await employee.save();
-        }
-      }
+      // if(news.concept.key == "BAJA"){
+      //   const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
+      //   if(employee){
+      //     employee.status = Status.BAJA;
+      //     await employee.save();
+      //   }
+      // }
       await createMovement(req.user, 'editó', 'novedad', `de ${newsOld.concept.name} a ${news.concept.name}`);
       return res.status(200).json(news);
     }catch(err){
