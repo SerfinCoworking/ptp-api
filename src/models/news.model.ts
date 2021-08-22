@@ -70,36 +70,75 @@ const requireDateFrom = async function(dateFrom: string) {
   return !!dateFrom
 }
 
-const conceptUniqueByEmployee = async function(conceptKey: string): Promise<boolean> {
+const requiredEmployee = async function(conceptKey: string) {
+  const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
+  if(['FERIADO', 'CAPACITACIONES'].includes(conceptKey)){
+    return true;
+  }else{
+    if(obj.employee){
+      const employee = await Employee.findOne({_id: obj.employee._id});
+      return !!employee
+    }else{
+      return false;
+    }
+  }
+}
+
+const conceptUniqueByEmployee = async function(employee: string): Promise<boolean> {
   const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
   const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
-  if(conceptKey !== 'FERIADO' && conceptKey !== 'CAPACITACIONES'){
-    console.log(conceptKey, "<====================");
+  if(!['ALTA', 'ACTIVO', 'BAJA', 'FERIADO', 'ADELANTO', 'CAPACITACIONES', 'EMBARGO', 'PLUS_RESPONSABILIDAD'].includes(obj.concept.key)){
     const news = await News.findOne({ 
-      'concept.key': conceptKey, 
+      'concept.key': {$nin: [
+        'ALTA',
+        'ACTIVO',
+        'BAJA',
+        'FERIADO',
+        'ADELANTO',
+        'CAPACITACIONES',
+        'EMBARGO',
+        'PLUS_RESPONSABILIDAD'
+      ]},
       $or: [
         {
-          'dateFrom': { $eq: obj.dateFrom},
+          'dateFrom': { $lt: this.dateFrom},
+          'dateTo': { $gt: this.dateTo }
+        },
+        { 
+          'dateFrom': { $eq: this.dateFrom}
         },
         {
-          'dateTo': { $eq: obj.dateTo }
+          'dateTo': { $eq: this.dateFrom }
         },
         { 
-          'dateFrom': { $lte: obj.dateFrom},
-          'dateTo': { $gte: obj.dateFrom }
+          'dateFrom': { $eq: this.dateTo}
+        },
+        {
+          'dateTo': { $eq: this.dateTo }
+        },
+        {
+          $and: [
+            { 
+              'dateFrom': { $gt: this.dateFrom},
+            },{
+              'dateFrom': { $lt: this.dateTo }
+            },
+          ]
         },
         { 
-          'dateFrom': { $lte: obj.dateTo},
-          'dateTo': { $gte: obj.dateTo }
-        },
-        { 
-          'dateFrom': { $gte: obj.dateFrom},
-          'dateTo': { $lte: obj.dateTo }
+          $and: [
+            { 
+              'dateTo': { $gt: this.dateFrom},
+            },{
+              'dateTo': { $lt: this.dateTo }
+            },
+          ]
         }
       ],
       'employee._id': obj.employee._id,
       _id: { $nin: [_id] } 
     });
+    console.log(news);
     return !news;
   }
   return true;
@@ -172,8 +211,9 @@ newsSchema.plugin(mongoosePaginate);
 // Model
 const News: PaginateModel<INews> = model('News', newsSchema);
 
-News.schema.path('employee').validate(employeeIsBaja, 'El usuario ya fue dado de baja.');
-News.schema.path('concept.key').validate(feriadoUniqueByDay, 'Ya existe un feriado en las fechas ingresadas.');
-News.schema.path('dateFrom').validate(requireDateFrom, 'Debe seleccionar una fecha.');
-News.schema.path('concept.key').validate(conceptUniqueByEmployee, 'El empleado ya tiene un concepto {VALUE} cargado en las fechas ingresadas.', 'employee');
+News.schema.path('employee').validate(employeeIsBaja, 'EMPLOYEE_El usuario ya fue dado de baja.');
+News.schema.path('concept.key').validate(requiredEmployee, 'EMPLOYEE_Debe seleccionar un empleado valido.');
+News.schema.path('concept.key').validate(feriadoUniqueByDay, 'CONCEPT_Ya existe un feriado en las fechas ingresadas.');
+News.schema.path('dateFrom').validate(requireDateFrom, 'DATEFROM_Debe seleccionar una fecha.');
+News.schema.path('employee').validate(conceptUniqueByEmployee, 'EMPLOYEE_El empleado posee una Novedad cargada en las fechas ingresadas.');
 export default News;
