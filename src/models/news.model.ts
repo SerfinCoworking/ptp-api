@@ -1,6 +1,6 @@
 import { Schema, model, PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate';
-import INews from '../interfaces/news.interface';
+import INews, { _ljReasons } from '../interfaces/news.interface';
 import Employee, { employeeSchema } from '../models/employee.model';
 import { ObjectId } from 'mongodb';
 import IEmployee from '../interfaces/employee.interface';
@@ -82,6 +82,33 @@ const requiredEmployee = async function(conceptKey: string) {
       return false;
     }
   }
+}
+
+const requiredReason = async function(conceptKey: string) {
+  const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
+  if(['LIC_JUSTIFICADA'].includes(conceptKey)){
+    
+    if(obj.reason){
+      const reasonTarget = _ljReasons.find((reason: any) => reason.key == obj.reason.key);
+      return !!reasonTarget
+    }else{
+      return false;
+    }
+  }
+  return true
+}
+
+const requiredImport = async function(conceptKey: string) {
+  const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
+  if(['ADELANTO', 'PLUS_RESPONSABILIDAD'].includes(conceptKey)){
+    
+    if(obj.import && typeof obj.import === 'number'){
+      return obj.import > 0;
+    }else{
+      return false;
+    }
+  }
+  return true
 }
 
 const conceptUniqueByEmployee = async function(employee: string): Promise<boolean> {
@@ -214,6 +241,9 @@ const News: PaginateModel<INews> = model('News', newsSchema);
 News.schema.path('employee').validate(employeeIsBaja, 'EMPLOYEE_El usuario ya fue dado de baja.');
 News.schema.path('concept.key').validate(requiredEmployee, 'EMPLOYEE_Debe seleccionar un empleado valido.');
 News.schema.path('concept.key').validate(feriadoUniqueByDay, 'CONCEPT_Ya existe un feriado en las fechas ingresadas.');
+News.schema.path('concept.key').validate(requiredReason, 'LICJUSTIFICADA_Debe seleccionar una razón valida.');
+News.schema.path('concept.key').validate(requiredImport, 'ADELANTO_Debe seleccionar un importe valido.');
+News.schema.path('concept.key').validate(requiredImport, 'PLUSRESPONSABILIDAD_Debe seleccionar un importe valido.');
 News.schema.path('dateFrom').validate(requireDateFrom, 'DATEFROM_Debe seleccionar una fecha.');
 News.schema.path('employee').validate(conceptUniqueByEmployee, 'EMPLOYEE_El empleado posee una Novedad cargada en las fechas ingresadas.');
 export default News;
