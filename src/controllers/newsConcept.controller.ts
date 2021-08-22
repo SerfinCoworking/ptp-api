@@ -8,7 +8,11 @@ class NewsConceptController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<INewsConcept[]>> => {
     try{
-      const newsConcepts: INewsConcept[] = await NewsConcept.find().select('_id name key');
+      const newsConcepts: INewsConcept[] = await NewsConcept.find({
+        key: {
+          $nin: ['ALTA', 'ACTIVO']
+        }
+      }).select('_id name key');
       return res.status(200).json(newsConcepts);
     }catch(err){
       const handler = errorHandler(err);
