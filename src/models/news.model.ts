@@ -65,6 +65,11 @@ const feriadoUniqueByDay = async function(conceptKey: string): Promise<boolean> 
   }
   return true;
 };
+
+const requireDateFrom = async function(dateFrom: string) {
+  return !!dateFrom
+}
+
 const conceptUniqueByEmployee = async function(conceptKey: string): Promise<boolean> {
   const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
   const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
@@ -169,5 +174,6 @@ const News: PaginateModel<INews> = model('News', newsSchema);
 
 News.schema.path('employee').validate(employeeIsBaja, 'El usuario ya fue dado de baja.');
 News.schema.path('concept.key').validate(feriadoUniqueByDay, 'Ya existe un feriado en las fechas ingresadas.');
+News.schema.path('dateFrom').validate(requireDateFrom, 'Debe seleccionar una fecha.');
 News.schema.path('concept.key').validate(conceptUniqueByEmployee, 'El empleado ya tiene un concepto {VALUE} cargado en las fechas ingresadas.', 'employee');
 export default News;
