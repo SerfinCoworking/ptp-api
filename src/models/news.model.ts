@@ -84,6 +84,38 @@ const requiredEmployee = async function(conceptKey: string) {
   }
 }
 
+const requiredEmployees = async function(conceptKey: string) {
+  const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
+  const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
+  if(conceptKey === 'CAPACITACIONES'){
+    if(obj.employeeMultiple && obj.employeeMultiple.length){
+
+      const validEmployees = await Promise.all(
+        obj.employeeMultiple.map(async (employee: IEmployee) => {
+          const news: INews | null = await hasNews(obj.dateFrom, obj.dateTo, employee._id, _id);
+          return {valid: !news, employeeId: employee._id}
+        })
+      );
+      if(validEmployees.filter((epl: any) => !epl.valid).length){
+        throw new Error("CAPACITACIONES_Uno o varios empleados seleccionado poseen una novedad cargada en las fechas ingresadas_" + JSON.stringify(validEmployees));
+      }
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  return true;
+}
+
+const requiredHours = async function(conceptKey: string) {
+  const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
+  if(conceptKey === 'CAPACITACIONES'){
+    return obj.capacitationHours && typeof obj.capacitationHours === 'number';
+  }
+  return true;
+}
+
 const requiredReason = async function(conceptKey: string) {
   const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
   if(['LIC_JUSTIFICADA'].includes(conceptKey)){
@@ -115,61 +147,65 @@ const conceptUniqueByEmployee = async function(employee: string): Promise<boolea
   const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
   const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
   if(!['ALTA', 'ACTIVO', 'BAJA', 'FERIADO', 'ADELANTO', 'CAPACITACIONES', 'EMBARGO', 'PLUS_RESPONSABILIDAD'].includes(obj.concept.key)){
-    const news = await News.findOne({ 
-      'concept.key': {$nin: [
-        'ALTA',
-        'ACTIVO',
-        'BAJA',
-        'FERIADO',
-        'ADELANTO',
-        'CAPACITACIONES',
-        'EMBARGO',
-        'PLUS_RESPONSABILIDAD'
-      ]},
-      $or: [
-        {
-          'dateFrom': { $lt: this.dateFrom},
-          'dateTo': { $gt: this.dateTo }
-        },
-        { 
-          'dateFrom': { $eq: this.dateFrom}
-        },
-        {
-          'dateTo': { $eq: this.dateFrom }
-        },
-        { 
-          'dateFrom': { $eq: this.dateTo}
-        },
-        {
-          'dateTo': { $eq: this.dateTo }
-        },
-        {
-          $and: [
-            { 
-              'dateFrom': { $gt: this.dateFrom},
-            },{
-              'dateFrom': { $lt: this.dateTo }
-            },
-          ]
-        },
-        { 
-          $and: [
-            { 
-              'dateTo': { $gt: this.dateFrom},
-            },{
-              'dateTo': { $lt: this.dateTo }
-            },
-          ]
-        }
-      ],
-      'employee._id': obj.employee._id,
-      _id: { $nin: [_id] } 
-    });
-    console.log(news);
+    const news: INews | null = await hasNews(obj.dateFrom, obj.dateTo, obj.employee._id, _id);
     return !news;
   }
   return true;
 };
+
+const hasNews = async function(dateFrom: string , dateTo: string, employee_id: ObjectId, _id: string): Promise<INews | null> {
+  return await News.findOne({ 
+    'concept.key': {$nin: [
+      'ALTA',
+      'ACTIVO',
+      'BAJA',
+      'FERIADO',
+      'ADELANTO',
+      'CAPACITACIONES',
+      'EMBARGO',
+      'PLUS_RESPONSABILIDAD'
+    ]},
+    $or: [
+      {
+        'dateFrom': { $lt: dateFrom},
+        'dateTo': { $gt: dateTo }
+      },
+      { 
+        'dateFrom': { $eq: dateFrom}
+      },
+      {
+        'dateTo': { $eq: dateFrom }
+      },
+      { 
+        'dateFrom': { $eq: dateTo}
+      },
+      {
+        'dateTo': { $eq: dateTo }
+      },
+      {
+        $and: [
+          { 
+            'dateFrom': { $gt: dateFrom},
+          },{
+            'dateFrom': { $lt: dateTo }
+          },
+        ]
+      },
+      { 
+        $and: [
+          { 
+            'dateTo': { $gt: dateFrom},
+          },{
+            'dateTo': { $lt: dateTo }
+          },
+        ]
+      }
+    ],
+    'employee._id': employee_id,
+    _id: { $nin: [_id] } 
+  });
+}
+
 // Schema
 export const newsSchema = new Schema({
   dateFrom: {
@@ -244,6 +280,8 @@ News.schema.path('concept.key').validate(feriadoUniqueByDay, 'CONCEPT_Ya existe 
 News.schema.path('concept.key').validate(requiredReason, 'LICJUSTIFICADA_Debe seleccionar una razón valida.');
 News.schema.path('concept.key').validate(requiredImport, 'ADELANTO_Debe seleccionar un importe valido.');
 News.schema.path('concept.key').validate(requiredImport, 'PLUSRESPONSABILIDAD_Debe seleccionar un importe valido.');
+News.schema.path('concept.key').validate(requiredEmployees, 'CAPACITACIONES_Debe seleccionar almenos un empleado.');
+News.schema.path('concept.key').validate(requiredHours, 'CAPACITACIONESHS_Debe seleccionar una cantidad de horas.');
 News.schema.path('dateFrom').validate(requireDateFrom, 'DATEFROM_Debe seleccionar una fecha.');
 News.schema.path('employee').validate(conceptUniqueByEmployee, 'EMPLOYEE_El empleado posee una Novedad cargada en las fechas ingresadas.');
 export default News;
