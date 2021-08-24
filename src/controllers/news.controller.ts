@@ -13,20 +13,45 @@ import { createMovement } from '../utils/helpers';
 class NewsController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<INews[]>> => {
-    const { search, page, limit, sort } = req.query;
+    const { search, concept, dateFrom, dateTo, page, limit, sort } = req.query;
 
     const target: string = await this.searchDigest(search);
     const sortDiggest: any = await this.sortDigest(sort, {"fromDate": 1});
     try{
-        const query = {
+      const queryBuilder = [];
+
+      if(concept && concept.length > 0){
+        queryBuilder.push({"concept.key": concept});
+      }
+      
+      if(dateFrom && dateFrom.length > 0){
+        queryBuilder.push({
           $or: [
-            {"concept.name":  { $regex: new RegExp( target, "ig")}},
+            {"dateFrom": {$gte: dateFrom}},
+            {"dateTo": {$gte: dateFrom}}
+          ]
+        });
+      }
+      
+      if(dateTo && dateTo.length > 0){
+        queryBuilder.push({
+          $or:[
+            {"dateFrom": {$lte: dateTo}},
+            {"dateTo": {$lte: dateTo}}
+          ]
+        });
+      }
+
+      if(target && target.length > 0){
+        queryBuilder.push({
+          $or: [
             {"employee.profile.lastName":  { $regex: new RegExp( target, "ig")}},
             {"employee.profile.firstName":  { $regex: new RegExp( target, "ig")}},
-            {"employee.profile.dni":  { $regex: new RegExp( target, "ig")}},
-            {"contact.email":  { $regex: new RegExp( target, "ig")}}
           ]
-        };
+        });
+      }
+
+      const query = queryBuilder.length ? { $and: queryBuilder } : {};
       const options: PaginateOptions = {
         sort: sortDiggest,
         page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
