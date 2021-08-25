@@ -16,7 +16,7 @@ class NewsController extends BaseController{
     const { search, concept, dateFrom, dateTo, page, limit, sort } = req.query;
 
     const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"fromDate": 1});
+    const sortDiggest: any = await this.sortDigest(sort, {"createdAt": -1});
     try{
       const queryBuilder = [];
 
@@ -47,6 +47,20 @@ class NewsController extends BaseController{
           $or: [
             {"employee.profile.lastName":  { $regex: new RegExp( target, "ig")}},
             {"employee.profile.firstName":  { $regex: new RegExp( target, "ig")}},
+            {
+              "employeeMultiple": {
+                $elemMatch: {
+                  $or: [
+                    {
+                      "profile.lastName": { $regex: new RegExp( target, "ig")}
+                    },
+                    {
+                      "profile.firstName": { $regex: new RegExp( target, "ig")}
+                    }
+                  ]
+                }
+              }
+            }
           ]
         });
       }
