@@ -4,7 +4,8 @@ import INews, { _ljReasons } from '../interfaces/news.interface';
 import Employee, { employeeSchema } from '../models/employee.model';
 import { ObjectId } from 'mongodb';
 import IEmployee from '../interfaces/employee.interface';
-
+import Period from './period.model';
+import { IPeriod } from '../interfaces/schedule.interface';
 
 // Validation callbacks
 
@@ -153,6 +154,67 @@ const conceptUniqueByEmployee = async function(employee: string): Promise<boolea
   return true;
 };
 
+const noSchedules = async function(conceptKey: string): Promise<boolean> {
+  const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
+  if (conceptKey === 'LIC_JUSTIFICADA' && obj.employee){
+    const period: IPeriod | null = await Period.findOne(
+      {
+        $and: [{
+          $or: [
+          {
+            $and: [
+              { fromDate: { $lte: obj.dateFrom } },
+              { toDate: {$gte: obj.dateFrom } }
+            ]
+          }, {
+            $and: [
+              { fromDate: { $lte: obj.dateTo } },
+              { toDate: {$gte: obj.dateTo } }
+            ]
+          },{
+            $and: [
+              { fromDate: { $gte: obj.dateFrom } },
+              { toDate: {$lte: obj.dateTo } }
+            ]
+          }],
+          shifts: {
+            $elemMatch: {
+              $and: [
+                { 'employee._id': { $eq: obj.employee._id } },
+                { 
+                  events: {
+                    $elemMatch: {
+                      $or: [
+                        {
+                          $and: [
+                            { fromDatetime: { $lte: obj.dateFrom } },
+                            { toDatetime: {$gte: obj.dateFrom } }
+                          ]
+                        }, {
+                          $and: [
+                            { fromDatetime: { $lte: obj.dateTo } },
+                            { toDatetime: {$gte: obj.dateTo } }
+                          ]
+                        },{
+                          $and: [
+                            { fromDatetime: { $gte: obj.dateFrom } },
+                            { toDatetime: {$lte: obj.dateTo } }
+                          ]
+                        }]
+                    }
+                  }
+                }
+              ]              
+            }
+          }
+        }]
+      });
+      
+      console.log(period);
+  }
+  return false;
+}
+
 const hasNews = async function(dateFrom: string , dateTo: string, employee_id: ObjectId, _id: string): Promise<INews | null> {
   return await News.findOne({ 
     'concept.key': {$nin: [
@@ -282,6 +344,7 @@ News.schema.path('concept.key').validate(requiredImport, 'ADELANTO_Debe seleccio
 News.schema.path('concept.key').validate(requiredImport, 'PLUSRESPONSABILIDAD_Debe seleccionar un importe valido.');
 News.schema.path('concept.key').validate(requiredEmployees, 'CAPACITACIONES_Debe seleccionar almenos un empleado.');
 News.schema.path('concept.key').validate(requiredHours, 'CAPACITACIONESHS_Debe seleccionar una cantidad de horas.');
+News.schema.path('concept.key').validate(noSchedules, 'LICJUSWITHSCH_Debe seleccionar una cantidad de horas.');
 News.schema.path('dateFrom').validate(requireDateFrom, 'DATEFROM_Debe seleccionar una fecha.');
 News.schema.path('employee').validate(conceptUniqueByEmployee, 'EMPLOYEE_El empleado posee una Novedad cargada en las fechas ingresadas.');
 export default News;
