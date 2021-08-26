@@ -126,7 +126,7 @@ export default class NewsModule {
     const totalFeriado = await this.calcHours(this.events, feriados, 'minute');
     this.news.feriado = Math.round(totalFeriado / 60);
     this.news.suspension = await this.calcHours(this.events, suspensiones, 'hour', false);
-    this.news.lic_justificada = await this.calcHours(this.events, lic_justificadas, 'hour', false);
+    this.news.lic_justificada = await this.calcJustificadasHours(lic_justificadas);
     this.news.lic_no_justificada = await this.calcHours(this.events, lic_no_justificadas, 'hour', false);
     this.news.art = await this.calcHours(this.events, arts, 'hour', false);
     this.news.capacitaciones = await this.calcCapacitacionesHours(capacitaciones);
@@ -189,6 +189,16 @@ export default class NewsModule {
       }));
     }));
     return total;
+  }
+
+  private async calcJustificadasHours(newsArr: INews[]): Promise<number>{
+    let total: number = 0;
+    await Promise.all(newsArr.map((news: INews) => {
+      const dateFrom = moment(news.dateFrom, "YYYY-MM-DD");
+      const dateTo = moment(news.dateTo, "YYYY-MM-DD");
+      total += (dateTo.diff(dateFrom, 'day') + 1);
+    }));
+    return (total * 8);
   }
 
   private async calcCapacitacionesHours(newsArr: INews[]): Promise<number>{
@@ -264,23 +274,23 @@ export default class NewsModule {
 
   private async calcGroupByReason(news: INews[], events: IEvent[]): Promise<void>{
     await Promise.all(news.map( async ( news: INews) => {
-      await Promise.all(events.map( async (event: IEvent) => {
-        const from = moment(event.fromDatetime);
-        const to = moment(event.toDatetime);
-        const isInDate: boolean = (
-          (from.isBetween(news.dateFrom, news.dateTo, "date", "[]") && 
-          to.isBetween(news.dateFrom, news.dateTo, "date", "[]")) ||
-          (from.isBetween(news.dateFrom, news.dateTo, "date", "[]")) ||
-          (to.isBetween(news.dateFrom, news.dateTo, "date", "[]"))
-        )
-        if(isInDate){
+      // await Promise.all(events.map( async (event: IEvent) => {
+        const from = moment(news.dateFrom, "YYYY-MM-DD");
+        const to = moment(news.dateTo, 'YYYY-MM-DD');
+        // const isInDate: boolean = (
+        //   (from.isBetween(news.dateFrom, news.dateTo, "date", "[]") && 
+        //   to.isBetween(news.dateFrom, news.dateTo, "date", "[]")) ||
+        //   (from.isBetween(news.dateFrom, news.dateTo, "date", "[]")) ||
+        //   (to.isBetween(news.dateFrom, news.dateTo, "date", "[]"))
+        // )
+        // if(isInDate){
           await Promise.all(this.lic_justificada_group_by_reason.map((item) => {
             if(item.key.toUpperCase() === news.reason?.key.toUpperCase()){ 
-              item.assigned_hours += to.diff(from, 'hours'); 
+              item.assigned_hours += ((to.diff(from, 'day') + 1) * 8); 
             }
           }));
-        }
-      }));
+        // }
+      // }));
     }));
   }
 
