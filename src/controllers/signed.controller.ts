@@ -13,7 +13,7 @@ class SignedController extends BaseController{
   signedEmployee = async (req: Request, res: Response) => {
     const { objectiveId, rfid } = req.body;
     try{
-      const signed = moment("27-08-2021 20:01", "DD-MM-YYYY HH:mm"); // fecha hora fichado
+      const signed = moment(); // fecha hora fichado
       let period: IPeriod | null;
       let end = moment().set('date', 26);
       let searchLastPeriod: any;
