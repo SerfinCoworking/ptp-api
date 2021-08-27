@@ -13,76 +13,120 @@ class SignedController extends BaseController{
   signedEmployee = async (req: Request, res: Response) => {
     const { objectiveId, rfid } = req.body;
     try{
-      const today = moment();
-      const todayFixEndOfPeriod = moment();
-      // const today = moment("2021-06-20 20:58:00");
-      // const today = moment("2020-09-27 20:59:00");
-      // const today = moment("2020-09-27 21:59:00");
-      // const today = moment("2020-09-27 22:10:00");
-      // const today = moment("2020-09-27 22:30:00");
-      // const today = moment("2020-09-27 22:35:00");
-      // const today = moment("2020-09-27 22:55:00");
-      // const today = moment("2020-09-27 23:55:00");
-      const yesterday = moment().subtract(1, 'day');
-      
+      const signed = moment("27-08-2021 20:01", "DD-MM-YYYY HH:mm"); // fecha hora fichado
+      let period: IPeriod | null;
+      let end = moment().set('date', 26);
+      let searchLastPeriod: any;
+      let currentPeriod: any;
+
+      const isStartPeriod: boolean = signed.isSameOrAfter(end, 'date');
+
       const employee: IEmployee | null = await Employee.findOne({ rfid: rfid}).select('_id');
       if(!employee) throw new GenericError({property:"Empleado", message: 'No se ha encontrado un empleado válido para esta tarjeta.', type: "RESOURCE_NOT_FOUND"});
+      // Si el dia del fichado es el comienzo de un nuevo periodo
+      // debemos buscar el ultimo dia del periodo anterior
+      // si no tiene egreso y es igual al mismo dia
+      // entonces marcamos su fichado de egreso
+      if( isStartPeriod ){
+        
+        let shift: IShift | undefined;
+        let event: IEvent | undefined;
+        searchLastPeriod = {
+          start: moment(end).subtract(1, 'month').startOf('day'),
+          end: moment(end).subtract(1, 'day').endOf('day'),
+        }
 
-      // Query, busca si el dia anterior tiene (como en el caso del día 26),
-      // Si el empleado que ficha tiene un evento asignado sin cerrar
-      // Es decir si debe hacer el checkout el día 26 de cada mes, 
-      // De lo contrario solo busca que exista un periodo que comprenda 
-      // la fecha actual.
-      const period: IPeriod | null = await Period.findOne({ 
-        "objective._id": objectiveId,
-        $or: [
-          {
-            "fromDate": {
-              $lte: yesterday.format('YYYY-MM-DD')
-            },
-            "toDate": {
-              $gte: yesterday.format("YYYY-MM-DD")
-            },
-            "shifts.employee._id": employee._id,
-            "shifts.events.toDatetime": {
-              $gte:  todayFixEndOfPeriod.startOf('day').toDate(),
-              $lt:  todayFixEndOfPeriod.endOf('day').toDate()
-            },
-            "shifts.events.checkout": {
-              $exists: false
+        currentPeriod = {
+          start: moment(end).startOf('day'),
+          end: moment(end).add(1, 'month').subtract(1, 'day').endOf('day'),
+        }
+        
+        period = await Period.findOne({ 
+          "objective._id": objectiveId,
+          $and: [
+            {fromDate: {$eq: searchLastPeriod.start.format("YYYY-MM-DD") }},
+            {toDate: {$eq: searchLastPeriod.end.format("YYYY-MM-DD") }},
+            {
+              shifts: {
+                $elemMatch: {
+                  "employee._id": {
+                    $eq: employee._id
+                  }
+                }
+              }
             }
-          },
+          ]
+        });
+        if(period){
+          let sIndex: number = 0;
+          let eIndex: number = 0;
+          shift = period.shifts.find((shift: IShift, index: number) => {
+            sIndex = index;
+            return shift.employee._id.equals(employee._id)
+          });
+          
+          if(shift){
+            event = shift.events.find((event: IEvent, index: number) => {
+              const schTo = moment(event.toDatetime, "YYYY-MM-DD");
+              eIndex = index;
+              return schTo.isSame(signed, 'date') && typeof event.checkout === 'undefined';
+            });
+            if(event){
+              // Si el ultimo dia del periodo anterior no fichó la salida
+              period.shifts[sIndex].events[eIndex].checkout = signed.toDate();
+              period.shifts[sIndex].signed?.push(signed.toDate());
+              await period.save();
+              return res.status(200).json({msg: "period found successfully", period});
+            }
+          }
+        }
+        
+        
+      }else{
+        currentPeriod = {
+          start: moment(end).subtract(1, 'month').startOf('day'),
+          end: moment(end).subtract(1, 'day').endOf('day'),
+        }
+      }
+      
+      const periodCurrent: IPeriod | null = await Period.findOne({ 
+        "objective._id": objectiveId,
+        $and: [
+          {fromDate: {$eq: currentPeriod.start.format("YYYY-MM-DD") }},
+          {toDate: {$eq: currentPeriod.end.format("YYYY-MM-DD") }},
           {
-            "fromDate": { 
-              $lte: today.format("YYYY-MM-DD")
-            }, 
-            "toDate": {
-              $gte: today.format("YYYY-MM-DD")
+            shifts: {
+              $elemMatch: {
+                "employee._id": {
+                  $eq: employee._id
+                }
+              }
             }
           }
         ]
-        
       });
 
-      if(!period) throw new GenericError({property:"Periodo", message: 'No se ha encontrado una agenda válida para este objetivo.', type: "RESOURCE_NOT_FOUND"});
 
-      await Promise.all( period.shifts.map( async (shift: IShift, index: number) => {
+      if(!periodCurrent) throw new GenericError({property:"Periodo", message: 'No se ha encontrado una agenda válida para este objetivo.', type: "RESOURCE_NOT_FOUND"});
+
+      await Promise.all( periodCurrent.shifts.map( async (shift: IShift, index: number) => {
         if (shift.employee._id.equals(employee._id)){
-          const content: ISigned[] = await this.getAllEventsByDate(today, shift);    
+          const content: ISigned[] = await this.getAllEventsByDate(signed, shift);    
 
           if(content.length){
-            let firstContent:  ISigned = await this.getClosestEvent(today, content);
-            firstContent = await this.setSigend(today, firstContent);
+            let firstContent:  ISigned = await this.getClosestEvent(signed, content);
+            firstContent = await this.setSigend(signed, firstContent);
             
-            period.shifts[index].events[firstContent.eventIndex] = firstContent.event;
-            period.shifts[index].signed?.push(today.toDate());
-            await period.save();
+            periodCurrent.shifts[index].events[firstContent.eventIndex] = firstContent.event;
+            periodCurrent.shifts[index].signed?.push(signed.toDate());
+            await periodCurrent.save();
           }else{
             throw new GenericError({property:"Employee", message: 'No se ha encontrado un horario asignado en este objetivo.', type: "RESOURCE_NOT_FOUND"});
           }
         }
       }));
-      return res.status(200).json({msg: "period found successfully", period});
+      return res.status(200).json({msg: "period found successfully", periodCurrent});
+   
     }catch(err){
       console.log(err);
       const handler = errorHandler(err);
@@ -128,7 +172,6 @@ class SignedController extends BaseController{
         //      esto quiere decir que estaba más proximo a marcar el ingreso a la siguiente guardia que marcar el egreso de la guardia anterior
         if((currentDiffTo >= diffFrom) || typeof(signed) === 'undefined'){
           currentDiffTo = diffTo;
-          console.log(diffFrom,  moment(cont.event.fromDatetime).format("YYYY-MM-DD HH:mm:ss"), target.format("YYYY-MM-DD HH:mm:ss"), target.isSameOrAfter(cont.event.fromDatetime));
           signed = cont;
         }
       });
@@ -152,7 +195,6 @@ class SignedController extends BaseController{
         //      esto quiere decir que estaba más proximo a marcar el ingreso a la siguiente guardia que marcar el egreso de la guardia anterior
         if((currentDiffTo >= diffFrom) || typeof(event) === 'undefined'){
           currentDiffTo = diffTo;
-          console.log(diffFrom,  moment(cont.fromDatetime).format("YYYY-MM-DD HH:mm:ss"), target.format("YYYY-MM-DD HH:mm:ss"), target.isSameOrAfter(cont.fromDatetime));
           event = cont;
         }
       });
@@ -163,10 +205,15 @@ class SignedController extends BaseController{
   
   private setSigend = async (target: moment.Moment, content: ISigned): Promise<ISigned> => {
     return new Promise((resolve, reject)  => {
-      if(!content.event.checkin){
+      const diffWStart = Math.abs(target.diff(content.event.fromDatetime, 'minutes'));
+      const diffWEnd = Math.abs(target.diff(content.event.toDatetime, 'minutes'));
+      const isEnd: boolean = (target.isSame(content.event.toDatetime, 'date') && diffWEnd < diffWStart);
+      const isCheckin: boolean = !content.event.checkin && target.isSame(content.event.fromDatetime, 'date') && !isEnd
+      if(isCheckin){
         // no tiene checkin o la hora de fichado es menor a la hora Entrada
         content.event.checkin = target.toDate();
-      }else if(!content.event.checkout || target.isSameOrAfter(content.event.checkout, 'minutes')){
+      // }else if(isEnd){
+      }else if(!content.event.checkout || target.isSameOrAfter(content.event.checkout, 'minutes') && target.isSame(content.event.toDatetime, 'date')){
         // no tiene checkout o la hora fichado es mayor a la última hora fichada
         content.event.checkout = target.toDate();
       }
