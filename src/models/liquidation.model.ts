@@ -29,7 +29,7 @@ export const liquidationSchema = new Schema({
       },
     },
     hours_by_working_day: {
-      lic_justificadas: [ { type: String } ],
+      lic_justificadas: { type: Number },
       lic_no_justificas: [ { type: String } ],
       suspension: [ { type: String } ],
       art: [ { type: String } ],

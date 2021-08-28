@@ -77,7 +77,7 @@ export interface ILiquidatedEmployee {
     };
   },
   hours_by_working_day: {
-    lic_justificadas: Array<string>;
+    lic_justificadas: number;
     lic_no_justificas: Array<string>;
     suspension: Array<string>;
     art: Array<string>;

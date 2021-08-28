@@ -23,7 +23,7 @@ export default class PeriodModule {
       }
     },
     hours_by_working_day: {
-      lic_justificadas: [],
+      lic_justificadas: 0,
       lic_no_justificas: [],
       suspension: [],
       art: []

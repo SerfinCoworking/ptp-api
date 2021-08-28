@@ -22,12 +22,12 @@ export default class NewsModule {
   }
 
   private hours_by_working_day: {
-    lic_justificadas: string[],
+    lic_justificadas: number,
     lic_no_justificas: string[],
     suspension: string[],
     art: string[]
   } = {
-    lic_justificadas: [],
+    lic_justificadas: 0,
     lic_no_justificas: [],
     suspension: [],
     art: []
@@ -131,7 +131,7 @@ export default class NewsModule {
     this.news.art = await this.calcHours(this.events, arts, 'hour', false);
     this.news.capacitaciones = await this.calcCapacitacionesHours(capacitaciones);
     
-    this.hours_by_working_day.lic_justificadas = await this.calcWorkedDay(lic_justificadas, this.events);
+    this.hours_by_working_day.lic_justificadas = await this.calcJustifyDays(lic_justificadas);
     this.hours_by_working_day.lic_no_justificas = await this.calcWorkedDay(lic_no_justificadas, this.events);
     this.hours_by_working_day.suspension = await this.calcWorkedDay(suspensiones, this.events);
     this.hours_by_working_day.art = await this.calcWorkedDay(arts, this.events);
@@ -142,7 +142,7 @@ export default class NewsModule {
     this.total_of_news.lic_sin_sueldo_by_days = await this.sumDays(lic_sin_goce_sueldo);
     await this.calcGroupByReason(lic_justificadas, this.events); // calculo justif por grupo
     this.total_viaticos = await this.calcViaticos(this.events);
-    this.total_of_news.presentismo = await this.calcPresentimos(suspensiones.length, lic_no_justificadas.length, this.hours_by_working_day.lic_justificadas.length);
+    this.total_of_news.presentismo = await this.calcPresentimos(suspensiones.length, lic_no_justificadas.length, this.hours_by_working_day.lic_justificadas);
     this.total_of_news.embargo = embargos.length;
     this.liquidated_news = await this.getNews(
       arts,
@@ -258,6 +258,16 @@ export default class NewsModule {
           target.push(from.format("YYYY-MM-DD"));
         }                   
       }));
+    }));
+    return target;
+  }
+  
+  private async calcJustifyDays(news: INews[]): Promise<number> {
+    let target: number = 0; 
+    await Promise.all(news.map( async (news: INews) => {
+      const from = moment(news.dateFrom, "YYYY-MM-DD");
+      const to = moment(news.dateTo, "YYYY-MM-DD");
+      target += (to.diff(from, 'day') + 1)
     }));
     return target;
   }
