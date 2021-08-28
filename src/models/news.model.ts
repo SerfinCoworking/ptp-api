@@ -158,61 +158,61 @@ const noSchedules = async function(conceptKey: string): Promise<boolean> {
   const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
   if (conceptKey === 'LIC_JUSTIFICADA' && obj.employee){
     const period: IPeriod | null = await Period.findOne(
-      {
-        $and: [{
-          $or: [
-          {
+    {
+      $and: [{
+        $or: [
+        {
+          $and: [
+            { fromDate: { $lte: obj.dateFrom } },
+            { toDate: {$gte: obj.dateFrom } }
+          ]
+        }, {
+          $and: [
+            { fromDate: { $lte: obj.dateTo } },
+            { toDate: {$gte: obj.dateTo } }
+          ]
+        },{
+          $and: [
+            { fromDate: { $gte: obj.dateFrom } },
+            { toDate: {$lte: obj.dateTo } }
+          ]
+        }],
+        shifts: {
+          $elemMatch: {
             $and: [
-              { fromDate: { $lte: obj.dateFrom } },
-              { toDate: {$gte: obj.dateFrom } }
-            ]
-          }, {
-            $and: [
-              { fromDate: { $lte: obj.dateTo } },
-              { toDate: {$gte: obj.dateTo } }
-            ]
-          },{
-            $and: [
-              { fromDate: { $gte: obj.dateFrom } },
-              { toDate: {$lte: obj.dateTo } }
-            ]
-          }],
-          shifts: {
-            $elemMatch: {
-              $and: [
-                { 'employee._id': { $eq: obj.employee._id } },
-                { 
-                  events: {
-                    $elemMatch: {
-                      $or: [
-                        {
-                          $and: [
-                            { fromDatetime: { $lte: obj.dateFrom } },
-                            { toDatetime: {$gte: obj.dateFrom } }
-                          ]
-                        }, {
-                          $and: [
-                            { fromDatetime: { $lte: obj.dateTo } },
-                            { toDatetime: {$gte: obj.dateTo } }
-                          ]
-                        },{
-                          $and: [
-                            { fromDatetime: { $gte: obj.dateFrom } },
-                            { toDatetime: {$lte: obj.dateTo } }
-                          ]
-                        }]
-                    }
+              { 'employee._id': { $eq: obj.employee._id } },
+              { 
+                events: {
+                  $elemMatch: {
+                    $or: [
+                      {
+                        $and: [
+                          { fromDatetime: { $lte: obj.dateFrom } },
+                          { toDatetime: {$gte: obj.dateFrom } }
+                        ]
+                      }, {
+                        $and: [
+                          { fromDatetime: { $lte: obj.dateTo } },
+                          { toDatetime: {$gte: obj.dateTo } }
+                        ]
+                      },{
+                        $and: [
+                          { fromDatetime: { $gte: obj.dateFrom } },
+                          { toDatetime: {$lte: obj.dateTo } }
+                        ]
+                      }]
                   }
                 }
-              ]              
-            }
+              }
+            ]              
           }
-        }]
-      });
-      
-      console.log(period);
+        }
+      }]
+    });
+    // console.log(period);
+    return !period;  
   }
-  return false;
+  return true;
 }
 
 const hasNews = async function(dateFrom: string , dateTo: string, employee_id: ObjectId, _id: string): Promise<INews | null> {
@@ -344,7 +344,7 @@ News.schema.path('concept.key').validate(requiredImport, 'ADELANTO_Debe seleccio
 News.schema.path('concept.key').validate(requiredImport, 'PLUSRESPONSABILIDAD_Debe seleccionar un importe valido.');
 News.schema.path('concept.key').validate(requiredEmployees, 'CAPACITACIONES_Debe seleccionar almenos un empleado.');
 News.schema.path('concept.key').validate(requiredHours, 'CAPACITACIONESHS_Debe seleccionar una cantidad de horas.');
-News.schema.path('concept.key').validate(noSchedules, 'LICJUSWITHSCH_Debe seleccionar una cantidad de horas.');
+News.schema.path('concept.key').validate(noSchedules, 'LICJUSWITHSCH_El empleado tiene guardias asignadas en el rango de fechas ingresado.');
 News.schema.path('dateFrom').validate(requireDateFrom, 'DATEFROM_Debe seleccionar una fecha.');
 News.schema.path('employee').validate(conceptUniqueByEmployee, 'EMPLOYEE_El empleado posee una Novedad cargada en las fechas ingresadas.');
 export default News;
