@@ -6,16 +6,19 @@ import Period from '../models/period.model';
 import PeriodModule from './period.module';
 import { buildWeeks } from '../utils/helpers';
 import Liquidation from '../models/liquidation.model';
+import LiquidatedNews from '../models/liquidated-news.model';
+import EmployeeLiquidated from '../models/employee-liquidated.documents';
+import EmployeeSigned from '../models/employee-signed.model';
 
 export default class LiquidationModule {
 
   private range: PeriodRangeDate;
-  private employeeIds: string;
+  private employeeIds: Array<string>;
   private periods: IPeriod[];
   private weeksBuilder: IHoursByWeek[];
   private liquidation: ILiquidation;
 
-  constructor(range: PeriodRangeDate, employeeIds: string){
+  constructor(range: PeriodRangeDate, employeeIds: Array<string>){
     this.periods = [];
     this.weeksBuilder = buildWeeks(range.dateFrom, range.dateTo, {
       totalHours: 0,
@@ -27,18 +30,42 @@ export default class LiquidationModule {
     this.liquidation = {} as ILiquidation;
   }
 
-  public async buildAndSave(): Promise<void>{
+  public async buildAndSave(_id?: string): Promise<void>{
     this.periods = await this.scopePeriods(this.range); 
     const liquidation: ILiquidation = await this.generateLiquidation(this.employeeIds, this.range);
-    await this.saveLiquidation(liquidation);
+    await this.saveLiquidation(liquidation, _id);
   }
 
   public getLiquidation(): ILiquidation{
     return this.liquidation;
   }
+  
+  public async destroyLiquidation(liq: ILiquidation): Promise<{dateFrom: string, dateTo: string}>{
+    
+    await Promise.all(liq.liquidatedEmployees.map( async (employeeLiq) => {
+      await LiquidatedNews.findOneAndDelete({ _id: employeeLiq.liquidated_news_id});
+    }));
 
-  private async saveLiquidation(liquidation: ILiquidation): Promise<void>{
-    this.liquidation = await Liquidation.create(liquidation);
+    const employeeLiquidateds = await EmployeeLiquidated.find({liquidation_id: liq._id});
+    await Promise.all(employeeLiquidateds.map( async (eLiquidated) =>{
+      await EmployeeSigned.findOneAndDelete({ employee_liquidated_id: eLiquidated._id});
+    }));
+
+    await EmployeeLiquidated.deleteMany({liquidation_id: liq._id});
+    
+    return {dateFrom: liq.dateFrom, dateTo: liq.dateTo};
+  }
+
+  private async saveLiquidation(liquidation: ILiquidation, _id?: string): Promise<void>{
+    if(_id){
+      const liquidated: ILiquidation | null = await Liquidation.findOneAndUpdate({_id}, liquidation);
+      if (liquidated){
+        await this.destroyLiquidation(liquidated);
+        this.liquidation = liquidated;
+      }
+    }else{
+      this.liquidation = await Liquidation.create(liquidation);
+    }
   }
 
   private async scopePeriods(range: PeriodRangeDate): Promise<IPeriod[]>{
@@ -67,17 +94,18 @@ export default class LiquidationModule {
       });
   }
   
-  private async scopeEmployees(employeeIds: string): Promise<IEmployee[]> {      
+  private async scopeEmployees(employeeIds: Array<string>): Promise<IEmployee[]> {      
     return await Employee.find({
-      _id: { $in : employeeIds.split("_")}
+      _id: { $in : employeeIds}
     }).select("_id enrollment profile status");
   }
   // Se obtienen las horas diurnas / nocturnas / totales / extras
-  private async generateLiquidation(employeeIds: string, range: PeriodRangeDate): Promise<ILiquidation>{
+  private async generateLiquidation(employeeIds: Array<string>, range: PeriodRangeDate): Promise<ILiquidation>{
     const employees: IEmployee[] = await this.scopeEmployees(employeeIds);
     const liq: ILiquidation = {
-      dateFrom: range.dateFrom.format("DD-MM-YYYY"),
-      dateTo: range.dateTo.format("DD-MM-YYYY"),
+      dateFrom: range.dateFrom.format("YYYY-MM-DD"),
+      dateTo: range.dateTo.format("YYYY-MM-DD"),
+      status: "IN_PROCESS",
       liquidatedEmployees: []
     } as unknown as ILiquidation;
     liq.liquidatedEmployees = await Promise.all(employees.map( async (employee: IEmployee) => {

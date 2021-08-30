@@ -14,6 +14,9 @@ export const liquidationSchema = new Schema({
   dateTo: {
     type: String
   },
+  status: {
+    type: String
+  },
   liquidatedEmployees: [{
     employee: employeeLiqSchema,
     total_by_hours: {

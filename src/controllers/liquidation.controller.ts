@@ -86,14 +86,30 @@ class LiquidationController extends BaseController{
   }
 
   new = async (req: Request, res: Response): Promise<Response<any>> => { 
-    const { fromDate, toDate, employeeSearch, employeeIds } = req.query;
-    const dateFrom = moment(fromDate, "DD_MM_YYYY").startOf('day');
-    const dateTo = moment(toDate, "DD_MM_YYYY").endOf('day');
+    const { fromDate, toDate, employeeSearch, employeeIds } = req.body;
+    const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
+    const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
     const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
     await liq.buildAndSave();
     const liquidation: ILiquidation = liq.getLiquidation();
-    // const liquidation: ILiquidation = {} as ILiquidation;
     return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
+  }
+  
+  update = async (req: Request, res: Response): Promise<Response<any>> => { 
+    const { id } = req.params;
+    const { fromDate, toDate, employeeIds } = req.body;
+    const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
+    const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
+    try{
+      
+      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
+      await liq.buildAndSave(id);
+      const liquidation: ILiquidation = liq.getLiquidation();
+      return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
   }
 
   liquidatedNews = async (req: Request, res: Response): Promise<Response<ILiquidatedNews | null>> => {   
@@ -111,21 +127,11 @@ class LiquidationController extends BaseController{
     const { id } = req.params;
     try{
       const liq: ILiquidation | null = await Liquidation.findOneAndDelete({_id: id});
-      if(!liq) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrado', type: "RESOURCE_NOT_FOUND"});
-      await Promise.all(liq.liquidatedEmployees.map( async (employeeLiq) => {
-        await LiquidatedNews.findOneAndDelete({ _id: employeeLiq.liquidated_news_id});
-      }));
-
-      const employeeLiquidateds = await EmployeeLiquidated.find({liquidation_id: liq._id});
-      await Promise.all(employeeLiquidateds.map( async (eLiquidated) =>{
-        await EmployeeSigned.findOneAndDelete({ employee_liquidated_id: eLiquidated._id});
-      }));
-
-      await EmployeeLiquidated.deleteMany({liquidation_id: liq._id});
-      
-      
-      const fromDateMoment = moment(liq.dateFrom, "DD-MM-YYYY");
-      const toDateMoment = moment(liq.dateTo, "DD-MM-YYYY");
+      if(!liq) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrada', type: "RESOURCE_NOT_FOUND"});
+      const liqMod = new LiquidationModule({dateFrom: moment(), dateTo: moment()}, []);
+      const {dateFrom, dateTo} = await liqMod.destroyLiquidation(liq);
+      const fromDateMoment = moment(dateFrom, "YYYY-MM-DD");
+      const toDateMoment = moment(dateTo, "YYYY-MM-DD");
       await createMovement(req.user, 'eliminó', 'liquidación', `Liquidación desde ${fromDateMoment.format("DD_MM_YYYY")} hasta ${toDateMoment.format("DD_MM_YYYY")}`);
       return res.status(200).json("liquidation deleted successfully");
     }catch(err){

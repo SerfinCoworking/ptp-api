@@ -45,6 +45,7 @@ export interface ILicReason {
 export default interface ILiquidation extends Document {
   dateFrom: string;
   dateTo: string;
+  status: string;
   liquidatedEmployees: ILiquidatedEmployee[];
   createdAt?: Date;
   updatedAt?: Date;
