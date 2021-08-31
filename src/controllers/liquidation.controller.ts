@@ -37,7 +37,7 @@ class LiquidationController extends BaseController{
         sort: sortDiggest,
         page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
         limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10),
-        select: "dateFrom dateTo"
+        select: "dateFrom dateTo status"
       };
 
       const liquidations: PaginateResult<ILiquidation> = await Liquidation.paginate(query, options);
@@ -87,21 +87,31 @@ class LiquidationController extends BaseController{
 
   new = async (req: Request, res: Response): Promise<Response<any>> => { 
     const { fromDate, toDate, employeeSearch, employeeIds } = req.body;
-    const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
-    const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
-    const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
-    await liq.buildAndSave();
-    const liquidation: ILiquidation = liq.getLiquidation();
-    return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
+    try{
+      if(!employeeIds.length) throw new GenericError({property:"Liquidation", message: 'EMPLOYEE_Debe seleccionar almenos un empleado', type: "RESOURCE_NOT_FOUND"});
+      if(!fromDate || !toDate) throw new GenericError({property:"Liquidation", message: 'RANGE_Debe seleccionar una rango de fechas valido', type: "RESOURCE_NOT_FOUND"});
+      const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
+      const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
+
+      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
+      await liq.buildAndSave();
+      const liquidation: ILiquidation = liq.getLiquidation();
+      return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
   }
   
   update = async (req: Request, res: Response): Promise<Response<any>> => { 
     const { id } = req.params;
     const { fromDate, toDate, employeeIds } = req.body;
-    const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
-    const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
-    try{
-      
+    try{      
+      if(!employeeIds.length) throw new GenericError({property:"Liquidation", message: 'EMPLOYEE_Debe seleccionar almenos un empleado', type: "RESOURCE_NOT_FOUND"});
+      if(!fromDate || !toDate) throw new GenericError({property:"Liquidation", message: 'RANGE_Debe seleccionar una rango de fechas valido', type: "RESOURCE_NOT_FOUND"});
+      const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
+      const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
+
       const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
       await liq.buildAndSave(id);
       const liquidation: ILiquidation = liq.getLiquidation();
