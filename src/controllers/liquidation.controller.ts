@@ -121,6 +121,21 @@ class LiquidationController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
+  
+  close = async (req: Request, res: Response): Promise<Response<any>> => { 
+    const { id } = req.params;  
+    try{
+      const opts: any = { runValidators: true, new: true };
+      const liquidation: ILiquidation | null = await Liquidation.findOneAndUpdate({_id: id, status: "IN_PROCESS"}, {status: 'CLOSED'}, opts);
+      if (!liquidation) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrada', type: "RESOURCE_NOT_FOUND"});
+      // liquidation.status = 'CLOSED';
+      // await liquidation.save;
+      return res.status(200).json({message: "Liquidación cerrada correctamente!", liquidation})
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
 
   liquidatedNews = async (req: Request, res: Response): Promise<Response<ILiquidatedNews | null>> => {   
     const {id} = req.params;
@@ -136,12 +151,14 @@ class LiquidationController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      const liq: ILiquidation | null = await Liquidation.findOneAndDelete({_id: id});
+      const liq: ILiquidation | null = await Liquidation.findOne({_id: id});
       if(!liq) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrada', type: "RESOURCE_NOT_FOUND"});
+      if(liq.status === 'CLOSED') throw new GenericError({property:"Liquidation", message: 'No es posible eliminar esta liquidación', type: "RESOURCE_NOT_FOUND"});
       const liqMod = new LiquidationModule({dateFrom: moment(), dateTo: moment()}, []);
       const {dateFrom, dateTo} = await liqMod.destroyLiquidation(liq);
       const fromDateMoment = moment(dateFrom, "YYYY-MM-DD");
       const toDateMoment = moment(dateTo, "YYYY-MM-DD");
+      await liq.remove();
       await createMovement(req.user, 'eliminó', 'liquidación', `Liquidación desde ${fromDateMoment.format("DD_MM_YYYY")} hasta ${toDateMoment.format("DD_MM_YYYY")}`);
       return res.status(200).json("liquidation deleted successfully");
     }catch(err){

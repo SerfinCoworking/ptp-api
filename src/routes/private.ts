@@ -78,6 +78,7 @@ class PrivateRoutes{
     this.router.post('/liquidation', hasPermissionIn('create', 'liquidation'), LiquidationController.new);
     this.router.get('/liquidation/:id', hasPermissionIn('read', 'liquidation'), LiquidationController.show);
     this.router.patch('/liquidation/:id', hasPermissionIn('update', 'liquidation'), LiquidationController.update);
+    this.router.patch('/liquidation/:id/close', hasPermissionIn('close', 'liquidation'), LiquidationController.close);
     this.router.delete('/liquidation/:id', hasPermissionIn('delete', 'liquidation'), LiquidationController.delete);
     this.router.get('/liquidation/liquidated-news/:id', hasPermissionIn('read', 'liquidation'), LiquidationController.liquidatedNews);
     this.router.get('/liquidation/:id/:employee_id', hasPermissionIn('read', 'liquidation'), LiquidationController.employeeDetail);
