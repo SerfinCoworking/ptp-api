@@ -22,17 +22,32 @@ import EmployeeSigned from '../models/employee-signed.model';
 class LiquidationController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<INews[]>> => {
-    const { search, page, limit, sort } = req.query;
-
-    const target: string = await this.searchDigest(search);
+    const { dateFrom, dateTo, page, limit, sort } = req.query;
     const sortDiggest: any = await this.sortDigest(sort, {"dateFrom": 1});
     try{
-        const query = {
+      const queryBuilder = [];
+
+
+      if(dateFrom && dateFrom.length > 0){
+        queryBuilder.push({
           $or: [
-            {"dateFrom":  { $regex: new RegExp( target, "ig")}},
-            {"dateTo":  { $regex: new RegExp( target, "ig")}},
+            {"dateFrom": {$gte: dateFrom}},
+            {"dateTo": {$gte: dateFrom}}
           ]
-        };
+        });
+      }
+      
+      if(dateTo && dateTo.length > 0){
+        queryBuilder.push({
+          $or:[
+            {"dateFrom": {$lte: dateTo}},
+            {"dateTo": {$lte: dateTo}}
+          ]
+        });
+      }
+
+      const query = queryBuilder.length ? { $and: queryBuilder } : {};
+
       const options: PaginateOptions = {
         sort: sortDiggest,
         page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),

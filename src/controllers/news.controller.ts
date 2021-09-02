@@ -14,7 +14,6 @@ class NewsController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<INews[]>> => {
     const { search, concept, dateFrom, dateTo, page, limit, sort } = req.query;
-
     const target: string = await this.searchDigest(search);
     const sortDiggest: any = await this.sortDigest(sort, {"createdAt": -1});
     try{
