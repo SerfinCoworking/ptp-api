@@ -9,6 +9,7 @@ import Employee from '../models/employee.model';
 import IEmployee, { Status } from '../interfaces/employee.interface';
 import NewsConcept from '../models/news-concept.model';
 import { createMovement } from '../utils/helpers';
+import EmployeeStatusModule from '../modules/employeeStatus.module';
 
 class NewsController extends BaseController{
 
@@ -108,12 +109,12 @@ class NewsController extends BaseController{
       if(!concept) throw new GenericError({property:"NewsConcept", message: 'Concepto no encontrado', type: "RESOURCE_NOT_FOUND"});
       body.concept = concept;
       const news: INews = await News.create(body);
-      // "BAJA", update user data
-      if(["BAJA", "ALTA", "ACTIVO"].includes(news.concept.key)){
+      
+      if(["BAJA"].includes(news.concept.key)){
         const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
         if(employee){
-          employee.status = news.concept.key;
-          await employee.save();
+          const employeeStatus = new EmployeeStatusModule(employee, news);
+          await employeeStatus.update();
         }
       }
       await createMovement(req.user, 'creó', 'novedad', `${news.concept.name}`);
@@ -144,26 +145,20 @@ class NewsController extends BaseController{
       // find the new
       const newsOld: INews | null = await News.findOne({_id: id});
       if(!newsOld) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
-
-      // update employee data of the oldNew
-      const employeeOld: IEmployee | null = await Employee.findOne({_id: newsOld.employee?._id});
-      if(employeeOld){
-        const now = moment();
-        employeeOld.status = now.diff(employeeOld.profile.admissionDate, "days") > 30  ?  Status.ACTIVO : Status.ALTA;
-        await employeeOld.save();
-      }
-
+      
+      const employeeOld: IEmployee | null | undefined = await Employee.findOne({_id: newsOld.employee?._id});
       // update news data and old employee o noew employee (if it changed)
       const news: INews | null = await News.findOneAndUpdate({_id: id}, body, opts);
       if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
-      // "BAJA", update user data
-      // if(news.concept.key == "BAJA"){
-      //   const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
-      //   if(employee){
-      //     employee.status = Status.BAJA;
-      //     await employee.save();
-      //   }
-      // }
+      
+      if(["BAJA"].includes(news.concept.key)){
+        const employee: IEmployee | null = await Employee.findOne({_id: body.employee?._id});
+        if(employee){
+          const employeeStatus = new EmployeeStatusModule(employee, news, employeeOld);
+          await employeeStatus.update();
+        }
+      }
+
       await createMovement(req.user, 'editó', 'novedad', `de ${newsOld.concept.name} a ${news.concept.name}`);
       return res.status(200).json(news);
     }catch(err){

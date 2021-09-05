@@ -11,11 +11,17 @@ import { IPeriod } from '../interfaces/schedule.interface';
 
 // Si el empleado ya fue dado de baja no permitir modificar / crear
 const employeeIsBaja = async function(employee: IEmployee): Promise<boolean>{
+  const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
+
+  const news: INews | null = await News.findOne({_id: _id}).select('employee._id');
+  
   const employeeTarget: IEmployee | null = await Employee.findOne({
-    _id: employee._id, 
-    status: "BAJA"
+    $and: [
+      {_id: employee._id}, 
+      {status: "BAJA"}
+    ] 
   });
-  return !employeeTarget
+  return !employeeTarget || (!!news && !!news.employee?._id.equals(employeeTarget._id) );
 }
 
 
