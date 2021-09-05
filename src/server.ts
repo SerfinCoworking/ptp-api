@@ -5,6 +5,7 @@ import cors from 'cors';
 import compression from 'compression';
 import { errorHandler } from "./middlewares/error.middleware";
 import { notFoundHandler } from "./middlewares/notFound.middleware";
+import { job } from "./utils/crons/employeeStatus";
 import * as db from './database/dbconfig';
 // config
 import { env } from './config/config';
@@ -46,6 +47,7 @@ class Server {
     async start() {
         this.app.listen(this.app.get('port'), async () => {
             await db.initializeMongo();
+            job.start();
             console.log(`Server on port ${this.app.get('port')}`);
         });
     }
