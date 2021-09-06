@@ -8,6 +8,9 @@ import { liquidatedNewsSchema } from './liquidated-news.model';
 
 // Schema
 export const liquidationSchema = new Schema({
+  name: {
+    type: String
+  },
   dateFrom: {
     type: String
   },

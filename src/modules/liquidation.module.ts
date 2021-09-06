@@ -12,21 +12,17 @@ import EmployeeSigned from '../models/employee-signed.model';
 
 export default class LiquidationModule {
 
-  private range: PeriodRangeDate;
-  private employeeIds: Array<string>;
   private periods: IPeriod[];
   private weeksBuilder: IHoursByWeek[];
   private liquidation: ILiquidation;
 
-  constructor(range: PeriodRangeDate, employeeIds: Array<string>){
+  constructor(private range: PeriodRangeDate, private employeeIds: Array<string>, private name: string){
     this.periods = [];
-    this.weeksBuilder = buildWeeks(range.dateFrom, range.dateTo, {
+    this.weeksBuilder = buildWeeks(this.range.dateFrom, this.range.dateTo, {
       totalHours: 0,
       totalExtraHours: 0,
       events: []
     });
-    this.range = range;
-    this.employeeIds = employeeIds;
     this.liquidation = {} as ILiquidation;
   }
 
@@ -58,13 +54,19 @@ export default class LiquidationModule {
 
   private async saveLiquidation(liquidation: ILiquidation, _id?: string): Promise<void>{
     if(_id){
-      const liquidated: ILiquidation | null = await Liquidation.findOneAndUpdate({_id}, liquidation);
+      const liquidated: ILiquidation | null = await Liquidation.findOneAndUpdate({_id}, {
+        ...liquidation,
+        name: this.name
+      });
       if (liquidated){
         await this.destroyLiquidation(liquidated);
         this.liquidation = liquidated;
       }
     }else{
-      this.liquidation = await Liquidation.create(liquidation);
+      this.liquidation = await Liquidation.create({
+        ...liquidation,
+        name: this.name
+      });
     }
   }
 

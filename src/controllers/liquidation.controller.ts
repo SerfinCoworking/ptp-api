@@ -22,12 +22,18 @@ import EmployeeSigned from '../models/employee-signed.model';
 class LiquidationController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<INews[]>> => {
-    const { dateFrom, dateTo, page, limit, sort } = req.query;
+    const { dateFrom, dateTo, name, page, limit, sort } = req.query;
     const sortDiggest: any = await this.sortDigest(sort, {"dateFrom": 1});
     try{
       const queryBuilder = [];
 
-
+      if(name && name.length > 0){
+        const target: string = await this.searchDigest(name);
+        queryBuilder.push({
+          "name":  { $regex: new RegExp( target, "ig")}
+        });
+      }
+      
       if(dateFrom && dateFrom.length > 0){
         queryBuilder.push({
           $or: [
@@ -52,7 +58,7 @@ class LiquidationController extends BaseController{
         sort: sortDiggest,
         page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
         limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10),
-        select: "dateFrom dateTo status"
+        select: "name dateFrom dateTo status"
       };
 
       const liquidations: PaginateResult<ILiquidation> = await Liquidation.paginate(query, options);
@@ -100,15 +106,15 @@ class LiquidationController extends BaseController{
     return res.status(200).json(employeeDetail);
   }
 
-  new = async (req: Request, res: Response): Promise<Response<any>> => { 
-    const { fromDate, toDate, employeeSearch, employeeIds } = req.body;
+  create = async (req: Request, res: Response): Promise<Response<any>> => { 
+    const { fromDate, toDate, employeeSearch, employeeIds, name } = req.body;
     try{
       if(!employeeIds.length) throw new GenericError({property:"Liquidation", message: 'EMPLOYEE_Debe seleccionar almenos un empleado', type: "RESOURCE_NOT_FOUND"});
       if(!fromDate || !toDate) throw new GenericError({property:"Liquidation", message: 'RANGE_Debe seleccionar una rango de fechas valido', type: "RESOURCE_NOT_FOUND"});
       const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
       const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
 
-      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
+      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds, name);
       await liq.buildAndSave();
       const liquidation: ILiquidation = liq.getLiquidation();
       return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
@@ -120,14 +126,14 @@ class LiquidationController extends BaseController{
   
   update = async (req: Request, res: Response): Promise<Response<any>> => { 
     const { id } = req.params;
-    const { fromDate, toDate, employeeIds } = req.body;
+    const { fromDate, toDate, employeeIds, name } = req.body;
     try{      
       if(!employeeIds.length) throw new GenericError({property:"Liquidation", message: 'EMPLOYEE_Debe seleccionar almenos un empleado', type: "RESOURCE_NOT_FOUND"});
       if(!fromDate || !toDate) throw new GenericError({property:"Liquidation", message: 'RANGE_Debe seleccionar una rango de fechas valido', type: "RESOURCE_NOT_FOUND"});
       const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
       const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
 
-      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds);
+      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds, name);
       await liq.buildAndSave(id);
       const liquidation: ILiquidation = liq.getLiquidation();
       return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
@@ -169,7 +175,7 @@ class LiquidationController extends BaseController{
       const liq: ILiquidation | null = await Liquidation.findOne({_id: id});
       if(!liq) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrada', type: "RESOURCE_NOT_FOUND"});
       if(liq.status === 'CLOSED') throw new GenericError({property:"Liquidation", message: 'No es posible eliminar esta liquidación', type: "RESOURCE_NOT_FOUND"});
-      const liqMod = new LiquidationModule({dateFrom: moment(), dateTo: moment()}, []);
+      const liqMod = new LiquidationModule({dateFrom: moment(), dateTo: moment()}, [], '');
       const {dateFrom, dateTo} = await liqMod.destroyLiquidation(liq);
       const fromDateMoment = moment(dateFrom, "YYYY-MM-DD");
       const toDateMoment = moment(dateTo, "YYYY-MM-DD");
