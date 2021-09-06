@@ -1,6 +1,8 @@
 import moment from 'moment';
 import IEmployee from '../interfaces/employee.interface';
 import INews from '../interfaces/news.interface';
+import Employee from '../models/employee.model';
+import News from '../models/news.model';
 
 export default class EmployeeStatusModule {
   
@@ -22,5 +24,22 @@ export default class EmployeeStatusModule {
       await this.employee.save();
     }
   }
+}
+
+export const cronEmployeeSetBaja =  async (): Promise<void> => {
+  const toDay = moment();
+  // Buscamos todas las novedades BAJA del dia actual
+  const news: INews[] = await News.find({
+    'concept.key': 'BAJA',
+    'dateFrom': {
+      $eq: toDay.format("YYYY-MM-DD")
+    }
+  });
+
+  // Por cada novedad BAJA, buscamos al empleado relacionado
+  // y le actualizamos su estado a BAJA
+  await Promise.all(news.map( async (newsToUpdate: INews) => {
+    await Employee.findOneAndUpdate({_id: newsToUpdate.employee?._id}, {status: 'BAJA'});
+  }));
 }
 
