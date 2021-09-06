@@ -113,7 +113,7 @@ class NewsController extends BaseController{
       if(["BAJA"].includes(news.concept.key)){
         const employee: IEmployee | null = await Employee.findOne({_id: news.employee?._id});
         if(employee){
-          const employeeStatus = new EmployeeStatusModule(employee, news);
+          const employeeStatus = new EmployeeStatusModule(employee, body.dateFrom);
           await employeeStatus.update();
         }
       }
@@ -154,7 +154,7 @@ class NewsController extends BaseController{
       if(["BAJA"].includes(news.concept.key)){
         const employee: IEmployee | null = await Employee.findOne({_id: body.employee?._id});
         if(employee){
-          const employeeStatus = new EmployeeStatusModule(employee, news, employeeOld);
+          const employeeStatus = new EmployeeStatusModule(employee, body.dateFrom, employeeOld);
           await employeeStatus.update();
         }
       }

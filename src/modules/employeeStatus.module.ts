@@ -6,7 +6,7 @@ import News from '../models/news.model';
 
 export default class EmployeeStatusModule {
   
-  constructor(private employee: IEmployee, private news: INews, private oldEmployee?: IEmployee | null | undefined){}
+  constructor(private employee: IEmployee, private dateFrom: string, private oldEmployee?: IEmployee | null | undefined){}
 
   async update(): Promise<void>{
     if(this.oldEmployee && !this.oldEmployee._id.equals(this.employee._id)){
@@ -16,7 +16,7 @@ export default class EmployeeStatusModule {
 
     const today = moment();
     // Cargo una baja antigua: cambio de estado automaticamente a BAJA
-    if ( today.isAfter(this.news.dateFrom)){
+    if ( today.isAfter(this.dateFrom)){
       this.employee.status = "BAJA";
       await this.employee.save();
     }else{
