@@ -74,6 +74,7 @@ class ObjectiveController extends BaseController{
       return res.status(200).json(objective);
     }catch(err){
       const handler = errorHandler(err);
+      console.log(err, "<===========");
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }

@@ -153,7 +153,16 @@ export const defaultSchedulesSchema = new Schema({
       type: Number,
       required: '{PATH} is required'
     },
-  }
+  },
+  color: { 
+    r: { type: Number},
+    g: { type: Number},
+    b: { type: Number},
+    a: { type: Number},
+    hex: { type: String},
+    rgba: { type: String}
+  },
+  name: { type: String }
 }, { _id : false });
 
 export const employeeLiqSchema = new Schema({
