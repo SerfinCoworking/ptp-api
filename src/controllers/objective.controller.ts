@@ -40,7 +40,11 @@ class ObjectiveController extends BaseController{
   create = async (req: Request, res: Response): Promise<Response<IObjective>> => {
     const body: IObjective = await this.filterNullValues(req.body, this.permitBody());
     try{
-      const objective: IObjective = await Objective.create({...body, role: {name: 'objective', permissions: [{name: 'signed'}]} });
+      const objective: IObjective = await Objective.create({
+        ...body,
+        status: 'DISABLED',
+        role: {name: 'objective', permissions: [{name: 'signed'}]} 
+      });
       await createMovement(req.user, 'creó', 'objetivo', `${objective.name}`);
       return res.status(200).json(objective);
     }catch(err){
@@ -74,7 +78,6 @@ class ObjectiveController extends BaseController{
       return res.status(200).json(objective);
     }catch(err){
       const handler = errorHandler(err);
-      console.log(err, "<===========");
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
@@ -92,8 +95,23 @@ class ObjectiveController extends BaseController{
     }
   }
 
+  passwordReset = async (req: Request, res: Response): Promise<Response<IObjective>> => {
+    const id: string = req.params.id;
+    const { password } = req.body;
+    try{
+      const opts: any = { runValidators: true, new: true, context: 'query' };
+      const objective: IObjective | null = await Objective.findOneAndUpdate({_id: id}, {password: password, status: 'ENABLED'}, opts);
+      if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      await createMovement(req.user, 'cambió contraseña', 'objetivo', `${objective.name}`);
+      return res.status(200).json(objective);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
   private permitBody = (permit?: string[] | undefined): Array<string> => {
-    return permit ? permit : [ 'name', 'serviceType', 'address', 'description', 'password', 'identifier', 'avatar' , 'defaultSchedules'];
+    return permit ? permit : [ 'name', 'serviceType', 'address', 'description', 'identifier', 'avatar' , 'defaultSchedules'];
   }
 }
 

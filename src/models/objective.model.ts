@@ -4,8 +4,6 @@ import mongoosePaginate from 'mongoose-paginate';
 import { serviceTypeSchema, addressSchema, defaultSchedulesSchema } from './embedded.documents';
 import IObjective from '../interfaces/objective.interface';
 import bcrypt from 'bcryptjs';
-import IRole from '../interfaces/role.interface';
-import Role from './role.model';
 import IUser from '../interfaces/user.interface';
 import User from './user.model';
 
@@ -14,16 +12,10 @@ const uniqueIdentifier = async function(identifier: string): Promise<boolean> {
   // excluimos el id del usuario que vamos a actualizar para no validar que se esta repitiendo el campo identifier
   const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
   let objective: IObjective | IUser | null = await Objective.findOne({ identifier, _id: { $nin: [_id] } });
-
   // checkeamos que el identificador del objetivo para logear, no se encuentre en uso en algun usuario
   if(!objective) objective = await User.findOne({ username: identifier });
 
   return !objective;
-};
-
-const existInRole = async function(role: string): Promise<boolean> {
-  const roleDB: IRole | null = await Role.findOne({ name: role});
-  return !!roleDB;
 };
 
 // Setter
@@ -58,16 +50,18 @@ export const objectiveSchema = new Schema({
   avatar: {
     type: String
   },
+  status: {
+    type: String
+  },
   password: {
     type: String,
-    required: '{PATH} is required is required',
-    minlength: [8, '{PATH} required a minimum of 8 characters'],
     set: encryptPassword
   },
   role: {
     _id: false,
     name:{
       type: String,
+      default: 'objective'
     },
     permissions:[{
       _id: false,
@@ -103,5 +97,4 @@ Objective.schema.method('isValidPassword', async function(thisObjective: IObject
 });
 
 Objective.schema.path('identifier').validate(uniqueIdentifier, 'Este {PATH} ya está en uso');
-// Objective.schema.path('role').validate(existInRole, 'Este {PATH} es inválido');
 export default Objective;

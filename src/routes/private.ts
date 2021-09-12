@@ -53,6 +53,7 @@ class PrivateRoutes{
     this.router.post('/objectives', hasPermissionIn('create', 'objective'), ObjectiveController.create);
     this.router.get('/objectives/:id', hasPermissionIn('read', 'objective'), ObjectiveController.show);
     this.router.patch('/objectives/:id', hasPermissionIn('update', 'objective'), ObjectiveController.update);
+    this.router.patch('/objectives/:id/password-reset', hasPermissionIn('password', 'objective'), ObjectiveController.passwordReset);
     this.router.delete('/objectives/:id', hasPermissionIn('delete', 'objective'), ObjectiveController.delete);
     
     // schedule
