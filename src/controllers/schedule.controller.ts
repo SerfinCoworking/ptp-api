@@ -27,7 +27,7 @@ class ScheduleController extends BaseController{
       const options: PaginateOptions = {
         sort: sortDiggest,
         page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 500)
+        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
       };
 
       const schedules: PaginateResult<ISchedule> = await Schedule.paginate(query, options);
