@@ -50,6 +50,12 @@ export interface ISchedule extends Document {
     _id: ObjectId;
     name: string;
   };
+  lastPeriod: ObjectId;
+  lastPeriodMonth: string;
+  lastPeriodRange: {
+    fromDate: string;
+    toDate: string;
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }

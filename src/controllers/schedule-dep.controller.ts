@@ -4,34 +4,43 @@ import { BaseController } from './base.controllers.interface';
 import Schedule from '../models/schedule.model';
 import Period from '../models/period.model';
 import { ISchedule, IPeriod,ICalendarList} from '../interfaces/schedule.interface';
-import { PaginateOptions, PaginateResult } from 'mongoose';
+import { PaginateResult } from 'mongoose';
 import moment from 'moment';
 import * as _ from 'lodash';
 import Objective from '../models/objective.model';
 import IObjective from '../interfaces/objective.interface';
 import { createMovement } from '../utils/helpers';
 
-class ScheduleController extends BaseController{
+class ScheduleDepController extends BaseController{
 
-  index = async (req: Request, res: Response): Promise<Response<ISchedule>> => {
-    const { search, page, limit, sort } = req.query;
-
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"objective.name": 1});
+  index = async (req: Request, res: Response): Promise<Response<ICalendarList>> => {
+    const {schedulePage, periodPage, objectiveId } = req.query;
+ 
+    const sPage: number = schedulePage ? schedulePage : 1;
+    
     try{
-      const query = {
-        $or: [
-          {"objective.name":  { $regex: new RegExp( target, "ig")}}
-        ]
+  
+      const schedules: PaginateResult<ISchedule> = await Schedule.paginate({}, {page: sPage, limit: 6, sort: {"objective.name": 1}});
+      const calendarList: ICalendarList = {
+        docs: [],
+        total: schedules.total,
+        limit: schedules.limit,
+        page: schedules.page,
+        pages: schedules.pages,
+        offset: schedules.offset,
       };
-      const options: PaginateOptions = {
-        sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 500)
-      };
+      await Promise.all(schedules.docs.map(async (schedule: ISchedule) => {
+        const pPage: number = periodPage && schedule.objective._id.equals(objectiveId) ? periodPage : 1;
+        
+        let period: PaginateResult<IPeriod> = await Period.paginate({"objective._id": schedule.objective._id}, { sort: { toDate: -1 }, page: pPage, limit: 1 });
+        let days: string[] = [];
+        if(period.total > 0){
+          days = this.getDaysObject(period.docs[0].fromDate, period.docs[0].toDate);
+        }
+        calendarList.docs.push({schedule, period, days});// set nested items
+      }));
 
-      const schedules: PaginateResult<ISchedule> = await Schedule.paginate(query, options);
-      return res.status(200).json(schedules);
+      return res.status(200).json(calendarList);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
@@ -143,4 +152,4 @@ class ScheduleController extends BaseController{
 
 }
 
-export default new ScheduleController();
+export default new ScheduleDepController();

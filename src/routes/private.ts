@@ -4,6 +4,7 @@ import RoleController from '../controllers/role.controller';
 import UserController from '../controllers/user.controller';
 import EmployeeController from '../controllers/employee.controller';
 import ObjectiveController from '../controllers/objective.controller';
+import ScheduleDepController from '../controllers/schedule-dep.controller';
 import ScheduleController from '../controllers/schedule.controller';
 import PeriodController from '../controllers/period.controller';
 import NewsConceptController from '../controllers/newsConcept.controller';
@@ -55,6 +56,13 @@ class PrivateRoutes{
     this.router.patch('/objectives/:id', hasPermissionIn('update', 'objective'), ObjectiveController.update);
     this.router.patch('/objectives/:id/password-reset', hasPermissionIn('password', 'objective'), ObjectiveController.passwordReset);
     this.router.delete('/objectives/:id', hasPermissionIn('delete', 'objective'), ObjectiveController.delete);
+    
+    // schedule
+    this.router.get('/schedules-dep', hasPermissionIn('read', 'schedule'), ScheduleDepController.index);
+    this.router.post('/schedules-dep',hasPermissionIn('create', 'schedule'), ScheduleDepController.create);
+    this.router.get('/schedules-dep/new', hasPermissionIn('create', 'schedule'), ScheduleDepController.newRecord);
+    this.router.get('/schedule-by-id-dep/:id',hasPermissionIn('read', 'schedule'), ScheduleDepController.getScheduleById);
+    this.router.get('/schedules-dep/:id',hasPermissionIn('read', 'schedule'), ScheduleDepController.show);
     
     // schedule
     this.router.get('/schedules', hasPermissionIn('read', 'schedule'), ScheduleController.index);

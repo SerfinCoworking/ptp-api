@@ -8,6 +8,12 @@ export const scheduleSchema = new Schema({
   objective: {
     _id: ObjectId,
     name: String
+  },
+  lastPeriod: { type: ObjectId },
+  lastPeriodMonth: { type: String },
+  lastPeriodRange: {
+    fromDate: { type: String },
+    toDate: { type: String }
   }
 },{
   timestamps: true
