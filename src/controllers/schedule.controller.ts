@@ -113,9 +113,9 @@ class ScheduleController extends BaseController{
       
       if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
 
-      const periods = await Period.find({"objective._id": schedule.objective._id}).select('objective fromDate toDate').sort({toDate: -1}).limit(10);
-      const objectives: IObjective[] = await Objective.find().select('name defaultSchedules');
-      return res.status(200).json({schedule, periods, objectives});
+      // const periods = await Period.find({"objective._id": schedule.objective._id}).select('objective fromDate toDate').sort({toDate: -1}).limit(10);
+      // const objectives: IObjective[] = await Objective.find().select('name defaultSchedules');
+      return res.status(200).json(schedule);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
