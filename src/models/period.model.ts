@@ -24,6 +24,9 @@ export const eventSchema = new Schema({
   },
   checkoutDescription:{
     type: String
+  },
+  corrected: {
+    type: Boolean
   }
 },{ _id : false });
 
