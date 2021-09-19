@@ -10,6 +10,7 @@ export interface IEvent{
   checkinDescription?: string;
   checkout?: Date;
   checkoutDescription?: string;
+  corrected?: boolean;
 }
 
 export interface ISigned{

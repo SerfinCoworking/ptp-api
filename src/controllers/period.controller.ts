@@ -179,6 +179,7 @@ class PeriodController extends BaseController{
               period.shifts[sIndex].events[eIndex].checkout = typeof(body.eventsDay[0].checkout) !== 'undefined' ? body.eventsDay[0].checkout : '';
               period.shifts[sIndex].events[eIndex].checkinDescription = typeof(body.eventsDay[0].checkinDescription) !== 'undefined' ? body.eventsDay[0].checkinDescription : '';
               period.shifts[sIndex].events[eIndex].checkoutDescription = typeof(body.eventsDay[0].checkoutDescription) !== 'undefined' ? body.eventsDay[0].checkoutDescription : '';
+              period.shifts[sIndex].events[eIndex].corrected = !!body.eventsDay[0].corrected;
             }
 
             // find correct event 2
@@ -187,6 +188,7 @@ class PeriodController extends BaseController{
               period.shifts[sIndex].events[eIndex].checkout = typeof(body.eventsDay[1].checkout) !== 'undefined' ? body.eventsDay[1].checkout : '';
               period.shifts[sIndex].events[eIndex].checkinDescription = typeof(body.eventsDay[1].checkinDescription) !== 'undefined' ? body.eventsDay[1].checkinDescription : '';
               period.shifts[sIndex].events[eIndex].checkoutDescription = typeof(body.eventsDay[1].checkoutDescription) !== 'undefined' ? body.eventsDay[1].checkoutDescription : '';
+              period.shifts[sIndex].events[eIndex].corrected = !!body.eventsDay[1].corrected;
             }
           }));
           await createMovement(req.user, 'editó', 'fichado', `de ${shift.employee.firstName} ${shift.employee.lastName}`);
