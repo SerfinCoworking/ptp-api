@@ -106,6 +106,21 @@ class PeriodController extends BaseController{
     }
   }
 
+  show = async (req: Request, res: Response): Promise<Response<ISchedule>> => {
+    const id: string = req.params.id;
+    try{
+      const period: IPeriod | null = await Period.findOne({_id: id});
+      
+      if(!period) throw new GenericError({property:"period", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+
+      return res.status(200).json(period);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
+
   getPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[], schedule: ISchedule, objective: IObjective}>> => {
     try{
       const id: string = req.params.id;

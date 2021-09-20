@@ -12,6 +12,7 @@ const toDateRequired = async function(toDate: string): Promise<boolean>{
 }
 // La fecha DESDE debe ser unica
 const fromDateUnique = async function(fromDate: string): Promise<boolean>{
+  const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
   const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
 
   const period: IPeriod | null = await Period.findOne({
@@ -21,15 +22,16 @@ const fromDateUnique = async function(fromDate: string): Promise<boolean>{
         fromDate: { $lte: fromDate },
         toDate: { $gte: fromDate }
       }
-    ]
+    ],
+    _id: { $nin: [_id] }
   });
   
   return !period;
 }
 // La fecha HAST debe ser unica
 const toDateUnique = async function(toDate: string): Promise<boolean>{
+  const _id = typeof(this._id) !== 'undefined' ? this._id : this.getFilter()._id;
   const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
-
   const period: IPeriod | null = await Period.findOne({
     'objective._id': obj.objective._id,
     $and: [
@@ -37,7 +39,8 @@ const toDateUnique = async function(toDate: string): Promise<boolean>{
         fromDate: { $lte: toDate },
         toDate: { $gte: toDate }
       }
-    ]
+    ],
+    _id: { $nin: [_id] }
   });
   
   return !period;

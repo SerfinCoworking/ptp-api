@@ -79,7 +79,7 @@ class ScheduleController extends BaseController{
       const objective: IObjective | null = await Objective.findOne({_id: body.objective._id}).select("name defaultSchedules");
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
       
-      let schedule: ISchedule | null = await Schedule.findOne({'objective_id': objective._id}).select('objective');
+      let schedule: ISchedule | null = await Schedule.findOne({'objective._id': objective._id}).select('objective');
       if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
       
 
