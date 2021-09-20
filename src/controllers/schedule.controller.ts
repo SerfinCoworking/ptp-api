@@ -38,70 +38,74 @@ class ScheduleController extends BaseController{
     }
   }
   
-  getScheduleById = async (req: Request, res: Response): Promise<Response<ICalendarList>> => {
-    const { id } = req.params; 
-    const {periodPage, objectiveId } = req.query; 
-    
-    try{
-  
-      const schedule: ISchedule | null = await Schedule.findOne({_id: id});
-      const calendarList: ICalendarList = {
-        docs: [],
-        total: 1,
-        limit: 1,
-        page: 1,
-        pages: 1
-      };
-
-      if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
-      
-      const pPage: number = periodPage ? periodPage : 1;
-
-      let period: PaginateResult<IPeriod> = await Period.paginate({"objective._id": schedule.objective._id}, { sort: { toDate: -1 }, page: pPage, limit: 1 });
-      let days: string[] = [];
-      if(period.total > 0){
-        days = this.getDaysObject(period.docs[0].fromDate, period.docs[0].toDate);
-      }
-      calendarList.docs.push({schedule, period, days});// set nested items
-
-      return res.status(200).json(calendarList);
-    }catch(err){
-      const handler = errorHandler(err);
-      return res.status(handler.getCode()).json(handler.getErrors());
-    }
-  }
-
-  newRecord = async (req: Request, res :Response): Promise<Response<any>> => {
-    try{
-      // get objectives and employees
-      const objectives: IObjective[] = await Objective.find().select('name');
-      return res.status(200).json(objectives);
-    }catch(err){
-      const handler = errorHandler(err);
-      return res.status(handler.getCode()).json(handler.getErrors());
-    }
-  }
-
-
   create = async (req: Request, res: Response): Promise<Response<any>> => {
-    const body: any = await this.filterNullValues(req.body, this.permitBody(['objective']));
+    
+    const body: any = await this.filterNullValues(req.body, this.permitBody(['objective', 'fromDate', 'toDate', 'shifts']));
     try{
-      const objective: IObjective | null = await Objective.findOne({_id: body.objective}).select("name defaultSchedules");
+      const objective: IObjective | null = await Objective.findOne({_id: body.objective._id}).select("name defaultSchedules");
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
       
       let schedule: ISchedule | null = await Schedule.findOne({"objective._id": objective._id}).select('objective');
-      let periods: IPeriod[];
+      if(!schedule) schedule = await Schedule.create({"objective": objective});
+
+      const period: IPeriod = await Period.create(body);
       
-      if(!schedule){
-        schedule = await Schedule.create({"objective": objective});
-        periods = [];
-      }else{
-        periods = await Period.find({"objective._id": objective._id}).select('objective fromDate toDate').sort({toDate: -1}).limit(10);
-      }
+      const lastPeriod: IPeriod | null = await Period.findOne({
+        'objective._id': schedule.objective._id
+      }).sort({toDate: -1});
+
+      if(lastPeriod){
+        await schedule.update({
+          lastPeriod: lastPeriod?._id,
+          lastPeriodMonth: lastPeriod.toDate,
+          lastPeriodRange: {
+            fromDate: lastPeriod.fromDate,
+            toDate: lastPeriod.toDate
+          }
+        });
+      }    
       await createMovement(req.user, 'creó', 'agenda', `Agenda al objetivo: ${schedule.objective.name}`);
-      return res.status(200).json({schedule, objective, periods});
+      return res.status(200).json({period});
     }catch(err){
       const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+  
+  update = async (req: Request, res: Response): Promise<Response<any>> => {
+    const id: string = req.params.id;
+    const body: any = await this.filterNullValues(req.body, this.permitBody(['objective', 'fromDate', 'toDate', 'shifts']));
+    try{
+      const objective: IObjective | null = await Objective.findOne({_id: body.objective._id}).select("name defaultSchedules");
+      if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      
+      let schedule: ISchedule | null = await Schedule.findOne({'objective_id': objective._id}).select('objective');
+      if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
+      
+
+      const opts: any = { runValidators: true, context: 'query' };
+      const period: IPeriod | null = await Period.findOneAndUpdate({_id: id}, body, opts); 
+      if(!period) throw new GenericError({property:"Period", message: 'Period no encontrado', type: "RESOURCE_NOT_FOUND"});
+
+      const lastPeriod: IPeriod | null = await Period.findOne({
+        'objective._id': schedule.objective._id
+      }).sort({toDate: -1});
+
+      if(lastPeriod){
+        await schedule.update({
+          lastPeriod: lastPeriod?._id,
+          lastPeriodMonth: lastPeriod.toDate,
+          lastPeriodRange: {
+            fromDate: lastPeriod.fromDate,
+            toDate: lastPeriod.toDate
+          }
+        });
+      }    
+      await createMovement(req.user, 'creó', 'agenda', `Agenda al objetivo: ${schedule.objective.name}`);
+      return res.status(200).json({period});
+    }catch(err){
+      const handler = errorHandler(err);
+      console.log(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }

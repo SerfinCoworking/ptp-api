@@ -67,9 +67,8 @@ class PrivateRoutes{
     // schedule
     this.router.get('/schedules', hasPermissionIn('read', 'schedule'), ScheduleController.index);
     this.router.post('/schedules',hasPermissionIn('create', 'schedule'), ScheduleController.create);
-    this.router.get('/schedules/new', hasPermissionIn('create', 'schedule'), ScheduleController.newRecord);
-    this.router.get('/schedule-by-id/:id',hasPermissionIn('read', 'schedule'), ScheduleController.getScheduleById);
     this.router.get('/schedules/:id',hasPermissionIn('read', 'schedule'), ScheduleController.show);
+    this.router.patch('/schedules/:id', hasPermissionIn('update', 'schedule'), ScheduleController.update);
     
     // period
     this.router.get('/period/:id', hasPermissionIn('read', 'schedule'), PeriodController.getPeriod);

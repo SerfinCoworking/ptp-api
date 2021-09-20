@@ -4,6 +4,44 @@ import { IPeriod } from '../interfaces/schedule.interface';
 import { ObjectId } from 'mongodb';
 
 
+const fromDateRequired = async function(fromDate: string): Promise<boolean>{
+  return !!fromDate;
+}
+const toDateRequired = async function(toDate: string): Promise<boolean>{
+  return !!toDate;
+}
+// La fecha DESDE debe ser unica
+const fromDateUnique = async function(fromDate: string): Promise<boolean>{
+  const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
+
+  const period: IPeriod | null = await Period.findOne({
+    'objective._id': obj.objective._id,
+    $and: [
+      {
+        fromDate: { $lte: fromDate },
+        toDate: { $gte: fromDate }
+      }
+    ]
+  });
+  
+  return !period;
+}
+// La fecha HAST debe ser unica
+const toDateUnique = async function(toDate: string): Promise<boolean>{
+  const obj = typeof(this._id) !== 'undefined' ? this : this.getUpdate().$set;
+
+  const period: IPeriod | null = await Period.findOne({
+    'objective._id': obj.objective._id,
+    $and: [
+      {
+        fromDate: { $lte: toDate },
+        toDate: { $gte: toDate }
+      }
+    ]
+  });
+  
+  return !period;
+}
 
 // Schema Event
 export const eventSchema = new Schema({
@@ -75,8 +113,13 @@ periodSchema.plugin(mongoosePaginate);
 // Model Period
 const Period: PaginateModel<IPeriod> = model('Period', periodSchema);
 
+Period.schema.path('fromDate').validate(fromDateRequired, 'FROMDATE_Fecha Desde es requerida.');
+Period.schema.path('toDate').validate(toDateRequired, 'TODATE_Fecha Hasta es requerida.');
+Period.schema.path('fromDate').validate(fromDateUnique, 'FROMDATE_La fecha ingresada se encuentra en otro período.');
+Period.schema.path('toDate').validate(toDateUnique, 'TODATE_La fecha ingresada se encuentra en otro período.');
 
-// Model methods
+
+// Model methods: DEPRECATED
 Period.schema.method('validatePeriod', async function(period: IPeriod): Promise<boolean>{  
   try{
     const periods: IPeriod[] | null = await Period.find(
