@@ -12,6 +12,7 @@ import moment from 'moment';
 import IObjective from '../interfaces/objective.interface';
 import Objective from '../models/objective.model';
 import { createMovement } from '../utils/helpers';
+import PeriodCalendarParserModule from '../modules/periodCalendarParser.module';
 
 class PeriodController extends BaseController{
 
@@ -140,6 +141,15 @@ class PeriodController extends BaseController{
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
+  }
+
+  getPlannig = async (req: Request, res: Response):Promise<Response<any>> => {
+    const id: string = req.params.id;
+    const period: IPeriod | null = await Period.findOne({_id: id});
+    if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+    const periodParser = new PeriodCalendarParserModule(period);
+    const result = await periodParser.toWeeks();
+    return res.status(200).json({msg: "ok", result});
   }
   
   getPrintPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {

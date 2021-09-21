@@ -74,6 +74,7 @@ class PrivateRoutes{
     this.router.get('/period/:id', hasPermissionIn('read', 'schedule'), PeriodController.getPeriod);
     this.router.get('/period/:id/show', hasPermissionIn('read', 'schedule'), PeriodController.show);
     this.router.get('/period/:id/print', hasPermissionIn('read', 'schedule'), PeriodController.getPrintPeriod);
+    this.router.get('/period/:id/planning', hasPermissionIn('read', 'schedule'), PeriodController.getPlannig);
     this.router.post('/period', hasPermissionIn('create', 'schedule'), PeriodController.create);
     this.router.patch('/period/:id', hasPermissionIn('update', 'schedule'), PeriodController.update);
 
