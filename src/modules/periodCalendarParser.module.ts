@@ -10,8 +10,8 @@ export default class PeriodCalendarParserModule {
 
   async toWeeks(){
     this.buildWeeks();
-    const result = await this.fillWeeksWithShifts();
-    return result;
+    const weeksEvents = await this.fillWeeksWithShifts();
+    return {weeksEvents, weeks: this.weeks};
   };
 
   // Separar por semana [7 dias]
@@ -42,17 +42,21 @@ export default class PeriodCalendarParserModule {
     await Promise.all(this.period.shifts.map( async (shift: IShift) => {
       
       const weeksEvents: Array<any> = [];
+      let totalHs: number = 0;
 
       await Promise.all(this.weeks.map( async (week: Array<string>) => {
         const dayEvents: Array<any> = [];
+        let totalByWeekHs: number = 0;
         await Promise.all(week.map( async (day: string) => {
         
           const events: Array<IEvent> = [];
 
           await Promise.all(shift.events.map((event: IEvent) => {
-            const fromDate = moment(event.fromDatetime, "YYYY-MM-DD");
+            const fromDate = moment(event.fromDatetime, "YYYY-MM-DD HH:mm");
+            const toDate = moment(event.toDatetime, "YYYY-MM-DD HH:mm");
             if(fromDate.isSame(day, 'date')){
               events.push(event);
+              totalByWeekHs += toDate.diff(fromDate, 'hours');
             }
           })); // fin events
 
@@ -62,12 +66,13 @@ export default class PeriodCalendarParserModule {
           });
 
         })); //fin week
-
-        weeksEvents.push(dayEvents);
+        totalHs += totalByWeekHs;
+        weeksEvents.push({dayEvents, totalByWeekHs});
       })); //fin weeks
 
       filledWeek.push({
         employee: shift.employee,
+        totalHs,
         weeks: weeksEvents
       })
 

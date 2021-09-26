@@ -146,10 +146,14 @@ class PeriodController extends BaseController{
   getPlannig = async (req: Request, res: Response):Promise<Response<any>> => {
     const id: string = req.params.id;
     const period: IPeriod | null = await Period.findOne({_id: id});
-    if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+    if(!period) throw new GenericError({property:"Period", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+    const objective: IObjective | null  =  await Objective.findOne({_id: period.objective._id}).select('defaultSchedules');
+    if(!period) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
+    
     const periodParser = new PeriodCalendarParserModule(period);
     const result = await periodParser.toWeeks();
-    return res.status(200).json({msg: "ok", result});
+
+    return res.status(200).json({defaultSchedules: objective?.defaultSchedules, ...result});
   }
   
   getPrintPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {

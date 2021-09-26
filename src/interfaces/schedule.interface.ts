@@ -11,6 +11,15 @@ export interface IEvent{
   checkout?: Date;
   checkoutDescription?: string;
   corrected?: boolean;
+  color: {
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+    hex: string;
+    rgba: string;
+  };
+  name: string;
 }
 
 export interface ISigned{

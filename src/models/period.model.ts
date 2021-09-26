@@ -68,7 +68,16 @@ export const eventSchema = new Schema({
   },
   corrected: {
     type: Boolean
-  }
+  },
+  color: { 
+    r: { type: Number},
+    g: { type: Number},
+    b: { type: Number},
+    a: { type: Number},
+    hex: { type: String},
+    rgba: { type: String}
+  },
+  name: { type: String }
 },{ _id : false });
 
 // Schema Shift
