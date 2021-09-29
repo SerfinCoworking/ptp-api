@@ -5,21 +5,27 @@ import Period from '../models/period.model';
 import { IPeriod, IShift, IEvent } from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
 import { createMovement } from '../utils/helpers';
+import moment from 'moment';
+import { Types } from 'mongoose';
 
 class EventController extends BaseController{
 
   create = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
     const { period_id, employee_id } = req.params;
     const event: IEvent = await this.filterNullValues(req.body, this.permitBody());
+    const eventId = new Types.ObjectId();
+    event._id = eventId;
+    
     try{
       const period: IPeriod | null = await Period.findOneAndUpdate({_id: period_id},
         { $push: { "shifts.$[outer].events": { ...event } }},
         { 
           arrayFilters: [{"outer.employee._id": employee_id }]
-        });
+      });
 
       if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
-      return res.status(200).json({period});
+      
+      return res.status(200).json({event});
     }catch(err){
       console.log(err);
       const handler = errorHandler(err);
