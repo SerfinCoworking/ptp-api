@@ -4,6 +4,7 @@ import { PaginateResult } from 'mongoose';
 
 
 export interface IEvent{
+  _id?: ObjectId;
   fromDatetime: Date;
   toDatetime: Date;
   checkin?: Date;

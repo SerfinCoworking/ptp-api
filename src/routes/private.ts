@@ -6,6 +6,7 @@ import EmployeeController from '../controllers/employee.controller';
 import ObjectiveController from '../controllers/objective.controller';
 import ScheduleDepController from '../controllers/schedule-dep.controller';
 import ScheduleController from '../controllers/schedule.controller';
+import EventController from '../controllers/event.controller';
 import PeriodController from '../controllers/period.controller';
 import NewsConceptController from '../controllers/newsConcept.controller';
 import NewsController from '../controllers/news.controller';
@@ -77,6 +78,14 @@ class PrivateRoutes{
     this.router.get('/period/:id/planning', hasPermissionIn('read', 'schedule'), PeriodController.getPlannig);
     this.router.post('/period', hasPermissionIn('create', 'schedule'), PeriodController.create);
     this.router.patch('/period/:id', hasPermissionIn('update', 'schedule'), PeriodController.update);
+    
+    // events
+    // this.router.get('/schedules', hasPermissionIn('read', 'schedule'), ScheduleController.index);
+    this.router.post('/period/:period_id/:employee_id/events',hasPermissionIn('create', 'event'), EventController.create);
+    this.router.patch('/period/:period_id/:employee_id/events/:id',hasPermissionIn('update', 'event'), EventController.update);
+    this.router.delete('/period/:period_id/:employee_id/events/:id',hasPermissionIn('delete', 'event'), EventController.delete);
+    // this.router.get('/schedules/:id',hasPermissionIn('read', 'schedule'), ScheduleController.show);
+    // this.router.patch('/schedules/:id', hasPermissionIn('update', 'schedule'), ScheduleController.update);
 
     this.router.post('/period/:id/create-shifts',hasPermissionIn('create', 'schedule'), PeriodController.createShifts);
     this.router.patch('/period/:id/update-shifts', hasPermissionIn('update', 'schedule'), PeriodController.updateShifts);

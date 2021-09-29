@@ -78,7 +78,7 @@ export const eventSchema = new Schema({
     rgba: { type: String}
   },
   name: { type: String }
-},{ _id : false });
+},{ _id : true });
 
 // Schema Shift
 export const shiftSchema = new Schema({
