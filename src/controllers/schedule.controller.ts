@@ -38,7 +38,7 @@ class ScheduleController extends BaseController{
     }
   }
   
-  create = async (req: Request, res: Response): Promise<Response<any>> => {
+  create = async (req: Request, res: Response): Promise<Response<IPeriod>> => {
     
     const body: any = await this.filterNullValues(req.body, this.permitBody(['objective', 'fromDate', 'toDate', 'shifts']));
     try{
@@ -65,14 +65,14 @@ class ScheduleController extends BaseController{
         });
       }    
       await createMovement(req.user, 'creó', 'agenda', `Agenda al objetivo: ${schedule.objective.name}`);
-      return res.status(200).json({period});
+      return res.status(200).json(period);
     }catch(err){
       const handler = errorHandler(err);
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
   
-  update = async (req: Request, res: Response): Promise<Response<any>> => {
+  update = async (req: Request, res: Response): Promise<Response<IPeriod>> => {
     const id: string = req.params.id;
     const body: any = await this.filterNullValues(req.body, this.permitBody(['objective', 'fromDate', 'toDate', 'shifts']));
     try{
@@ -102,7 +102,7 @@ class ScheduleController extends BaseController{
         });
       }    
       await createMovement(req.user, 'creó', 'agenda', `Agenda al objetivo: ${schedule.objective.name}`);
-      return res.status(200).json({period});
+      return res.status(200).json(period);
     }catch(err){
       const handler = errorHandler(err);
       console.log(err);

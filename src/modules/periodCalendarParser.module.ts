@@ -1,5 +1,7 @@
 import moment from "moment";
 import { IEvent, IPeriod, IShift } from "../interfaces/schedule.interface";
+import Period from "../models/period.model";
+import { ObjectId } from 'mongodb';
 
 export default class PeriodCalendarParserModule {
   
@@ -11,7 +13,12 @@ export default class PeriodCalendarParserModule {
   async toWeeks(){
     this.buildWeeks();
     const weeksEvents = await this.fillWeeksWithShifts();
-    return {weeksEvents, weeks: this.weeks};
+    return {weeksEvents, weeks: this.weeks, period: {
+      _id:  this.period._id,
+      objective: this.period.objective,
+      fromDate: this.period.fromDate,
+      toDate: this.period.toDate
+    }};
   };
 
   // Separar por semana [7 dias]
@@ -44,12 +51,17 @@ export default class PeriodCalendarParserModule {
       const weeksEvents: Array<any> = [];
       let totalHs: number = 0;
 
+      //obtenemos todos los eventos que tenga el empleado en otros objetivos 
+      // entre las mismas fechas del periodo
+      const allEventsByEmployee: Array<IEvent> = await this.otherEvents(this.period._id, this.period.fromDate, this.period.toDate, shift.employee);
+
       await Promise.all(this.weeks.map( async (week: Array<string>) => {
         const dayEvents: Array<any> = [];
         let totalByWeekHs: number = 0;
         await Promise.all(week.map( async (day: string) => {
         
           const events: Array<IEvent> = [];
+          const otherEvents: Array<IEvent> = [];
 
           await Promise.all(shift.events.map((event: IEvent) => {
             const fromDate = moment(event.fromDatetime, "YYYY-MM-DD HH:mm");
@@ -59,10 +71,20 @@ export default class PeriodCalendarParserModule {
               totalByWeekHs += toDate.diff(fromDate, 'hours');
             }
           })); // fin events
+          
+          await Promise.all(allEventsByEmployee.map((event: IEvent) => {
+            const fromDate = moment(event.fromDatetime, "YYYY-MM-DD HH:mm");
+            const toDate = moment(event.toDatetime, "YYYY-MM-DD HH:mm");
+            if(fromDate.isSame(day, 'date')){
+              otherEvents.push(event);
+              totalByWeekHs += toDate.diff(fromDate, 'hours');
+            }
+          })); // fin events
 
           dayEvents.push({
             date: day,
-            events
+            events,
+            otherEvents
           });
 
         })); //fin week
@@ -80,4 +102,71 @@ export default class PeriodCalendarParserModule {
     return filledWeek;
   }
 
+  async otherEvents(periodId: ObjectId, dateFrom: string, dateTo: string, employee: any): Promise<Array<IEvent>>{
+    const events: Array<IEvent> = [];
+    const periods: Array<IPeriod> = await Period.find({
+      $and: [{
+        $or: [
+        {
+          $and: [
+            { fromDate: { $lte: dateFrom } },
+            { toDate: {$gte: dateFrom } }
+          ]
+        }, {
+          $and: [
+            { fromDate: { $lte: dateTo } },
+            { toDate: {$gte: dateTo } }
+          ]
+        },{
+          $and: [
+            { fromDate: { $gte: dateFrom } },
+            { toDate: {$lte: dateTo } }
+          ]
+        }],
+        shifts: {
+          $elemMatch: {
+            $and: [
+              { 'employee._id': { $eq: employee._id } },
+              { 
+                events: {
+                  $elemMatch: {
+                    $or: [
+                      {
+                        $and: [
+                          { fromDatetime: { $lte: dateFrom } },
+                          { toDatetime: {$gte: dateFrom } }
+                        ]
+                      }, {
+                        $and: [
+                          { fromDatetime: { $lte: dateTo } },
+                          { toDatetime: {$gte: dateTo } }
+                        ]
+                      },{
+                        $and: [
+                          { fromDatetime: { $gte: dateFrom } },
+                          { toDatetime: {$lte: dateTo } }
+                        ]
+                      }]
+                  }
+                }
+              }
+            ]              
+          }
+        },
+        _id: { $ne: periodId }
+      }]
+    });
+
+    await Promise.all(periods.map( async (period: IPeriod) => {
+      await Promise.all(period.shifts.map( async (shift: IShift) => {
+        if(shift.employee._id.equals(employee._id)){
+          await Promise.all(shift.events.map((ev: IEvent) => {
+            events.push(ev);
+          }));
+        }
+      }));
+    }));
+
+    return events;
+  }
 }
