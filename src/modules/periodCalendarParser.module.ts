@@ -2,6 +2,8 @@ import moment from "moment";
 import { IEvent, IPeriod, IShift } from "../interfaces/schedule.interface";
 import Period from "../models/period.model";
 import { ObjectId } from 'mongodb';
+import INews from "../interfaces/news.interface";
+import News from "../models/news.model";
 
 export default class PeriodCalendarParserModule {
   
@@ -51,9 +53,10 @@ export default class PeriodCalendarParserModule {
       const weeksEvents: Array<any> = [];
       let totalHs: number = 0;
 
-      //obtenemos todos los eventos que tenga el empleado en otros objetivos 
+      // obtenemos todos los eventos que tenga el empleado en otros objetivos 
       // entre las mismas fechas del periodo
       const allEventsByEmployee: Array<IEvent> = await this.otherEvents(this.period._id, this.period.fromDate, this.period.toDate, shift.employee);
+      const newsByEmployee: Array<INews> = await this.getNews(shift.employee._id, this.period.fromDate, this.period.toDate);
 
       await Promise.all(this.weeks.map( async (week: Array<string>) => {
         const dayEvents: Array<any> = [];
@@ -62,6 +65,7 @@ export default class PeriodCalendarParserModule {
         
           const events: Array<IEvent> = [];
           const otherEvents: Array<IEvent> = [];
+          const news: Array<INews> = [];
 
           await Promise.all(shift.events.map((event: IEvent) => {
             const fromDate = moment(event.fromDatetime, "YYYY-MM-DD HH:mm");
@@ -79,12 +83,20 @@ export default class PeriodCalendarParserModule {
               otherEvents.push(event);
               totalByWeekHs += toDate.diff(fromDate, 'hours');
             }
-          })); // fin events
+          })); // fin other events
+          
+          await Promise.all(newsByEmployee.map((aNews: INews) => {
+            const dayMoment = moment(day, 'YYYY-MM-DD');
+            if(dayMoment.isBetween(aNews.dateFrom, aNews.dateTo, undefined, '[]')){
+              news.push(aNews);
+            }
+          })); // fin other events
 
           dayEvents.push({
             date: day,
             events,
-            otherEvents
+            otherEvents,
+            news
           });
 
         })); //fin week
@@ -168,5 +180,55 @@ export default class PeriodCalendarParserModule {
     }));
 
     return events;
+  }
+
+  async getNews(employeeId: ObjectId, dateFrom: string, dateTo: string): Promise<Array<INews>>{
+    return await News.find({
+      $and: [
+        {
+          $or: [
+            {
+              $and: [
+                { dateFrom: { $lte: dateFrom } },
+                { dateTo: { $gte: dateFrom } }
+              ]
+            }, {
+              $and: [
+                { dateFrom: { $lte: dateTo } },
+                { dateTo: { $gte: dateTo } }
+              ]
+            },{
+              $and: [
+                { dateFrom: { $gte: dateFrom } },
+                { dateTo: { $lte: dateTo } }
+              ]
+            }
+          ]
+        },
+        {
+          $or: [
+            {
+              'concept.key': { $in: [
+                'FERIADO'
+              ]},
+            },
+            {
+              $and: [{
+                'concept.key': { $in: [
+                  'BAJA',
+                  'LIC_JUSTIFICADA',
+                  'VACACIONES',
+                  'LIC_NO_JUSTIFICADA',
+                  'ART',
+                  'SUSPENSION',
+                  'LIC_SIN_SUELDO'
+                ]},
+                'employee._id': { $eq: employeeId }
+              }]
+            }
+          ]
+        }
+      ]      
+    }).select('concept dateFrom dateTo employee._id');
   }
 }
