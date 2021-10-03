@@ -13,7 +13,7 @@ export default class PeriodCalendarParserModule {
   constructor(private period: IPeriod){}
 
   async toWeeks(){
-    this.buildWeeks();
+    await this.buildWeeks();
     const weeksEvents = await this.fillWeeksWithShifts();
     return {weeksEvents, weeks: this.weeks, period: {
       _id:  this.period._id,
@@ -24,17 +24,20 @@ export default class PeriodCalendarParserModule {
   };
 
   // Separar por semana [7 dias]
-  private buildWeeks(){
+  private async buildWeeks(){
     const fromDate = moment(this.period.fromDate, "YYYY-MM-DD");
     const toDate = moment(this.period.toDate, "YYYY-MM-DD");
     const diffInDays = toDate.diff(fromDate, 'days');
     let counter: number = 0;
-    let weeksDays: Array<string> = [];
+    let weeksDays: Array<any> = [];
+    const feriados: Array<INews> = await this.getFeriados(this.period.fromDate, this.period.toDate);
 
     while(fromDate.isSameOrBefore(toDate)){
         
       counter++;
-      weeksDays.push(fromDate.format('YYYY-MM-DD'));
+      
+      let feriado: INews | undefined = feriados.find((aNews: INews) => fromDate.isBetween(aNews.dateFrom, aNews.dateTo, undefined, '[]'));
+      weeksDays.push({day: fromDate.format('YYYY-MM-DD'), feriado});
       if(counter === 7){
         counter = 0;
         this.weeks.push(weeksDays);
@@ -58,10 +61,10 @@ export default class PeriodCalendarParserModule {
       const allEventsByEmployee: Array<IEvent> = await this.otherEvents(this.period._id, this.period.fromDate, this.period.toDate, shift.employee);
       const newsByEmployee: Array<INews> = await this.getNews(shift.employee._id, this.period.fromDate, this.period.toDate);
 
-      await Promise.all(this.weeks.map( async (week: Array<string>) => {
+      await Promise.all(this.weeks.map( async (week: Array<any>) => {
         const dayEvents: Array<any> = [];
         let totalByWeekHs: number = 0;
-        await Promise.all(week.map( async (day: string) => {
+        await Promise.all(week.map( async (date: any) => {
         
           const events: Array<IEvent> = [];
           const otherEvents: Array<IEvent> = [];
@@ -70,7 +73,7 @@ export default class PeriodCalendarParserModule {
           await Promise.all(shift.events.map((event: IEvent) => {
             const fromDate = moment(event.fromDatetime, "YYYY-MM-DD HH:mm");
             const toDate = moment(event.toDatetime, "YYYY-MM-DD HH:mm");
-            if(fromDate.isSame(day, 'date')){
+            if(fromDate.isSame(date.day, 'date')){
               events.push(event);
               totalByWeekHs += toDate.diff(fromDate, 'hours');
             }
@@ -79,21 +82,21 @@ export default class PeriodCalendarParserModule {
           await Promise.all(allEventsByEmployee.map((event: IEvent) => {
             const fromDate = moment(event.fromDatetime, "YYYY-MM-DD HH:mm");
             const toDate = moment(event.toDatetime, "YYYY-MM-DD HH:mm");
-            if(fromDate.isSame(day, 'date')){
+            if(fromDate.isSame(date.day, 'date')){
               otherEvents.push(event);
               totalByWeekHs += toDate.diff(fromDate, 'hours');
             }
           })); // fin other events
           
           await Promise.all(newsByEmployee.map((aNews: INews) => {
-            const dayMoment = moment(day, 'YYYY-MM-DD');
+            const dayMoment = moment(date.day, 'YYYY-MM-DD');
             if(dayMoment.isBetween(aNews.dateFrom, aNews.dateTo, undefined, '[]')){
               news.push(aNews);
             }
           })); // fin other events
 
           dayEvents.push({
-            date: day,
+            date: date,
             events,
             otherEvents,
             news
@@ -208,11 +211,6 @@ export default class PeriodCalendarParserModule {
         {
           $or: [
             {
-              'concept.key': { $in: [
-                'FERIADO'
-              ]},
-            },
-            {
               $and: [{
                 'concept.key': { $in: [
                   'BAJA',
@@ -230,5 +228,33 @@ export default class PeriodCalendarParserModule {
         }
       ]      
     }).select('concept dateFrom dateTo employee._id');
+  }
+  
+  async getFeriados(dateFrom: string, dateTo: string): Promise<Array<INews>>{
+    return await News.find({
+      $and: [
+        {
+          $or: [
+            {
+              $and: [
+                { dateFrom: { $lte: dateFrom } },
+                { dateTo: { $gte: dateFrom } }
+              ]
+            }, {
+              $and: [
+                { dateFrom: { $lte: dateTo } },
+                { dateTo: { $gte: dateTo } }
+              ]
+            },{
+              $and: [
+                { dateFrom: { $gte: dateFrom } },
+                { dateTo: { $lte: dateTo } }
+              ]
+            }
+          ]
+        },
+        { 'concept.key': 'FERIADO' }
+      ]      
+    }).select('concept dateFrom dateTo');
   }
 }
