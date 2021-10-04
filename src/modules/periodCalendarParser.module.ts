@@ -1,9 +1,8 @@
 import moment from "moment";
 import { IEvent, IPeriod, IShift } from "../interfaces/schedule.interface";
-import Period from "../models/period.model";
-import { ObjectId } from 'mongodb';
 import INews from "../interfaces/news.interface";
 import News from "../models/news.model";
+import { getNews, otherEvents } from "../utils/periodParser.helpers";
 
 export default class PeriodCalendarParserModule {
   
@@ -34,8 +33,7 @@ export default class PeriodCalendarParserModule {
 
     while(fromDate.isSameOrBefore(toDate)){
         
-      counter++;
-      
+      counter++;      
       let feriado: INews | undefined = feriados.find((aNews: INews) => fromDate.isBetween(aNews.dateFrom, aNews.dateTo, undefined, '[]'));
       weeksDays.push({day: fromDate.format('YYYY-MM-DD'), feriado});
       if(counter === 7){
@@ -48,7 +46,7 @@ export default class PeriodCalendarParserModule {
       fromDate.add(1, 'day');
     }
   }
-
+  
   private async fillWeeksWithShifts(){
     const filledWeek: Array<any> = [];
     await Promise.all(this.period.shifts.map( async (shift: IShift) => {
@@ -58,8 +56,8 @@ export default class PeriodCalendarParserModule {
 
       // obtenemos todos los eventos que tenga el empleado en otros objetivos 
       // entre las mismas fechas del periodo
-      const allEventsByEmployee: Array<IEvent> = await this.otherEvents(this.period._id, this.period.fromDate, this.period.toDate, shift.employee);
-      const newsByEmployee: Array<INews> = await this.getNews(shift.employee._id, this.period.fromDate, this.period.toDate);
+      const allEventsByEmployee: Array<IEvent> = await otherEvents(this.period._id, this.period.fromDate, this.period.toDate, shift.employee);
+      const newsByEmployee: Array<INews> = await getNews(shift.employee._id, this.period.fromDate, this.period.toDate);
 
       await Promise.all(this.weeks.map( async (week: Array<any>) => {
         const dayEvents: Array<any> = [];
@@ -115,119 +113,6 @@ export default class PeriodCalendarParserModule {
 
     }));// fin shifts
     return filledWeek;
-  }
-
-  async otherEvents(periodId: ObjectId, dateFrom: string, dateTo: string, employee: any): Promise<Array<IEvent>>{
-    const events: Array<IEvent> = [];
-    const periods: Array<IPeriod> = await Period.find({
-      $and: [{
-        $or: [
-        {
-          $and: [
-            { fromDate: { $lte: dateFrom } },
-            { toDate: {$gte: dateFrom } }
-          ]
-        }, {
-          $and: [
-            { fromDate: { $lte: dateTo } },
-            { toDate: {$gte: dateTo } }
-          ]
-        },{
-          $and: [
-            { fromDate: { $gte: dateFrom } },
-            { toDate: {$lte: dateTo } }
-          ]
-        }],
-        shifts: {
-          $elemMatch: {
-            $and: [
-              { 'employee._id': { $eq: employee._id } },
-              { 
-                events: {
-                  $elemMatch: {
-                    $or: [
-                      {
-                        $and: [
-                          { fromDatetime: { $lte: dateFrom } },
-                          { toDatetime: {$gte: dateFrom } }
-                        ]
-                      }, {
-                        $and: [
-                          { fromDatetime: { $lte: dateTo } },
-                          { toDatetime: {$gte: dateTo } }
-                        ]
-                      },{
-                        $and: [
-                          { fromDatetime: { $gte: dateFrom } },
-                          { toDatetime: {$lte: dateTo } }
-                        ]
-                      }]
-                  }
-                }
-              }
-            ]              
-          }
-        },
-        _id: { $ne: periodId }
-      }]
-    });
-
-    await Promise.all(periods.map( async (period: IPeriod) => {
-      await Promise.all(period.shifts.map( async (shift: IShift) => {
-        if(shift.employee._id.equals(employee._id)){
-          await Promise.all(shift.events.map((ev: IEvent) => {
-            events.push(ev);
-          }));
-        }
-      }));
-    }));
-
-    return events;
-  }
-
-  async getNews(employeeId: ObjectId, dateFrom: string, dateTo: string): Promise<Array<INews>>{
-    return await News.find({
-      $and: [
-        {
-          $or: [
-            {
-              $and: [
-                { dateFrom: { $lte: dateFrom } },
-                { dateTo: { $gte: dateFrom } }
-              ]
-            }, {
-              $and: [
-                { dateFrom: { $lte: dateTo } },
-                { dateTo: { $gte: dateTo } }
-              ]
-            },{
-              $and: [
-                { dateFrom: { $gte: dateFrom } },
-                { dateTo: { $lte: dateTo } }
-              ]
-            }
-          ]
-        },
-        {
-          $or: [
-            {
-              $and: [{
-                'concept.key': { $in: [
-                  'BAJA',
-                  'LIC_JUSTIFICADA',
-                  'VACACIONES',
-                  'LIC_NO_JUSTIFICADA',
-                  'ART',
-                  'SUSPENSION',
-                  'LIC_SIN_SUELDO'
-                ]},
-                'employee._id': { $eq: employeeId }
-              }]
-            }
-          ]
-        }
-      ]      
-    }).select('concept dateFrom dateTo employee._id');
   }
   
   async getFeriados(dateFrom: string, dateTo: string): Promise<Array<INews>>{

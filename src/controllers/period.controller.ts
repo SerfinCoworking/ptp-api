@@ -13,6 +13,7 @@ import IObjective from '../interfaces/objective.interface';
 import Objective from '../models/objective.model';
 import { createMovement } from '../utils/helpers';
 import PeriodCalendarParserModule from '../modules/periodCalendarParser.module';
+import EmployeePeriodCalendarParserModule from '../modules/employeePeriodCalendarParser.module';
 
 class PeriodController extends BaseController{
 
@@ -142,7 +143,8 @@ class PeriodController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
-
+  
+  //********* New implementation ***********//
   getPlannig = async (req: Request, res: Response):Promise<Response<any>> => {
     const id: string = req.params.id;
     const period: IPeriod | null = await Period.findOne({_id: id});
@@ -155,6 +157,15 @@ class PeriodController extends BaseController{
 
     return res.status(200).json({defaultSchedules: objective?.defaultSchedules, ...result});
   }
+  
+  getEmployeeForPlannig = async (req: Request, res: Response):Promise<Response<any>> => {
+    const { fromDate, toDate, employee} = req.query;
+    const periodParser = new EmployeePeriodCalendarParserModule({fromDate, toDate});
+    const result = await periodParser.toWeeksByEmployees(employee);
+
+    return res.status(200).json(result);
+  }
+  //********* End New implementation ***********//
   
   getPrintPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
     try{
