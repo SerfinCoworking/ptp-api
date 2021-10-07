@@ -159,11 +159,19 @@ class PeriodController extends BaseController{
   }
   
   getEmployeeForPlannig = async (req: Request, res: Response):Promise<Response<any>> => {
-    const { fromDate, toDate, employee} = req.query;
-    const periodParser = new EmployeePeriodCalendarParserModule({fromDate, toDate});
+    const { periodId, fromDate, toDate, employee} = req.query;
+    const periodParser = new EmployeePeriodCalendarParserModule(periodId, {fromDate, toDate});
     const result = await periodParser.toWeeksByEmployees(employee);
 
     return res.status(200).json(result);
+  }
+
+  addEmployeeInPlannig = async (req: Request, res: Response): Promise<Response<any>> => {
+    const { id } = req.params;
+    const { shift } = req.body;
+    const period: IPeriod | null = await Period.findOneAndUpdate({_id: id},
+      { $push: { "shifts": shift }});
+    return res.status(200).json(shift);
   }
   //********* End New implementation ***********//
   

@@ -1,29 +1,36 @@
 import moment from "moment";
-import { IEvent } from "../interfaces/schedule.interface";
+import { IEvent, IPeriod, IShift } from "../interfaces/schedule.interface";
 import INews from "../interfaces/news.interface";
 import Employee from "../models/employee.model";
 import IEmployee from "../interfaces/employee.interface";
 import { getNews, otherEvents } from "../utils/periodParser.helpers";
+import Period from "../models/period.model";
+import { ObjectId } from "bson";
 
 export default class EmployeePeriodCalendarParserModule {
   
   weeks: any = [];
   shifts: any = [];
 
-  constructor(private range: {fromDate: string, toDate: string}){}
+  constructor(private periodId: string, private range: {fromDate: string, toDate: string}){}
 
   // Get employees only with other events and news, as weeks
   async toWeeksByEmployees(target: string){
     await this.buildWeeks();
-    const employees: Array<IEmployee> = await Employee.find(
-      { $or: [
-        {"profile.firstName":  { $regex: new RegExp( target, "ig")}},
-        {"profile.lastName":  { $regex: new RegExp( target, "ig")}}
-    ]}).select('_id profile.firstName profile.lastName profile.avatar');
+    const period: IPeriod | null = await Period.findOne({_id: this.periodId});
+    const employeesId: Array<ObjectId> = period?.shifts.map((shift: IShift) => shift.employee._id) || [];
+    const employees: Array<IEmployee> = await Employee.find({ 
+      $and: [
+        { $or: [
+          {"profile.firstName":  { $regex: new RegExp( target, "ig")}},
+          {"profile.lastName":  { $regex: new RegExp( target, "ig")}},
+        ]},
+        { _id: { $nin: employeesId }}
+      ]}
+    ).select('_id profile.firstName profile.lastName profile.avatar');
     const weeksEvents = await this.fillWeeksWithShiftsByEmployee(employees);
-    return { weeksEvents };
+    return weeksEvents;
   };
-  
   
   // Separar por semana [7 dias]
   private async buildWeeks(){
@@ -110,5 +117,5 @@ export default class EmployeePeriodCalendarParserModule {
 
     }));// fin shifts
     return filledWeek;
-  }  
+  }
 }
