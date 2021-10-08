@@ -80,6 +80,7 @@ class PrivateRoutes{
     this.router.post('/period', hasPermissionIn('create', 'schedule'), PeriodController.create);
     this.router.post('/period/:id/planning', hasPermissionIn('read', 'schedule'), PeriodController.addEmployeeInPlannig);
     this.router.patch('/period/:id', hasPermissionIn('update', 'schedule'), PeriodController.update);
+    this.router.delete('/period/:id/planning/:employee_id', hasPermissionIn('read', 'schedule'), PeriodController.deleteEmployeeInPlannig);
     
     // events
     // this.router.get('/schedules', hasPermissionIn('read', 'schedule'), ScheduleController.index);
