@@ -14,9 +14,54 @@ import Objective from '../models/objective.model';
 import { createMovement } from '../utils/helpers';
 import PeriodCalendarParserModule from '../modules/periodCalendarParser.module';
 import EmployeePeriodCalendarParserModule from '../modules/employeePeriodCalendarParser.module';
+import { PaginateOptions, PaginateResult } from 'mongoose';
 
 class PeriodController extends BaseController{
 
+  index = async (req: Request, res: Response): Promise<Response<IPeriod[]>> => {
+    const { objectiveId } = req.params;
+    const { search, concept, dateFrom, dateTo, page, limit, sort } = req.query;
+    const target: string = await this.searchDigest(search);
+    const sortDiggest: any = await this.sortDigest(sort, {"createdAt": -1});
+    try{
+      const queryBuilder = [];
+      
+      queryBuilder.push({ 
+        "objective._id": objectiveId 
+      });
+      if(dateFrom && dateFrom.length > 0){
+        queryBuilder.push({
+          $or: [
+            {"dateFrom": {$gte: dateFrom}},
+            {"dateTo": {$gte: dateFrom}}
+          ]
+        });
+      }
+      
+      if(dateTo && dateTo.length > 0){
+        queryBuilder.push({
+          $or:[
+            {"dateFrom": {$lte: dateTo}},
+            {"dateTo": {$lte: dateTo}}
+          ]
+        });
+      }
+
+      const query = queryBuilder.length ? { $and: queryBuilder } : {};
+      const options: PaginateOptions = {
+        sort: sortDiggest,
+        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
+        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+      };
+
+      const periods: PaginateResult<IPeriod> = await Period.paginate(query, options);
+      return res.status(200).json(periods);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+  
   create = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[]}>> => {
     const body: any = await this.filterNullValues(req.body, this.permitBody(['fromDate', 'toDate', 'objective']));
     try{
