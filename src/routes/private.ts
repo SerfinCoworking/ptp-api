@@ -74,7 +74,8 @@ class PrivateRoutes{
     // period
     this.router.get('/period/employees-for-planning', hasPermissionIn('read', 'schedule'), PeriodController.getEmployeeForPlannig);
     this.router.get('/period/:id', hasPermissionIn('read', 'schedule'), PeriodController.getPeriod);
-    this.router.get('/period/:id/show', hasPermissionIn('read', 'schedule'), PeriodController.show);
+    this.router.get('/period/:id/show', hasPermissionIn('read', 'schedule'), PeriodController.show); // use by new implementation
+    this.router.get('/period/:id/monitor', hasPermissionIn('read', 'schedule'), PeriodController.monitor); // use by new implementation
     this.router.get('/period/:id/print', hasPermissionIn('read', 'schedule'), PeriodController.getPrintPeriod);
     this.router.get('/period/:id/planning', hasPermissionIn('read', 'schedule'), PeriodController.getPlannig);
     this.router.post('/period', hasPermissionIn('create', 'schedule'), PeriodController.create);

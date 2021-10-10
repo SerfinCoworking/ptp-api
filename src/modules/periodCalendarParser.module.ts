@@ -21,6 +21,17 @@ export default class PeriodCalendarParserModule {
       toDate: this.period.toDate
     }};
   };
+  
+  async toEmployees(){
+    await this.buildWeeks();
+    const weeksEvents = await this.fillShiftsWithWeeks();
+    return {weeksEvents, weeks: this.weeks, period: {
+      _id:  this.period._id,
+      objective: this.period.objective,
+      fromDate: this.period.fromDate,
+      toDate: this.period.toDate
+    }};
+  };
 
   // Separar por semana [7 dias]
   private async buildWeeks(){
@@ -47,7 +58,7 @@ export default class PeriodCalendarParserModule {
     }
   }
   
-  private async fillWeeksWithShifts(){
+  private async fillShiftsWithWeeks(){
     const filledWeek: Array<any> = [];
     await Promise.all(this.period.shifts.map( async (shift: IShift) => {
       
@@ -110,6 +121,44 @@ export default class PeriodCalendarParserModule {
         totalHs,
         weeks: weeksEvents
       })
+
+    }));// fin shifts
+    return filledWeek;
+  }
+  
+  private async fillWeeksWithShifts(){
+    
+    const filledWeek: Array<any> = [];
+    await Promise.all(this.weeks.map( async (week: Array<any>) => {
+      const weeksEvents: Array<any> = [];
+      await Promise.all(week.map( async (date: any) => {
+        const dayEvents: Array<any> = [];
+    
+        await Promise.all(this.period.shifts.map( async (shift: IShift) => {
+          const events: Array<IEvent> = [];
+          await Promise.all(shift.events.map((event: IEvent) => {
+            const fromDate = moment(event.fromDatetime, "YYYY-MM-DD HH:mm");
+            if(fromDate.isSame(date.day, 'date')){
+              events.push(event);
+            }
+          })); // fin events
+
+          if(events.length){
+
+            dayEvents.push({
+              employee: shift.employee,
+              events
+            });
+          }
+
+
+        })); //fin week
+        weeksEvents.push({
+          date,
+          ...dayEvents
+        });
+      })); //fin weeks
+      filledWeek.push(weeksEvents);
 
     }));// fin shifts
     return filledWeek;

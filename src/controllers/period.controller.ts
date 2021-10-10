@@ -166,6 +166,25 @@ class PeriodController extends BaseController{
       return res.status(handler.getCode()).json(handler.getErrors());
     }
   }
+  
+  monitor = async (req: Request, res: Response): Promise<Response<ISchedule>> => {
+    const id: string = req.params.id;
+
+    try{
+      const period: IPeriod | null = await Period.findOne({_id: id});
+      
+      if(!period) throw new GenericError({property:"period", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+
+      const periodParser = new PeriodCalendarParserModule(period);
+      const result = await periodParser.toWeeks();
+  
+      return res.status(200).json(result);
+
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
 
 
   getPeriod = async (req: Request, res: Response): Promise<Response<{period: IPeriod, shifts: IShift[], schedule: ISchedule, objective: IObjective}>> => {
@@ -198,7 +217,7 @@ class PeriodController extends BaseController{
     if(!period) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
     
     const periodParser = new PeriodCalendarParserModule(period);
-    const result = await periodParser.toWeeks();
+    const result = await periodParser.toEmployees();
 
     return res.status(200).json({defaultSchedules: objective?.defaultSchedules, ...result});
   }
@@ -206,7 +225,7 @@ class PeriodController extends BaseController{
   getEmployeeForPlannig = async (req: Request, res: Response):Promise<Response<any>> => {
     const { periodId, fromDate, toDate, employee} = req.query;
     const periodParser = new EmployeePeriodCalendarParserModule(periodId, {fromDate, toDate});
-    const result = await periodParser.toWeeksByEmployees(employee);
+    const result = await periodParser.employeesByWeeks(employee);
 
     return res.status(200).json(result);
   }

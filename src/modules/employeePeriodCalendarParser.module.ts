@@ -15,7 +15,7 @@ export default class EmployeePeriodCalendarParserModule {
   constructor(private periodId: string, private range: {fromDate: string, toDate: string}){}
 
   // Get employees only with other events and news, as weeks
-  async toWeeksByEmployees(target: string){
+  async employeesByWeeks(target: string){
     await this.buildWeeks();
     const period: IPeriod | null = await Period.findOne({_id: this.periodId});
     const employeesId: Array<ObjectId> = period?.shifts.map((shift: IShift) => shift.employee._id) || [];
