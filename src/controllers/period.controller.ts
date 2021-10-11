@@ -15,6 +15,7 @@ import { createMovement } from '../utils/helpers';
 import PeriodCalendarParserModule from '../modules/periodCalendarParser.module';
 import EmployeePeriodCalendarParserModule from '../modules/employeePeriodCalendarParser.module';
 import { PaginateOptions, PaginateResult } from 'mongoose';
+import { IPeriodMonitor } from '../interfaces/planing.interface.';
 
 class PeriodController extends BaseController{
 
@@ -167,7 +168,7 @@ class PeriodController extends BaseController{
     }
   }
   
-  monitor = async (req: Request, res: Response): Promise<Response<ISchedule>> => {
+  monitor = async (req: Request, res: Response): Promise<Response<IPeriodMonitor>> => {
     const id: string = req.params.id;
 
     try{
@@ -176,7 +177,7 @@ class PeriodController extends BaseController{
       if(!period) throw new GenericError({property:"period", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
 
       const periodParser = new PeriodCalendarParserModule(period);
-      const result = await periodParser.toWeeks();
+      const result: IPeriodMonitor = await periodParser.toWeeks();
   
       return res.status(200).json(result);
 

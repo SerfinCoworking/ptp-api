@@ -3,6 +3,7 @@ import { IEvent, IPeriod, IShift } from "../interfaces/schedule.interface";
 import INews from "../interfaces/news.interface";
 import News from "../models/news.model";
 import { getNews, otherEvents } from "../utils/periodParser.helpers";
+import { IMonitorEmployee, IMonitorWeek, IMonitorWeekMonth, IPeriodMonitor } from "../interfaces/planing.interface.";
 
 export default class PeriodCalendarParserModule {
   
@@ -11,9 +12,9 @@ export default class PeriodCalendarParserModule {
 
   constructor(private period: IPeriod){}
 
-  async toWeeks(){
+  async toWeeks(): Promise<IPeriodMonitor>{
     await this.buildWeeks();
-    const weeksEvents = await this.fillWeeksWithShifts();
+    const weeksEvents: Array<IMonitorWeekMonth> = await this.fillWeeksWithShifts();
     return {weeksEvents, period: {
       _id:  this.period._id,
       objective: this.period.objective,
@@ -126,13 +127,13 @@ export default class PeriodCalendarParserModule {
     return filledWeek;
   }
   
-  private async fillWeeksWithShifts(){
+  private async fillWeeksWithShifts(): Promise<IMonitorWeekMonth[]>{
     
-    const filledWeek: Array<any> = [];
+    const filledWeek: IMonitorWeekMonth[] = [];
     await Promise.all(this.weeks.map( async (week: Array<any>) => {
-      const weeksEvents: Array<any> = [];
+      const weeksEvents: IMonitorWeek[] = [];
       await Promise.all(week.map( async (date: any) => {
-        const dayEvents: Array<any> = [];
+        const dayEvents: IMonitorEmployee[] = [];
     
         await Promise.all(this.period.shifts.map( async (shift: IShift) => {
           const events: Array<IEvent> = [];
@@ -143,20 +144,20 @@ export default class PeriodCalendarParserModule {
             }
           })); // fin events
 
-          if(events.length){
+          // if(events.length){
 
             dayEvents.push({
               employee: shift.employee,
               events
             });
-          }
+          // }
         })); //fin week
-        weeksEvents.push({
-          date,
+        weeksEvents.push({ day:{
+          date: date.day,
           dayEvents
-        });
+        }});
       })); //fin weeks
-      filledWeek.push(weeksEvents);
+      filledWeek.push({ week: weeksEvents});
 
     }));// fin shifts
     return filledWeek;
