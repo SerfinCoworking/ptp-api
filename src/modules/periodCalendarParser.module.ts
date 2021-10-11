@@ -14,7 +14,7 @@ export default class PeriodCalendarParserModule {
   async toWeeks(){
     await this.buildWeeks();
     const weeksEvents = await this.fillWeeksWithShifts();
-    return {weeksEvents, weeks: this.weeks, period: {
+    return {weeksEvents, period: {
       _id:  this.period._id,
       objective: this.period.objective,
       fromDate: this.period.fromDate,
@@ -150,12 +150,10 @@ export default class PeriodCalendarParserModule {
               events
             });
           }
-
-
         })); //fin week
         weeksEvents.push({
           date,
-          ...dayEvents
+          dayEvents
         });
       })); //fin weeks
       filledWeek.push(weeksEvents);

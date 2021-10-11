@@ -10,7 +10,7 @@ import Employee from '../models/employee.model';
 
 class SignedController extends BaseController{ 
 
-  signedEmployee = async (req: Request, res: Response) => {
+  employeeSign = async (req: Request, res: Response) => {
     const { objectiveId, rfid } = req.body;
     try{
       const signed = moment(); // fecha hora fichado
@@ -115,7 +115,7 @@ class SignedController extends BaseController{
 
           if(content.length){
             let firstContent:  ISigned = await this.getClosestEvent(signed, content);
-            firstContent = await this.setSigend(signed, firstContent);
+            firstContent = await this.setSigned(signed, firstContent);
             
             periodCurrent.shifts[index].events[firstContent.eventIndex] = firstContent.event;
             periodCurrent.shifts[index].signed?.push(signed.toDate());
@@ -134,9 +134,30 @@ class SignedController extends BaseController{
     }
   }
 
-  private permitBody = (permit?: string[] | undefined): Array<string> => {
-    return permit ? permit : [ 'objective', 'fromDate', 'toDate', 'shifts' ];
+  manualSign = async (req: Request, res: Response): Promise<Response<any>> => {
+    const {id, employee_id} = req.params;
+    const { event } = await this.filterNullValues(req.body, ['event']);
+    try{
+
+      const period: IPeriod | null = await Period.findOneAndUpdate({_id: id},
+        { $set: { "shifts.$[outer].events.$[event]": { ...event } }},
+        { 
+          arrayFilters: [
+            {"outer.employee._id": employee_id},
+            {"event._id": event._id }
+          ]
+        });
+
+      if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+
+      return res.status(200).json({msg: 'Fichaje guardado correctamente'});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
   }
+
+
 
   // obtencion de todos los evnetos de un empleado en un día
   private getAllEventsByDate = async (target: moment.Moment, shift: IShift): Promise<ISigned[]> => {
@@ -179,31 +200,9 @@ class SignedController extends BaseController{
     });
       
   }
-  private getFirstClosestEvent = async (target: moment.Moment, content: IEvent[]): Promise<IEvent> => {
-    
-    let event: IEvent;
-    
-    return new Promise((resolve, reject) => {
-      let currentDiffTo: number = 0;
-      content.map( async ( cont: IEvent, index: number) => {
-        const diffFrom: number = Math.abs(target.diff(cont.fromDatetime, 'minutes'));
-        const diffTo: number = Math.abs(target.diff(cont.toDatetime, 'minutes'));
-
-        // solo tenemos encuenta dos cosas:
-        // 1: si no hay un evento asignado, entonces definimos el primero por defecto
-        // 2: si la diferencia entre la hora de "SALIDA" y la hora actual, es mayor a la diferencia entre la hora de "ENTRADA" y la hora actual.
-        //      esto quiere decir que estaba más proximo a marcar el ingreso a la siguiente guardia que marcar el egreso de la guardia anterior
-        if((currentDiffTo >= diffFrom) || typeof(event) === 'undefined'){
-          currentDiffTo = diffTo;
-          event = cont;
-        }
-      });
-      resolve(event);
-    });
-      
-  }
   
-  private setSigend = async (target: moment.Moment, content: ISigned): Promise<ISigned> => {
+  
+  private setSigned = async (target: moment.Moment, content: ISigned): Promise<ISigned> => {
     return new Promise((resolve, reject)  => {
       const diffWStart = Math.abs(target.diff(content.event.fromDatetime, 'minutes'));
       const diffWEnd = Math.abs(target.diff(content.event.toDatetime, 'minutes'));
