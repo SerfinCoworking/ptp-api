@@ -6,19 +6,25 @@ import IEmployee from "../interfaces/employee.interface";
 import { getNews, otherEvents } from "../utils/periodParser.helpers";
 import Period from "../models/period.model";
 import { ObjectId } from "bson";
+import { IPeriodByEmployeeByWeek, IPeriodPrint, IPeriodWeekGroupByEmployee } from "../interfaces/period..print.interface.";
 
 export default class EmployeePeriodCalendarParserModule {
   
   weeks: any = [];
+  period: IPeriod = {} as IPeriod;
   shifts: any = [];
 
-  constructor(private periodId: string, private range: {fromDate: string, toDate: string}){}
+  constructor(private periodId: string){}
 
   // Get employees only with other events and news, as weeks
   async employeesByWeeks(target: string){
-    await this.buildWeeks();
     const period: IPeriod | null = await Period.findOne({_id: this.periodId});
-    const employeesId: Array<ObjectId> = period?.shifts.map((shift: IShift) => shift.employee._id) || [];
+    if (!this.period) return;
+    
+    this.period = period as IPeriod;
+    await this.buildWeeks();
+
+    const employeesId: Array<ObjectId> = this.period.shifts.map((shift: IShift) => shift.employee._id) || [];
     const employees: Array<IEmployee> = await Employee.find({ 
       $and: [
         { $or: [
@@ -32,10 +38,26 @@ export default class EmployeePeriodCalendarParserModule {
     return weeksEvents;
   };
   
+  // Get employees only with other events and news, as weeks
+  async employeesGroupByWeeks(target?: string): Promise<IPeriodPrint | void>{
+    const period: IPeriod | null = await Period.findOne({_id: this.periodId});
+    if (!period) return;
+    this.period = period;
+    await this.buildWeeks();
+
+    const weeksEvents: Array<IPeriodWeekGroupByEmployee> = await this.fillWeekByEmployee();
+    return {period: {
+      _id: this.period._id,
+      fromDate: this.period.fromDate,
+      toDate: this.period.toDate,
+      objective: this.period.objective
+    }, weeksEvents};
+  };
+  
   // Separar por semana [7 dias]
-  private async buildWeeks(){
-    const fromDate = moment(this.range.fromDate, "YYYY-MM-DD");
-    const toDate = moment(this.range.toDate, "YYYY-MM-DD");
+  private async buildWeeks(): Promise<void>{
+    const fromDate = moment(this.period.fromDate, "YYYY-MM-DD");
+    const toDate = moment(this.period.toDate, "YYYY-MM-DD");
     const diffInDays = toDate.diff(fromDate, 'days');
     let counter: number = 0;
     let weeksDays: Array<any> = [];
@@ -65,8 +87,8 @@ export default class EmployeePeriodCalendarParserModule {
 
       // obtenemos todos los eventos que tenga el empleado en otros objetivos 
       // entre las mismas fechas del periodo
-      const allEventsByEmployee: Array<IEvent> = await otherEvents(undefined, this.range.fromDate, this.range.toDate, employee);
-      const newsByEmployee: Array<INews> = await getNews(employee._id, this.range.fromDate, this.range.toDate);
+      const allEventsByEmployee: Array<IEvent> = await otherEvents(undefined, this.period.fromDate, this.period.toDate, employee);
+      const newsByEmployee: Array<INews> = await getNews(employee._id, this.period.fromDate, this.period.toDate);
       await Promise.all(this.weeks.map( async (week: Array<any>) => {
         const dayEvents: Array<any> = [];
         let totalByWeekHs: number = 0;
@@ -117,5 +139,36 @@ export default class EmployeePeriodCalendarParserModule {
 
     }));// fin shifts
     return filledWeek;
+  }
+
+  private async fillWeekByEmployee(): Promise<Array<IPeriodWeekGroupByEmployee>>{
+    const result: Array<IPeriodWeekGroupByEmployee> = await Promise.all(this.weeks.map( async (week: Array<string>) => {
+      const employeesGroupByWeek: Array<IPeriodByEmployeeByWeek> = [];
+      await Promise.all(this.period.shifts.map( async (shift: IShift) => {
+        const employeeGroupByWeek: IPeriodByEmployeeByWeek = {
+          employee: shift.employee,
+          week: []
+        };
+        await Promise.all(week.map( async (weekDay: any) => {
+          const events: Array<IEvent> = [];
+
+          const targetDate: moment.Moment = moment(weekDay.day, 'YYYY-MM-DD');
+          await Promise.all(shift.events.map((event: IEvent) => {
+            if(targetDate.isSame(event.fromDatetime, 'date')){
+              events.push(event);
+            }
+          }));
+
+          employeeGroupByWeek.week.push({
+            date: weekDay.day,
+            events
+          });
+        }));
+
+        employeesGroupByWeek.push(employeeGroupByWeek);
+      }));
+      return {employeesWeek: employeesGroupByWeek};
+    }));
+    return result;
   }
 }

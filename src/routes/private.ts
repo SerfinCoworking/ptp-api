@@ -8,6 +8,7 @@ import ScheduleDepController from '../controllers/schedule-dep.controller';
 import ScheduleController from '../controllers/schedule.controller';
 import EventController from '../controllers/event.controller';
 import PeriodController from '../controllers/period.controller';
+import PeriodPrinterController from '../controllers/period-printer.controller';
 import NewsConceptController from '../controllers/newsConcept.controller';
 import NewsController from '../controllers/news.controller';
 import SignedController from '../controllers/signed.controller';
@@ -77,6 +78,7 @@ class PrivateRoutes{
     this.router.get('/period/:id/show', hasPermissionIn('read', 'schedule'), PeriodController.show); // use by new implementation
     this.router.get('/period/:id/monitor', hasPermissionIn('read', 'schedule'), PeriodController.monitor); // use by new implementation
     this.router.get('/period/:id/print', hasPermissionIn('read', 'schedule'), PeriodController.getPrintPeriod);
+    this.router.get('/period/:id/print-v2', hasPermissionIn('read', 'schedule'), PeriodPrinterController.getPeriodPrinterParsed);
     this.router.get('/period/:id/planning', hasPermissionIn('read', 'schedule'), PeriodController.getPlannig);
     this.router.post('/period', hasPermissionIn('create', 'schedule'), PeriodController.create);
     this.router.post('/period/:id/planning', hasPermissionIn('read', 'schedule'), PeriodController.addEmployeeInPlannig);
@@ -149,3 +151,4 @@ class PrivateRoutes{
 
 const privateRoutes: PrivateRoutes = new PrivateRoutes();
 export default privateRoutes.routes();
+

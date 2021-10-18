@@ -225,7 +225,7 @@ class PeriodController extends BaseController{
   
   getEmployeeForPlannig = async (req: Request, res: Response):Promise<Response<any>> => {
     const { periodId, fromDate, toDate, employee} = req.query;
-    const periodParser = new EmployeePeriodCalendarParserModule(periodId, {fromDate, toDate});
+    const periodParser = new EmployeePeriodCalendarParserModule(periodId);
     const result = await periodParser.employeesByWeeks(employee);
 
     return res.status(200).json(result);
