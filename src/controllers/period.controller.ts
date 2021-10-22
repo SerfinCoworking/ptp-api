@@ -16,6 +16,7 @@ import PeriodCalendarParserModule from '../modules/periodCalendarParser.module';
 import EmployeePeriodCalendarParserModule from '../modules/employeePeriodCalendarParser.module';
 import { PaginateOptions, PaginateResult } from 'mongoose';
 import { IPeriodMonitor } from '../interfaces/planing.interface.';
+import { log } from 'console';
 
 class PeriodController extends BaseController{
 
@@ -26,9 +27,10 @@ class PeriodController extends BaseController{
     const sortDiggest: any = await this.sortDigest(sort, {"createdAt": -1});
     try{
       const queryBuilder = [];
-      
+
       queryBuilder.push({ 
-        "objective._id": objectiveId 
+        "objective._id": objectiveId,
+        fromDate: {$gte: "2021-10-25"}
       });
       if(dateFrom && dateFrom.length > 0){
         queryBuilder.push({
