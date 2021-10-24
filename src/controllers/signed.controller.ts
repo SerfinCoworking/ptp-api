@@ -140,7 +140,7 @@ class SignedController extends BaseController{
     try{
 
       const period: IPeriod | null = await Period.findOneAndUpdate({_id: id},
-        { $set: { "shifts.$[outer].events.$[event]": { ...event } }},
+        { $set: { "shifts.$[outer].events.$[event]": { ...event, corrected: true } }},
         { 
           arrayFilters: [
             {"outer.employee._id": employee_id},
