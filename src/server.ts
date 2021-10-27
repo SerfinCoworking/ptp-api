@@ -9,8 +9,8 @@ import { job } from "./utils/crons/employeeStatus";
 import * as db from './database/dbconfig';
 // config
 import { env } from './config/config';
-
 import routes from './routes/routes';
+import { ServerSocket } from './sockets/serverSocket';
 
 class Server {
 
@@ -45,11 +45,15 @@ class Server {
     }
 
     async start() {
-        this.app.listen(this.app.get('port'), async () => {
+
+        const serve = this.app.listen(this.app.get('port'), async () => {
             await db.initializeMongo();
             job.start();
             console.log(`Server on port ${this.app.get('port')}`);
         });
+        // Socket.IO connection
+        const socket = new ServerSocket(serve);
+        socket.connect();
     }
 }
 
