@@ -14,6 +14,7 @@ export class ServerSocket {
     this.io.on('connection', (socket) => {
       console.log('A user connected ========================');
       eventsHandler.updateEvent(this.io, socket); // update event
+      eventsHandler.userSigning(this.io, socket); // update event
       
       //Whenever someone disconnects this piece of code executed
       socket.on('disconnect', function () {
