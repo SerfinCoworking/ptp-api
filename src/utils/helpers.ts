@@ -1,8 +1,9 @@
 import moment from "moment";
 import { GenericError } from "../common/errors.handler";
-import { IEvent, IPeriod } from "../interfaces/schedule.interface";
+import { IEvent, IPeriod, IShift } from "../interfaces/schedule.interface";
 import IUser from "../interfaces/user.interface";
 import Movement from "../models/movement.model";
+import Period from "../models/period.model";
 import User from "../models/user.model";
 
 // Signature of the callback
@@ -169,4 +170,49 @@ export const sum = async (arr: any[], byField: string): Promise<number> => {
     total += item[byField] || 0;
   }));
   return total;
+}
+
+export const closestEventByEmployeeAndDatetime = async (signed: moment.Moment, objectiveId: string, rangeDate: {start: moment.Moment, end: moment.Moment}, employeeId: string): Promise<{event: IEvent, period: IPeriod} | undefined> => {
+  const period: IPeriod | null = await Period.findOne({ 
+    "objective._id": objectiveId,
+    $and: [
+      {fromDate: {$eq: rangeDate.start.format("YYYY-MM-DD") }},
+      {toDate: {$eq: rangeDate.end.format("YYYY-MM-DD") }},
+      {
+        shifts: {
+          $elemMatch: {
+            "employee._id": {
+              $eq: employeeId
+            }
+          }
+        }
+      }
+    ]
+  });
+  if(!period) return;
+
+  const shiftIndex: number | undefined = period.shifts.findIndex((shift: IShift): boolean => shift.employee._id.equals(employeeId));
+  
+  if(typeof(shiftIndex) !== 'undefined' && shiftIndex >= 0){
+    const events: Array<IEvent> = period.shifts[shiftIndex].events.filter((event: IEvent) => {
+      return (signed.isSame(event.fromDatetime, 'date')  || signed.isSame(event?.toDatetime, 'date')) && !(event.checkin || event.checkout)
+    }) || [];
+    if(!events.length) return;  
+
+    const event: IEvent | undefined = events.reduce((prev: IEvent, curr: IEvent) => {
+      const diffToPrev: number = Math.abs(signed.diff(prev.toDatetime, 'minutes'));
+      const diffFromCurrent: number = Math.abs(signed.diff(curr.fromDatetime, 'minutes'));
+      return diffFromCurrent >= diffToPrev ? prev : curr;
+    });
+
+
+    const diffFrom: number = Math.abs(signed.diff(event.fromDatetime, 'minutes'));
+    const diffTo: number = Math.abs(signed.diff(event.toDatetime, 'minutes'));
+    if(typeof(event.checkin) === 'undefined' && diffFrom < diffTo ){
+      event.checkin = signed.toDate();
+    }else if(typeof(event.checkout) === 'undefined') {
+      event.checkout = signed.toDate();
+    }
+    return {event, period};
+  }
 }
