@@ -195,8 +195,9 @@ export const closestEventByEmployeeAndDatetime = async (signed: moment.Moment, o
   
   if(typeof(shiftIndex) !== 'undefined' && shiftIndex >= 0){
     const events: Array<IEvent> = period.shifts[shiftIndex].events.filter((event: IEvent) => {
-      return (signed.isSame(event.fromDatetime, 'date')  || signed.isSame(event?.toDatetime, 'date')) && !(event.checkin || event.checkout)
+      return (signed.isSame(event.fromDatetime, 'date')  || signed.isSame(event.toDatetime, 'date')) && (!event.checkin || !event.checkout)
     }) || [];
+    
     if(!events.length) return;  
 
     const event: IEvent | undefined = events.reduce((prev: IEvent, curr: IEvent) => {
