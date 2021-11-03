@@ -1,4 +1,5 @@
 import { ObjectId } from "bson";
+import IObjective from "./objective.interface";
 import { IEvent } from "./schedule.interface";
 
 export interface IPeriodDay {
@@ -30,5 +31,6 @@ export interface IPeriodPrint {
       name: string;
     };
   };
+  objective: IObjective;
   weeksEvents: Array<IPeriodWeekGroupByEmployee>;
 }

@@ -7,6 +7,8 @@ import { getNews, otherEvents } from "../utils/periodParser.helpers";
 import Period from "../models/period.model";
 import { ObjectId } from "bson";
 import { IPeriodByEmployeeByWeek, IPeriodPrint, IPeriodWeekGroupByEmployee } from "../interfaces/period..print.interface.";
+import IObjective from "../interfaces/objective.interface";
+import Objective from "../models/objective.model";
 
 export default class EmployeePeriodCalendarParserModule {
   
@@ -42,6 +44,8 @@ export default class EmployeePeriodCalendarParserModule {
   async employeesGroupByWeeks(target?: string): Promise<IPeriodPrint | void>{
     const period: IPeriod | null = await Period.findOne({_id: this.periodId});
     if (!period) return;
+    const objective: IObjective | null = await Objective.findOne({_id: period.objective._id});
+    if (!objective) return;
     this.period = period;
     await this.buildWeeks();
 
@@ -51,7 +55,7 @@ export default class EmployeePeriodCalendarParserModule {
       fromDate: this.period.fromDate,
       toDate: this.period.toDate,
       objective: this.period.objective
-    }, weeksEvents};
+    }, objective, weeksEvents};
   };
   
   // Separar por semana [7 dias]
