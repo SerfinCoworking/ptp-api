@@ -7,8 +7,10 @@ import { closestEventByEmployeeAndDatetime } from "../utils/helpers";
 
 module.exports.getUserSignedEvent = async function(data: {objectiveId: string, rfid: number}): Promise<{event: IEvent, periodId: ObjectId, employeeId: ObjectId} | null | void> {
   
-  const signed = moment("2021-11-27 16:01", "YYYY-MM-DD HH:mm"); // fecha hora fichado
-  const end = moment("2021-11-27 16:01", "YYYY-MM-DD HH:mm").set('date', 26);
+  // const signed = moment("2021-11-27 15:57", "YYYY-MM-DD HH:mm"); // fecha hora fichado
+  // const end = moment("2021-11-27 15:57", "YYYY-MM-DD HH:mm").set('date', 26);
+  const signed = moment(); // fecha hora fichado
+  const end = moment().set('date', 26);
   // const signed = moment("2021-11-26 12:51", "YYYY-MM-DD HH::mm"); // fecha hora fichado
   // let end = moment("2021-11-26 12:51", "YYYY-MM-DD HH::mm").set('date', 26);
   let currPeriodRange: any;
