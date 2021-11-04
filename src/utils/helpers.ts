@@ -190,7 +190,7 @@ export const closestEventByEmployeeAndDatetime = async (signed: moment.Moment, o
       }
     ]
   });
-  console.log(rangeDate, "<=============RANGE DATE");
+  console.log(rangeDate, "<=============RANGE DATE", period?.objective.name, "<======== PERIOD");
   if(!period) return;
 
   const shiftIndex: number | undefined = period.shifts.findIndex((shift: IShift): boolean => shift.employee._id.equals(employeeId));
@@ -208,7 +208,7 @@ export const closestEventByEmployeeAndDatetime = async (signed: moment.Moment, o
       return diffFromCurrent >= diffToPrev ? prev : curr;
     });
 
-
+    console.log(event, "<============ PREVIOUS EVENT");
     const diffFrom: number = Math.abs(signed.diff(event.fromDatetime, 'minutes'));
     const diffTo: number = Math.abs(signed.diff(event.toDatetime, 'minutes'));
     if(typeof(event.checkin) === 'undefined' && diffFrom < diffTo ){
