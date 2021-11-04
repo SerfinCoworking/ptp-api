@@ -32,6 +32,7 @@ module.exports.userSigning = function(io: Server, socket: Socket): void {
     
     eventSigns.getUserSignedEvent(data).then((result: {event: IEvent, periodId: ObjectId, employeeId: ObjectId}) => {
       try{
+        console.log(result, "<==========================Result");
         Period.findOneAndUpdate({_id: result.periodId},
           { $set: { "shifts.$[outer].events.$[event]": result.event }},
           { 
@@ -52,6 +53,7 @@ module.exports.userSigning = function(io: Server, socket: Socket): void {
         
       }catch(err){
         // 
+        console.log(err, "<============ERROR");
         io.emit("user:signingFail", { error: "No posee guardias pendientes en este día" });
       }
       

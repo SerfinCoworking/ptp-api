@@ -173,6 +173,7 @@ export const sum = async (arr: any[], byField: string): Promise<number> => {
 }
 
 export const closestEventByEmployeeAndDatetime = async (signed: moment.Moment, objectiveId: string, rangeDate: {start: moment.Moment, end: moment.Moment}, employeeId: string): Promise<{event: IEvent, period: IPeriod} | undefined> => {
+  console.log(objectiveId, "<=================Objective ID");
   const period: IPeriod | null = await Period.findOne({ 
     "objective._id": objectiveId,
     $and: [
@@ -189,15 +190,16 @@ export const closestEventByEmployeeAndDatetime = async (signed: moment.Moment, o
       }
     ]
   });
+  console.log(rangeDate, "<=============RANGE DATE");
   if(!period) return;
 
   const shiftIndex: number | undefined = period.shifts.findIndex((shift: IShift): boolean => shift.employee._id.equals(employeeId));
-  
+  console.log(shiftIndex, employeeId, "<============Employee Index");
   if(typeof(shiftIndex) !== 'undefined' && shiftIndex >= 0){
     const events: Array<IEvent> = period.shifts[shiftIndex].events.filter((event: IEvent) => {
       return (signed.isSame(event.fromDatetime, 'date')  || signed.isSame(event.toDatetime, 'date')) && (!event.checkin || !event.checkout)
     }) || [];
-    
+    console.log(events, "<==========Events");
     if(!events.length) return;  
 
     const event: IEvent | undefined = events.reduce((prev: IEvent, curr: IEvent) => {

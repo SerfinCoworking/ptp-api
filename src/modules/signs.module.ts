@@ -11,6 +11,7 @@ module.exports.getUserSignedEvent = async function(data: {objectiveId: string, r
   // const end = moment("2021-11-27 15:57", "YYYY-MM-DD HH:mm").set('date', 26);
   const signed = moment(); // fecha hora fichado
   const end = moment().set('date', 26);
+  console.log(signed, "<=============signed");
   // const signed = moment("2021-11-26 12:51", "YYYY-MM-DD HH::mm"); // fecha hora fichado
   // let end = moment("2021-11-26 12:51", "YYYY-MM-DD HH::mm").set('date', 26);
   let currPeriodRange: any;
@@ -18,12 +19,13 @@ module.exports.getUserSignedEvent = async function(data: {objectiveId: string, r
   const isStartPeriod: boolean = signed.isSameOrAfter(end, 'date');
 
   const employee: IEmployee | null = await Employee.findOne({ rfid: data.rfid}).select('_id');
-  
+  console.log(employee, data.rfid, "<======================== RFID");
   if(!employee) return;
   // Si el dia del fichado es el comienzo de un nuevo periodo
   // debemos buscar el ultimo dia del periodo anterior
   // si no tiene egreso y es igual al mismo dia
   // entonces marcamos su fichado de egreso
+  console.log(isStartPeriod, "<======isStartPeriod");
   if(isStartPeriod){
     
     const prevPeriodRange = {
