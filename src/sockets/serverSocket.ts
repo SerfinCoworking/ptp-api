@@ -12,7 +12,7 @@ export class ServerSocket {
 
   connect(): void {
     this.io.on('connection', (socket) => {
-      console.log('A user connected ========================');
+      console.log(`======= User: ${socket.handshake.query.name} connected ========================`);
       eventsHandler.updateEvent(this.io, socket); // update event
       eventsHandler.userSigning(this.io, socket); // update event
       
