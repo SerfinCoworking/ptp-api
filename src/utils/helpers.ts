@@ -190,16 +190,16 @@ export const closestEventByEmployeeAndDatetime = async (signed: moment.Moment, o
       }
     ]
   });
-  console.log(rangeDate, "<=============RANGE DATE", period?.objective.name, "<======== PERIOD");
+  // console.log(rangeDate, "<=============RANGE DATE", period?.objective.name, "<======== PERIOD");
   if(!period) return;
 
   const shiftIndex: number | undefined = period.shifts.findIndex((shift: IShift): boolean => shift.employee._id.equals(employeeId));
-  console.log(shiftIndex, employeeId, "<============Employee Index");
+  // console.log(shiftIndex, employeeId, "<============Employee Index");
   if(typeof(shiftIndex) !== 'undefined' && shiftIndex >= 0){
     const events: Array<IEvent> = period.shifts[shiftIndex].events.filter((event: IEvent) => {
       return (signed.isSame(event.fromDatetime, 'date')  || signed.isSame(event.toDatetime, 'date')) && (!event.checkin || !event.checkout)
     }) || [];
-    console.log(events, "<==========Events");
+    // console.log(events, "<==========Events");
     if(!events.length) return;  
 
     const event: IEvent | undefined = events.reduce((prev: IEvent, curr: IEvent) => {
@@ -208,7 +208,7 @@ export const closestEventByEmployeeAndDatetime = async (signed: moment.Moment, o
       return diffFromCurrent >= diffToPrev ? prev : curr;
     });
 
-    console.log(event, "<============ PREVIOUS EVENT");
+    // console.log(event, "<============ PREVIOUS EVENT");
     const diffFrom: number = Math.abs(signed.diff(event.fromDatetime, 'minutes'));
     const diffTo: number = Math.abs(signed.diff(event.toDatetime, 'minutes'));
     if(typeof(event.checkin) === 'undefined' && diffFrom < diffTo ){
