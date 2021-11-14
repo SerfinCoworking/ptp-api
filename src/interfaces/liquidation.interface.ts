@@ -44,6 +44,7 @@ export interface ILicReason {
 // ==================== V2 ======================
 export default interface ILiquidation extends Document {
   name: string;
+  observation: string;
   dateFrom: string;
   dateTo: string;
   status: string;

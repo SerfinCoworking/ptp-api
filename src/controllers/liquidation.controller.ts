@@ -101,14 +101,14 @@ class LiquidationController extends BaseController{
   }
 
   create = async (req: Request, res: Response): Promise<Response<any>> => { 
-    const { fromDate, toDate, employeeSearch, employeeIds, name } = req.body;
+    const { fromDate, toDate, employeeIds, name, observation } = req.body;
     try{
       if(!employeeIds.length) throw new GenericError({property:"Liquidation", message: 'EMPLOYEE_Debe seleccionar almenos un empleado', type: "RESOURCE_NOT_FOUND"});
       if(!fromDate || !toDate) throw new GenericError({property:"Liquidation", message: 'RANGE_Debe seleccionar una rango de fechas valido', type: "RESOURCE_NOT_FOUND"});
       const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
       const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
 
-      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds, name);
+      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds, name, observation);
       await liq.buildAndSave();
       const liquidation: ILiquidation = liq.getLiquidation();
       return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});
@@ -120,14 +120,14 @@ class LiquidationController extends BaseController{
   
   update = async (req: Request, res: Response): Promise<Response<any>> => { 
     const { id } = req.params;
-    const { fromDate, toDate, employeeIds, name } = req.body;
+    const { fromDate, toDate, employeeIds, name, observation } = req.body;
     try{      
       if(!employeeIds.length) throw new GenericError({property:"Liquidation", message: 'EMPLOYEE_Debe seleccionar almenos un empleado', type: "RESOURCE_NOT_FOUND"});
       if(!fromDate || !toDate) throw new GenericError({property:"Liquidation", message: 'RANGE_Debe seleccionar una rango de fechas valido', type: "RESOURCE_NOT_FOUND"});
       const dateFrom = moment(fromDate, "YYYY-MM-DD").startOf('day');
       const dateTo = moment(toDate, "YYYY-MM-DD").endOf('day');
 
-      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds, name);
+      const liq = new LiquidationModule({dateFrom, dateTo}, employeeIds, name, observation);
       await liq.buildAndSave(id);
       const liquidation: ILiquidation = liq.getLiquidation();
       return res.status(200).json({ message: "Liquidación generada correctamente!", liquidation});

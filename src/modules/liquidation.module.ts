@@ -16,7 +16,7 @@ export default class LiquidationModule {
   private weeksBuilder: IHoursByWeek[];
   private liquidation: ILiquidation;
 
-  constructor(private range: PeriodRangeDate, private employeeIds: Array<string>, private name: string){
+  constructor(private range: PeriodRangeDate, private employeeIds: Array<string>, private name: string, private observation?: string){
     this.periods = [];
     this.weeksBuilder = buildWeeks(this.range.dateFrom, this.range.dateTo, {
       totalHours: 0,
@@ -56,7 +56,8 @@ export default class LiquidationModule {
     if(_id){
       const liquidated: ILiquidation | null = await Liquidation.findOneAndUpdate({_id}, {
         ...liquidation,
-        name: this.name
+        name: this.name,
+        observation: this.observation
       });
       if (liquidated){
         await this.destroyLiquidation(liquidated);
@@ -65,7 +66,8 @@ export default class LiquidationModule {
     }else{
       this.liquidation = await Liquidation.create({
         ...liquidation,
-        name: this.name
+        name: this.name,
+        observation: this.observation
       });
     }
   }

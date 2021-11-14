@@ -2,13 +2,15 @@ import { ObjectId } from 'bson';
 import { Schema, model, PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate';
 import ILiquidation from '../interfaces/liquidation.interface';
-import { newsSchema } from '../models/news.model';
 import { calculatedHoursSchema, employeeLiqSchema, licReasonSchema } from './embedded.documents';
-import { liquidatedNewsSchema } from './liquidated-news.model';
+
 
 // Schema
 export const liquidationSchema = new Schema({
   name: {
+    type: String
+  },
+  observation: {
     type: String
   },
   dateFrom: {
