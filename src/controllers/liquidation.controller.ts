@@ -1,14 +1,9 @@
 import { Request, Response } from 'express';
 import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
-import Period from '../models/period.model';
-import IEmployee from '../interfaces/employee.interface';
 import ILiquidation, { ILiquidatedEmployee, ILiquidatedNews } from '../interfaces/liquidation.interface';
-import { IPeriod, IShift, IEvent} from '../interfaces/schedule.interface';
 import * as _ from 'lodash';
-import Employee from '../models/employee.model';
 import moment from 'moment';
-import News from '../models/news.model';
 import INews, { _ljReasons } from '../interfaces/news.interface';
 import Liquidation from '../models/liquidation.model';
 import { PaginateOptions, PaginateResult } from 'mongoose';
@@ -17,13 +12,12 @@ import LiquidationModule from '../modules/liquidation.module';
 import LiquidatedNews from '../models/liquidated-news.model';
 import EmployeeLiquidated from '../models/employee-liquidated.documents';
 import IEmployeeLiquidated from '../interfaces/employee-liquidated.interface';
-import EmployeeSigned from '../models/employee-signed.model';
 
 class LiquidationController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<INews[]>> => {
     const { dateFrom, dateTo, name, page, limit, sort } = req.query;
-    const sortDiggest: any = await this.sortDigest(sort, {"dateFrom": 1});
+    const sortDiggest: any = await this.sortDigest(sort, {"dateFrom": -1});
     try{
       const queryBuilder = [];
 
