@@ -332,9 +332,24 @@ class PeriodController extends BaseController{
     const { id } = req.params;
     try{
       const period: IPeriod | null = await Period.findOneAndDelete({_id: id});
-      if(!period) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
-      await createMovement(req.user, 'eliminó', 'período', `Período del objetivo: ${period.objective.name} desde ${period.fromDate} hasta ${period.toDate}`);
+      if(!period) throw new GenericError({property:"Objective", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      
+      const lastPeriod: IPeriod | null = await Period.findOne({
+        'objective._id': period.objective._id
+      }).sort({toDate: -1});
 
+      await Schedule.findOneAndUpdate({
+        'objective._id': period.objective._id
+      },{
+        lastPeriod: lastPeriod?._id || undefined,
+        lastPeriodMonth: lastPeriod?.toDate || undefined,
+        lastPeriodRange: {
+          fromDate: lastPeriod?.fromDate || undefined,
+          toDate: lastPeriod?.toDate || undefined
+        }
+      });
+
+      await createMovement(req.user, 'eliminó', 'período', `Período del objetivo: ${period.objective.name} desde ${period.fromDate} hasta ${period.toDate}`);
       return res.status(200).json("period deleted successfully");
     }catch(err){
       const handler = errorHandler(err);
