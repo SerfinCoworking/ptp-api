@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 import { createMovement } from '../utils/helpers';
 import moment from 'moment';
 import { Types } from 'mongoose';
+import EventModule from '../modules/event.module';
 
 class EventController extends BaseController{
 
@@ -47,6 +48,21 @@ class EventController extends BaseController{
         });
 
       if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      return res.status(200).json({period});
+    }catch(err){
+      console.log(err);
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
+  }
+
+  updateMultiDays = async (req: Request, res: Response): Promise<Response<{shifts: IShift}>> => {
+    const { period_id, employee_id} = req.params;
+    const events: IEvent[] = <IEvent[]> req.body.events;
+    const days: string =  req.body.days;
+    try{
+      const eventModule = new EventModule(period_id, employee_id);
+      const period = await eventModule.replicateEventsToDays(days, events);      
       return res.status(200).json({period});
     }catch(err){
       console.log(err);

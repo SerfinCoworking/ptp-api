@@ -88,6 +88,7 @@ class PrivateRoutes{
     // events
     // this.router.get('/schedules', hasPermissionIn('read', 'schedule'), ScheduleController.index);
     this.router.post('/period/:period_id/:employee_id/events',hasPermissionIn('create', 'event'), EventController.create);
+    this.router.patch('/period/:period_id/:employee_id',hasPermissionIn('update', 'event'), EventController.updateMultiDays);
     this.router.patch('/period/:period_id/:employee_id/events/:id',hasPermissionIn('update', 'event'), EventController.update);
     this.router.delete('/period/:period_id/:employee_id/events/:id',hasPermissionIn('delete', 'event'), EventController.delete);
     // this.router.get('/schedules/:id',hasPermissionIn('read', 'schedule'), ScheduleController.show);
