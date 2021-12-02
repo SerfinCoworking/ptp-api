@@ -3,9 +3,6 @@ import { errorHandler, GenericError } from '../common/errors.handler';
 import { BaseController } from './base.controllers.interface';
 import Period from '../models/period.model';
 import { IPeriod, IShift, IEvent } from '../interfaces/schedule.interface';
-import * as _ from 'lodash';
-import { createMovement } from '../utils/helpers';
-import moment from 'moment';
 import { Types } from 'mongoose';
 import EventModule from '../modules/event.module';
 

@@ -1,11 +1,14 @@
 import { ObjectID } from 'bson';
 import moment from 'moment';
+import INews from '../interfaces/news.interface';
 import { IEvent, IPeriod } from '../interfaces/schedule.interface';
+import News from '../models/news.model';
 import Period from '../models/period.model';
 
 export default class EventModule {
 
   period: IPeriod | null = {} as IPeriod;
+  news: INews[] = [];
   constructor(private periodId: string, private employeeId: string){}
 
   async replicateEventsToDays(days: string, targetEvents: IEvent[]): Promise<IPeriod | null> {
@@ -39,6 +42,7 @@ export default class EventModule {
           currentEvents.push(...events);
         }
       }));
+      this.news = await this.hasNews(this.period.fromDate, this.period.toDate, this.employeeId);
     }
 
     if(periods.length){  
@@ -120,10 +124,13 @@ export default class EventModule {
 
   async cloneEvents(targetEvents: IEvent[], fromDate: moment.Moment): Promise<IEvent[]>{
     const events: IEvent[] = [];
-    await Promise.all(targetEvents.map((event) => {
-      if(event.fromDatetime && event.toDatetime){
-        const toCloneFrom = moment(event.fromDatetime, 'YYY-MM-DD HH:mm');
-        const toCloneTo = moment(event.toDatetime, 'YYY-MM-DD HH:mm');
+    let hasNews: INews | undefined = this.news.find((news) => fromDate.isBetween(news.dateFrom, news.dateTo, undefined, "[]"));
+
+    await Promise.all(targetEvents.map( async (event) => {
+
+      if(event.fromDatetime && event.toDatetime && !hasNews){
+        const toCloneFrom = moment(event.fromDatetime, 'YYYY-MM-DD HH:mm');
+        const toCloneTo = moment(event.toDatetime, 'YYYY-MM-DD HH:mm');
         const toCloneIsSameDate: boolean = toCloneFrom.isSame(toCloneTo, 'date');
 
         const startEvent = moment(fromDate).hour(toCloneFrom.hour()).minute(toCloneFrom.minute());
@@ -144,4 +151,55 @@ export default class EventModule {
     return events;
   }
 
+  async hasNews(dateFrom: string , dateTo: string, employee_id: string): Promise<INews[]> {
+    return await News.find({ 
+      'concept.key': {$nin: [
+        'ALTA',
+        'ACTIVO',
+        'BAJA',
+        'FERIADO',
+        'ADELANTO',
+        'CAPACITACIONES',
+        'EMBARGO',
+        'PLUS_RESPONSABILIDAD'
+      ]},
+      $or: [
+        {
+          'dateFrom': { $lt: dateFrom},
+          'dateTo': { $gt: dateTo }
+        },
+        { 
+          'dateFrom': { $eq: dateFrom}
+        },
+        {
+          'dateTo': { $eq: dateFrom }
+        },
+        { 
+          'dateFrom': { $eq: dateTo}
+        },
+        {
+          'dateTo': { $eq: dateTo }
+        },
+        {
+          $and: [
+            { 
+              'dateFrom': { $gt: dateFrom},
+            },{
+              'dateFrom': { $lt: dateTo }
+            },
+          ]
+        },
+        { 
+          $and: [
+            { 
+              'dateTo': { $gt: dateFrom},
+            },{
+              'dateTo': { $lt: dateTo }
+            },
+          ]
+        }
+      ],
+      'employee._id': employee_id
+    });
+  }
 }
