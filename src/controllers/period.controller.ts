@@ -331,9 +331,15 @@ class PeriodController extends BaseController{
   delete = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     try{
-      const period: IPeriod | null = await Period.findOneAndDelete({_id: id});
+      const period: IPeriod | null = await Period.findOne({_id: id});
       if(!period) throw new GenericError({property:"Objective", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
       
+      const hasSigns = period.shifts.some((shift) => shift.events.some((event) => event.checkin || event.checkout));
+      
+      if(hasSigns){
+        return res.status(403).json("Este período no se puedo elminar ya que posee fichados.");
+      }
+
       const lastPeriod: IPeriod | null = await Period.findOne({
         'objective._id': period.objective._id
       }).sort({toDate: -1});
