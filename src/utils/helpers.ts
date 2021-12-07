@@ -118,8 +118,8 @@ export const calcDayAndNightHours = async (datetimeFrom: moment.Moment, datetime
     }
   }
 
-  dayHours = unit === 'minutes' ? Math.round(dayHours / 60) : dayHours;
-  nightHours = unit === 'minutes' ? Math.round(nightHours / 60) : nightHours;
+  dayHours = unit === 'minutes' ? parseFloat((dayHours / 60).toFixed(2)) : dayHours;
+  nightHours = unit === 'minutes' ? parseFloat((nightHours / 60).toFixed(2)) : nightHours;
   return {dayHours, nightHours};
 }
 

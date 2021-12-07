@@ -147,8 +147,8 @@ export default class PeriodModule {
           const diffSignedAndScheduleFrom: number = scheduleDateTimeFrom.diff(signedDateTimeFrom, 'minutes') || 0;
           const diffSignedAndScheduleTo: number = scheduleDateTimeTo.diff(signedDateTimeTo, 'minutes') || 0;
           
-          signedDateTimeFrom = Math.abs(diffSignedAndScheduleFrom) > 30 ? signedDateTimeFrom : scheduleDateTimeFrom;
-          signedDateTimeTo = Math.abs(diffSignedAndScheduleTo) > 30 ? signedDateTimeTo : scheduleDateTimeTo;
+          signedDateTimeFrom = (Math.abs(diffSignedAndScheduleFrom) > 30 || event.corrected) ? signedDateTimeFrom : scheduleDateTimeFrom;
+          signedDateTimeTo = (Math.abs(diffSignedAndScheduleTo) > 30 || event.corrected) ? signedDateTimeTo : scheduleDateTimeTo;
           /**=====================================================================================**/
           
           let { dayHours: signedDH, nightHours: signedNH} = await calcDayAndNightHours(signedDateTimeFrom, signedDateTimeTo, 'minutes');
@@ -158,12 +158,12 @@ export default class PeriodModule {
           const eventWithObjective: IEventWithObjective = {
             event: event,
             objectiveName: objectiveName,
-            diffInHours: Math.round(signedDateTimeTo.diff(signedDateTimeFrom, 'minutes') / 60) || 0,
+            diffInHours: parseFloat((signedDateTimeTo.diff(signedDateTimeFrom, 'minutes') / 60).toFixed(2)) || 0,
             dayHours: signedDH,
             nightHours: signedNH,
             feriadoHours: 0
           };
-          await this.calcByWeeks(this.signedWeeks, signedDateTimeFrom, signedDateTimeTo, eventWithObjective);
+          await this.calcByWeeks(this.signedWeeks, signedDateTimeFrom, signedDateTimeTo, eventWithObjective, 'minutes');
         }
       }
 
@@ -172,14 +172,14 @@ export default class PeriodModule {
     return {signed, schedule};
   }
 
-  async calcByWeeks(weeks: IHoursByWeek[], fromDate: moment.Moment, toDate: moment.Moment, eventWithObjective: IEventWithObjective): Promise<void>{
+  async calcByWeeks(weeks: IHoursByWeek[], fromDate: moment.Moment, toDate: moment.Moment, eventWithObjective: IEventWithObjective, unit: string = 'hour'): Promise<void>{
     await Promise.all(weeks.map( (week) => {
       // el calculo se hace por la guardia completa, no corta entre semanas
       // si la guardia comienza en el ultimo dia de la semana, y termina en el comienzo
       // de la siguiente, se toma el total de horas de la guardia como parte de la semana
       // en la que inicio su guardia
       if(fromDate.isBetween(week.from, week.to, "date", "[]")){
-        week.totalHours += Math.round(toDate.diff(fromDate, 'minutes') / 60);
+        week.totalHours += (unit === 'minutes' ? parseFloat((toDate.diff(fromDate, 'minutes') / 60).toFixed(2)) : toDate.diff(fromDate, 'hour'));
         week.events?.push(eventWithObjective);
       }
       if(week.totalHours > 48){
