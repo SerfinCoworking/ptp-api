@@ -252,11 +252,20 @@ class PeriodController extends BaseController{
   deleteEmployeeInPlannig = async (req: Request, res: Response): Promise<Response<any>> => {
     const { id, employee_id } = req.params;
 
-    const period: IPeriod | null = await Period.findOneAndUpdate({_id: id},
-      { $pull: {"shifts": { "employee._id": employee_id } } });
+    try{
+      const period: IPeriod | null = await Period.findOne({_id: id});
+      if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
+      
+      const hasSings = period.shifts.find(shift => shift.employee._id.equals(employee_id) && shift.events.some(event => event.checkin || event.checkout));
+      if(hasSings) throw new GenericError({property:"Empleado", message: 'El empleado no se puede eliminar, tiene fichados realizados.', type: "RESOURCE_NOT_FOUND"});
+      await Period.findOneAndUpdate({_id: period._id},
+          { $pull: {"shifts": { "employee._id": employee_id } } });
 
-    if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
-    return res.status(200).json({period});
+      return res.status(200).json({period});
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
   }
   //********* End New implementation ***********//
   
