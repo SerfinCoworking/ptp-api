@@ -236,9 +236,17 @@ class PeriodController extends BaseController{
   addEmployeeInPlannig = async (req: Request, res: Response): Promise<Response<any>> => {
     const { id } = req.params;
     const { shift } = req.body;
-    const period: IPeriod | null = await Period.findOneAndUpdate({_id: id},
-      { $push: { "shifts": shift }});
-    return res.status(200).json(shift);
+    try{
+      if(!shift) throw new GenericError({property:"Empleado", message: 'Empleado invalido', type: "RESOURCE_NOT_FOUND"});
+      
+      const period: IPeriod | null = await Period.findOneAndUpdate({_id: id},
+                                                                   { $push: { "shifts": shift }});
+      if(!period) throw new GenericError({property:"Periodo", message: 'Período no encontrado', type: "RESOURCE_NOT_FOUND"});
+      return res.status(200).json(shift);
+    }catch(err){
+      const handler = errorHandler(err);
+      return res.status(handler.getCode()).json(handler.getErrors());
+    }
   }
   
   deleteEmployeeInPlannig = async (req: Request, res: Response): Promise<Response<any>> => {
