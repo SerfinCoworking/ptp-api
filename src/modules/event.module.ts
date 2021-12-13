@@ -80,11 +80,12 @@ export default class EventModule {
     const weekDays = days.split('_');
     const events: IEvent[] = [];
     const currentEventsToDelete: ObjectID[] = [];
+    const toDay = moment();
     while(fromDate.isSameOrBefore(toDate, 'date')){
       const weekDay = fromDate.weekday().toString();
 
       // this date it is include by selected days to replicate
-      if(weekDays.includes(weekDay)){
+      if(weekDays.includes(weekDay) && fromDate.isAfter(toDay)){
 
         const hasOtherEvent = otherEvents.find((event) => {
           return fromDate.isSame(event.fromDatetime, 'date') || fromDate.isSame(event.toDatetime, 'date')
