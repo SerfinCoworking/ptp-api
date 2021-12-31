@@ -285,7 +285,6 @@ export const newsSchema = new Schema({
   employee: employeeSchema,
   employeeMultiple: [employeeSchema],
   concept: {
-    _id: ObjectId,
     name: {
       type: String
     },

@@ -31,7 +31,7 @@ class AuthController extends BaseController{
       const user: IUser | null = await User.findOne({ _id });
       if(!user) throw new GenericError({property:"User", message: 'User not found', type: "RESOURCE_NOT_FOUND"});
 
-      const isMatch: boolean = await User.schema.methods.isValidPassword(user, oldPassword);
+      const isMatch: boolean = await user.isValidPassword(user.password, oldPassword);
       if(!isMatch) throw new GenericError({property:"User", message: 'Su contraseña actual no coincide con nuestros registros', type: "UNAUTHORIZED"});
       // if(!isMatch) return res.status(401).json({ message: 'Su contraseña actual no coincide con nuestros registros'});
 

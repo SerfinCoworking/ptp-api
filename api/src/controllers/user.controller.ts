@@ -65,7 +65,7 @@ class UserController extends BaseController{
     const body = await this.filterNullValues(req.body, this.permitBody());
     try{
       const opts: any = { runValidators: true, new: true, context: 'query' };
-      const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts);
+      const user: IUser = await User.findOneAndUpdate({_id: id}, body, opts) as IUser;
       if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
       await createMovement(req.user, 'editó', 'usuario', `${user.username}`);
       return res.status(200).json(user);
@@ -80,7 +80,7 @@ class UserController extends BaseController{
     const body = await this.filterNullValues(req.body, ['roles']);
     try{
       const opts: any = { runValidators: true, new: true };
-      const user: IUser | null = await User.findOneAndUpdate({_id: id}, body, opts);
+      const user: IUser = await User.findOneAndUpdate({_id: id}, body, opts) as IUser;
       if(!user) throw new GenericError({property:"User", message: 'Usuario no encontrado', type: "RESOURCE_NOT_FOUND"});
       await createMovement(req.user, 'actualizó permisos', 'usuario', `${user.username}`);
 

@@ -48,7 +48,7 @@ class NewsConceptController extends BaseController{
     const body = await this.filterNullValues(req.body, this.permitBody());
     try{
       const opts: any = { runValidators: true, new: true };
-      const newsConcept: INewsConcept | null = await NewsConcept.findOneAndUpdate({_id: id}, body, opts);
+      const newsConcept: INewsConcept = await NewsConcept.findOneAndUpdate({_id: id}, body, opts) as INewsConcept;
       if(!newsConcept) throw new GenericError({property:"NewsConcept", message: 'Concepto novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(newsConcept);
     }catch(err){

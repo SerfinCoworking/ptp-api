@@ -6,7 +6,6 @@ import { ObjectId } from 'mongodb';
 // Schema
 export const scheduleSchema = new Schema({
   objective: {
-    _id: ObjectId,
     name: String
   },
   lastPeriod: { type: ObjectId },

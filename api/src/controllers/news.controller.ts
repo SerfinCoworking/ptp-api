@@ -148,7 +148,7 @@ class NewsController extends BaseController{
       
       const employeeOld: IEmployee | null | undefined = await Employee.findOne({_id: newsOld.employee?._id});
       // update news data and old employee o noew employee (if it changed)
-      const news: INews | null = await News.findOneAndUpdate({_id: id}, body, opts);
+      const news: INews = await News.findOneAndUpdate({_id: id}, body, opts) as INews;
       if(!news) throw new GenericError({property:"News", message: 'Novedad no encontrada', type: "RESOURCE_NOT_FOUND"});
       
       if(["BAJA"].includes(news.concept.key)){

@@ -72,7 +72,7 @@ passport.use(new LocalStrategy({
         }
 
         // check if the password is correct
-        const isMatch = await user.schema.methods.isValidPassword(user, password);
+        const isMatch = await user.isValidPassword(user.password, password);
 
         // if not, handle it
         if(!isMatch){

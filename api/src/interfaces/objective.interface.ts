@@ -17,5 +17,6 @@ export default interface IObjective extends Document {
   defaultSchedules: IDefaultSchedule[];
   createdAt?: Date;
   updatedAt?: Date;
+  isValidPassword(storePassword: string, password: string): Promise<boolean>;
 }
 

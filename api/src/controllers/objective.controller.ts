@@ -72,7 +72,7 @@ class ObjectiveController extends BaseController{
 
     try{
       const opts: any = { runValidators: true, new: true, context: 'query' };
-      const objective: IObjective | null = await Objective.findOneAndUpdate({_id: id}, body, opts);
+      const objective: IObjective = await Objective.findOneAndUpdate({_id: id}, body, opts) as IObjective;
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
       await createMovement(req.user, 'editó', 'objetivo', `${objective.name}`);
       return res.status(200).json(objective);
@@ -100,7 +100,7 @@ class ObjectiveController extends BaseController{
     const { password } = req.body;
     try{
       const opts: any = { runValidators: true, new: true, context: 'query' };
-      const objective: IObjective | null = await Objective.findOneAndUpdate({_id: id}, {password: password, status: 'ENABLED'}, opts);
+      const objective: IObjective = await Objective.findOneAndUpdate({_id: id}, {password: password, status: 'ENABLED'}, opts) as IObjective;
       if(!objective) throw new GenericError({property:"Objective", message: 'Objetivo no encontrado', type: "RESOURCE_NOT_FOUND"});
       await createMovement(req.user, 'cambió contraseña', 'objetivo', `${objective.name}`);
       return res.status(200).json(objective);

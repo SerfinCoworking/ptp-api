@@ -23,5 +23,5 @@ export default interface IUser extends Document{
     loginCount: number;
     createdAt?: Date;
     updatedAt?: Date;
-    isValidPassword(thisUser: IUser, password: string): Promise<boolean>;
+    isValidPassword(storePassword: string, password: string): Promise<boolean>;
 }

@@ -82,7 +82,7 @@ class EmployeeController extends BaseController{
     const body = await this.filterNullValues(req.body, this.permitBody());
     try{
       const opts: any = { runValidators: true, new: true };
-      const employee: IEmployee | null = await Employee.findOneAndUpdate({_id: id}, body, opts);
+      const employee: IEmployee = await Employee.findOneAndUpdate({_id: id}, body, opts) as IEmployee;
       if(!employee) throw new GenericError({property:"Employee", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
       await createMovement(req.user, 'editó', 'empleado', `${employee.profile.lastName} ${employee.profile.lastName}`);
       return res.status(200).json(employee);

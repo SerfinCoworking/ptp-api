@@ -64,7 +64,7 @@ class CustomerController extends BaseController{
     const body = await this.filterNullValues(req.body, this.permitBody());
     try{
       const opts: any = { runValidators: true, new: true };
-      const employee: ICustomer | null = await Customer.findOneAndUpdate({_id: id}, body, opts);
+      const employee: ICustomer = await Customer.findOneAndUpdate({_id: id}, body, opts) as ICustomer;
       if(!employee) throw new GenericError({property:"Customer", message: 'Cliente no encontrado', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(employee);
     }catch(err){

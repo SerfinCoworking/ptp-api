@@ -65,7 +65,7 @@ class TemplateController extends BaseController{
 
     try{
       const opts: any = { runValidators: true, new: true, context: 'query' };
-      const template: ITemplate | null = await Template.findOneAndUpdate({_id: id}, body, opts);
+      const template: ITemplate = await Template.findOneAndUpdate({_id: id}, body, opts) as ITemplate;
       if(!template) throw new GenericError({property:"Template", message: 'Template no encontrado', type: "RESOURCE_NOT_FOUND"});
       await createMovement(req.user, 'editó', 'template', `${Template.name}`);
       return res.status(200).json(template);

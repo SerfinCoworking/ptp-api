@@ -84,7 +84,7 @@ class ScheduleController extends BaseController{
       
 
       const opts: any = { runValidators: true, context: 'query' };
-      const period: IPeriod | null = await Period.findOneAndUpdate({_id: id}, body, opts); 
+      const period: IPeriod = await Period.findOneAndUpdate({_id: id}, body, opts) as IPeriod; 
       if(!period) throw new GenericError({property:"Period", message: 'Period no encontrado', type: "RESOURCE_NOT_FOUND"});
 
       const lastPeriod: IPeriod | null = await Period.findOne({

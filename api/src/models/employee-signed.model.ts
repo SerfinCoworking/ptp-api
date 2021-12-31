@@ -10,7 +10,6 @@ const signedByPeriodSchema = new Schema({
     type: Date
   }],
   objective: {
-    _id: { type: ObjectId},
     name: { type: String}
   }
 }, { _id : false });

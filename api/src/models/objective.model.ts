@@ -84,17 +84,17 @@ export const objectiveSchema = new Schema({
 
 objectiveSchema.plugin(mongoosePaginate);
 
-// Model
-const Objective: PaginateModel<IObjective> = model<IObjective>('Objective', objectiveSchema);
-
 // Model methods
-Objective.schema.method('isValidPassword', async function(thisObjective: IObjective, password: string): Promise<boolean>{
+objectiveSchema.method('isValidPassword', async function(storePassword: string, password: string): Promise<boolean>{
   try{
-    return await bcrypt.compare(password, thisObjective.password);
+    return await bcrypt.compare(password, storePassword);
   } catch(err){
     throw new Error(err);
   }
 });
+// Model
+const Objective: PaginateModel<IObjective> = model<IObjective>('Objective', objectiveSchema);
+
 
 Objective.schema.path('identifier').validate(uniqueIdentifier, 'Este {PATH} ya está en uso');
 export default Objective;

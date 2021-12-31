@@ -111,17 +111,18 @@ export const userSchema = new Schema({
 
 userSchema.plugin(mongoosePaginate);
 
-// Model
-const User: PaginateModel<IUser> = model<IUser>('User', userSchema);
-
 // Model methods
-User.schema.method('isValidPassword', async function(thisUser: IUser, password: string): Promise<boolean>{
+userSchema.method('isValidPassword', async function(storePassword: string, password: string): Promise<boolean>{
   try{
-    return await bcrypt.compare(password, thisUser.password);
+    return await bcrypt.compare(password, storePassword);
   } catch(err){
     throw new Error(err);
   }
 });
+
+// Model
+const User: PaginateModel<IUser> = model<IUser>('User', userSchema);
+
 
 // Model Validations
 User.schema.path('email').validate(uniqueEmail, 'El {PATH} está en uso');

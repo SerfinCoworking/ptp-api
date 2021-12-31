@@ -141,7 +141,7 @@ class LiquidationController extends BaseController{
     const { id } = req.params;  
     try{
       const opts: any = { runValidators: true, new: true };
-      const liquidation: ILiquidation | null = await Liquidation.findOneAndUpdate({_id: id, status: "IN_PROCESS"}, {status: 'CLOSED'}, opts);
+      const liquidation: ILiquidation = await Liquidation.findOneAndUpdate({_id: id, status: "IN_PROCESS"}, {status: 'CLOSED'}, opts) as ILiquidation;
       if (!liquidation) throw new GenericError({property:"Liquidation", message: 'Liquidación no encontrada', type: "RESOURCE_NOT_FOUND"});
       // liquidation.status = 'CLOSED';
       // await liquidation.save;

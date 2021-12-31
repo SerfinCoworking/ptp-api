@@ -75,7 +75,7 @@ class PeriodController extends BaseController{
          "objective.name": body.objective.name
         });
         // validates date and objective period
-        const isInvalid: boolean = await Period.schema.methods.validatePeriod(period);
+        const isInvalid: boolean = await period.validatePeriod(period);
       if(isInvalid){
         throw new GenericError({property:"Period", message: "No se pudo crear el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas.", type: "BAD_REQUEST"});
       }
@@ -102,7 +102,7 @@ class PeriodController extends BaseController{
       period.toDate = body.toDate;
       
       // validates date and objective period
-      const isInvalid: boolean = await Period.schema.methods.validatePeriod(period);
+      const isInvalid: boolean = await period.validatePeriod(period);
       
       if(isInvalid){
         throw new GenericError({property:"Period", message: "No se pudo actualizar el Periodo debido a que una o ambas fechas ingresadas para este objectivo, ya se encuentran definidas.", type: "BAD_REQUEST"});
@@ -290,9 +290,9 @@ class PeriodController extends BaseController{
     try{
       const opts: any = { runValidators: true };
       // update only shifts
-      const period: IPeriod | null = await Period.findOneAndUpdate({_id: id}, {
+      const period: IPeriod = await Period.findOneAndUpdate({_id: id}, {
         shifts: body.shifts
-      }, opts);
+      }, opts) as IPeriod;
       if(!period) throw new GenericError({property:"Periodo", message: 'Periodo no encontrado', type: "RESOURCE_NOT_FOUND"});
 
       return res.status(200).json(period);
@@ -364,11 +364,11 @@ class PeriodController extends BaseController{
       await Schedule.findOneAndUpdate({
         'objective._id': period.objective._id
       },{
-        lastPeriod: lastPeriod?._id || undefined,
-        lastPeriodMonth: lastPeriod?.toDate || undefined,
+        lastPeriod: lastPeriod?._id || '',
+        lastPeriodMonth: lastPeriod?.toDate || '',
         lastPeriodRange: {
-          fromDate: lastPeriod?.fromDate || undefined,
-          toDate: lastPeriod?.toDate || undefined
+          fromDate: lastPeriod?.fromDate || '',
+          toDate: lastPeriod?.toDate || ''
         }
       });
 
