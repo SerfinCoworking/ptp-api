@@ -55,16 +55,15 @@ class ScheduleController extends BaseController{
         'objective._id': schedule.objective._id
       }).sort({toDate: -1});
 
-      if(lastPeriod){
-        await schedule.update({
-          lastPeriod: lastPeriod?._id,
-          lastPeriodMonth: lastPeriod.toDate,
-          lastPeriodRange: {
-            fromDate: lastPeriod.fromDate,
-            toDate: lastPeriod.toDate
-          }
-        });
-      }    
+      await schedule.update({
+        lastPeriod: lastPeriod ? lastPeriod._id : period._id,
+        lastPeriodMonth: lastPeriod ? lastPeriod.toDate : period.toDate,
+        lastPeriodRange: {
+          fromDate: lastPeriod ? lastPeriod.fromDate : period.fromDate,
+          toDate: lastPeriod ? lastPeriod.toDate : period.toDate
+        }
+      });
+      
       await createMovement(req.user, 'creó', 'agenda', `Agenda al objetivo: ${schedule.objective.name}`);
       return res.status(200).json(period);
     }catch(err){
