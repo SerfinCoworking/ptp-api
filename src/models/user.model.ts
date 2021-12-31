@@ -113,11 +113,7 @@ userSchema.plugin(mongoosePaginate);
 
 // Model methods
 userSchema.method('isValidPassword', async function(storePassword: string, password: string): Promise<boolean>{
-  try{
-    return await bcrypt.compare(password, storePassword);
-  } catch(err){
-    throw new Error(err);
-  }
+  return await bcrypt.compare(password, storePassword);
 });
 
 // Model

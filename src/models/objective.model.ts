@@ -86,11 +86,7 @@ objectiveSchema.plugin(mongoosePaginate);
 
 // Model methods
 objectiveSchema.method('isValidPassword', async function(storePassword: string, password: string): Promise<boolean>{
-  try{
-    return await bcrypt.compare(password, storePassword);
-  } catch(err){
-    throw new Error(err);
-  }
+  return await bcrypt.compare(password, storePassword);
 });
 // Model
 const Objective: PaginateModel<IObjective> = model<IObjective>('Objective', objectiveSchema);

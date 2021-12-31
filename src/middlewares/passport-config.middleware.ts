@@ -95,7 +95,7 @@ const authenticationMiddleware = (req: Request, res: Response, next: NextFunctio
 
             req.user = user;
             next();
-        }catch(error){
+        }catch(error: any){
             if(error.code == 'ERR_HTTP_INVALID_STATUS_CODE') return res.status(HttpCodes.EXPECTATION_FAILED).json({message: 'Debe iniciar sesión'});
 
             return res.status(500).json('Server Error')
