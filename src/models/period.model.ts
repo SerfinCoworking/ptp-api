@@ -83,6 +83,7 @@ export const eventSchema = new Schema({
 // Schema Shift
 export const shiftSchema = new Schema({
   employee: {
+    _id: { type: ObjectId},
     firstName: {
       type: String
     },
@@ -112,6 +113,7 @@ export const periodSchema = new Schema({
   },
   shifts: [shiftSchema],
   objective: {
+    _id: { type: ObjectId },
     name: { type: String}
   }
 },{
