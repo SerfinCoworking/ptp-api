@@ -16,7 +16,7 @@ class ScheduleDepController extends BaseController{
   index = async (req: Request, res: Response): Promise<Response<ICalendarList>> => {
     const {schedulePage, periodPage, objectiveId } = req.query;
  
-    const sPage: number = schedulePage ? schedulePage : 1;
+    const sPage: number = schedulePage ? parseInt(schedulePage as string) : 1;
     
     try{
   
@@ -30,7 +30,7 @@ class ScheduleDepController extends BaseController{
         offset: schedules.offset,
       };
       await Promise.all(schedules.docs.map(async (schedule: ISchedule) => {
-        const pPage: number = periodPage && schedule.objective._id.equals(objectiveId) ? periodPage : 1;
+        const pPage: number = periodPage && schedule.objective._id.equals(objectiveId as string) ? parseInt(periodPage as string) : 1;
         
         let period: PaginateResult<IPeriod> = await Period.paginate({"objective._id": schedule.objective._id}, { sort: { toDate: -1 }, page: pPage, limit: 1 });
         let days: string[] = [];
@@ -64,7 +64,7 @@ class ScheduleDepController extends BaseController{
 
       if(!schedule) throw new GenericError({property:"Schedule", message: 'Agenda no encontrada', type: "RESOURCE_NOT_FOUND"});
       
-      const pPage: number = periodPage ? periodPage : 1;
+      const pPage: number = periodPage ? parseInt(periodPage as string) : 1;
 
       let period: PaginateResult<IPeriod> = await Period.paginate({"objective._id": schedule.objective._id}, { sort: { toDate: -1 }, page: pPage, limit: 1 });
       let days: string[] = [];

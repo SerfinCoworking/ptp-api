@@ -4,14 +4,15 @@ import { BaseController } from './base.controllers.interface';
 import Customer from '../models/employee.model';
 import ICustomer from '../interfaces/employee.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 class CustomerController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<ICustomer[]>> => {
-    const { search, page, limit, sort } = req.query;
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
 
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"profile.firstName": 1, "profile.lastName": 1});
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"profile.firstName": 1, "profile.lastName": 1});
 
     try{
       const query = {
@@ -24,8 +25,8 @@ class CustomerController extends BaseController{
       };
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? page : 1),
-        limit: (typeof(limit) !== 'undefined' ? limit : 10)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10)
       };
 
       const employees: PaginateResult<ICustomer> = await Customer.paginate(query, options);

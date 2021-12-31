@@ -10,14 +10,15 @@ import * as _ from 'lodash';
 import Objective from '../models/objective.model';
 import IObjective from '../interfaces/objective.interface';
 import { createMovement } from '../utils/helpers';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 class ScheduleController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<ISchedule>> => {
-    const { search, page, limit, sort } = req.query;
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
 
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"objective.name": 1});
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"objective.name": 1});
     try{
       const query = {
         $or: [
@@ -26,8 +27,8 @@ class ScheduleController extends BaseController{
       };
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10)
       };
 
       const schedules: PaginateResult<ISchedule> = await Schedule.paginate(query, options);

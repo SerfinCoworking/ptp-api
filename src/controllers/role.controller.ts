@@ -4,15 +4,16 @@ import { errorHandler, GenericError } from '../common/errors.handler';
 import Role from '../models/role.model';
 import IRole from '../interfaces/role.interface';
 import { PaginateOptions, PaginateResult } from 'mongoose';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 class RoleController extends BaseController{
 
   
   public index = async (req: Request, res: Response): Promise<Response<IRole[]>> => {
-    const { search, page, limit, sort } = req.query;
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
 
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"nameDisplay": 1});
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"nameDisplay": 1});
 
     try{
       const query = {
@@ -22,8 +23,8 @@ class RoleController extends BaseController{
       };
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 100)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 100)
       };
 
       const roles: PaginateResult<IRole> = await Role.paginate(query, options);

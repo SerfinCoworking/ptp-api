@@ -6,15 +6,16 @@ import IObjective from '../interfaces/objective.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
 import _ from 'lodash';
 import { createMovement } from '../utils/helpers';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 
 class ObjectiveController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<IObjective[]>> => {
-    const { search, page, limit, sort } = req.query;
-    
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"name": 1});
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
+   
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"name": 1});
     
     try{
       const query = {
@@ -25,8 +26,8 @@ class ObjectiveController extends BaseController{
       const options: PaginateOptions = {
         select: '_id name identifier address serviceType description avatar defaultSchedules createdAt updatedAt',
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10)
       };
       
       const objective: PaginateResult<IObjective> = await Objective.paginate(query, options);

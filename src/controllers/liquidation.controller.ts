@@ -12,12 +12,16 @@ import LiquidationModule from '../modules/liquidation.module';
 import LiquidatedNews from '../models/liquidated-news.model';
 import EmployeeLiquidated from '../models/employee-liquidated.documents';
 import IEmployeeLiquidated from '../interfaces/employee-liquidated.interface';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 class LiquidationController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<INews[]>> => {
-    const { dateFrom, dateTo, name, page, limit, sort } = req.query;
-    const sortDiggest: any = await this.sortDigest(sort, {"dateFrom": -1});
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
+    const dateFrom: string = req.query.dateFrom as string;
+    const dateTo: string  = req.query.dateTo as string;
+    const name: string = req.query.name as string;
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"dateFrom": -1});
     try{
       const queryBuilder = [];
 
@@ -50,8 +54,8 @@ class LiquidationController extends BaseController{
 
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10),
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10),
         select: "name dateFrom dateTo status"
       };
 

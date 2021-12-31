@@ -5,14 +5,15 @@ import User from '../models/user.model';
 import IUser from '../interfaces/user.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
 import { createMovement } from '../utils/helpers';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 class UserController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<IUser[]>> => {
-    const { search, page, limit, sort } = req.query;
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
 
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"profile.firstName": 1, "profile.lastName": 1});
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"profile.firstName": 1, "profile.lastName": 1});
 
     try{
       const query = {
@@ -24,8 +25,8 @@ class UserController extends BaseController{
       };
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10)
       };
 
       const users: PaginateResult<IUser> = await User.paginate(query, options);

@@ -10,13 +10,17 @@ import IEmployee, { Status } from '../interfaces/employee.interface';
 import NewsConcept from '../models/news-concept.model';
 import { createMovement } from '../utils/helpers';
 import EmployeeStatusModule from '../modules/employeeStatus.module';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 class NewsController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<INews[]>> => {
-    const { search, concept, dateFrom, dateTo, page, limit, sort } = req.query;
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"createdAt": -1});
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
+    const concept: string = req.query.concept as string;
+    const dateFrom: string = req.query.dateFrom as string;
+    const dateTo: string = req.query.dateTo as string;
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"createdAt": -1});
     try{
       const queryBuilder = [];
 
@@ -68,8 +72,8 @@ class NewsController extends BaseController{
       const query = queryBuilder.length ? { $and: queryBuilder } : {};
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10)
       };
 
       const news: PaginateResult<INews> = await News.paginate(query, options);
@@ -91,7 +95,8 @@ class NewsController extends BaseController{
   }
 
   getNewsByDate = async (req: Request, res: Response): Promise<Response<INews[]>> => {
-    const {dateFrom, dateTo } = req.query;
+    const dateFrom: string = req.query.dateFrom as string;
+    const dateTo: string = req.query.dateTo as string;
     // get all news by a period range
     const news: INews[] = await News.find({
       $and: [

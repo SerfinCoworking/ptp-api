@@ -17,14 +17,17 @@ import EmployeePeriodCalendarParserModule from '../modules/employeePeriodCalenda
 import { PaginateOptions, PaginateResult } from 'mongoose';
 import { IPeriodMonitor } from '../interfaces/planing.interface.';
 import { log } from 'console';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 class PeriodController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<IPeriod[]>> => {
     const { objectiveId } = req.params;
-    const { search, concept, dateFrom, dateTo, page, limit, sort } = req.query;
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"createdAt": -1});
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
+    const dateFrom: string = req.query.dateFrom as string;
+    const dateTo: string = req.query.dateTo as string;
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"createdAt": -1});
     try{
       const queryBuilder = [];
 
@@ -53,8 +56,8 @@ class PeriodController extends BaseController{
       const query = queryBuilder.length ? { $and: queryBuilder } : {};
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10)
       };
 
       const periods: PaginateResult<IPeriod> = await Period.paginate(query, options);
@@ -226,7 +229,8 @@ class PeriodController extends BaseController{
   }
   
   getEmployeeForPlannig = async (req: Request, res: Response):Promise<Response<any>> => {
-    const { periodId, fromDate, toDate, employee} = req.query;
+    const periodId: string = req.query.periodId as string;
+    const employee: string = req.query.employee as string;
     const periodParser = new EmployeePeriodCalendarParserModule(periodId);
     const result = await periodParser.employeesByWeeks(employee);
 

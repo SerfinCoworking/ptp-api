@@ -5,15 +5,16 @@ import Template from '../models/template.model';
 import ITemplate from '../interfaces/template.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
 import { createMovement } from '../utils/helpers';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 
 class TemplateController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<ITemplate[]>> => {
-    const { search, page, limit, sort } = req.query;
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;
     
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"name": 1});
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"name": 1});
     
     try{
       const query = {
@@ -23,8 +24,8 @@ class TemplateController extends BaseController{
       };
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10)
       };
       
       const templates: PaginateResult<ITemplate> = await Template.paginate(query, options);

@@ -5,15 +5,16 @@ import IMovement from '../interfaces/movement.interface';
 import { PaginateResult, PaginateOptions } from 'mongoose';
 import _ from 'lodash';
 import Movement from '../models/movement.model';
+import { IRequestQuery } from '../interfaces/request-query,interface';
 
 
 class MovementController extends BaseController{
 
   index = async (req: Request, res: Response): Promise<Response<IMovement[]>> => {
-    const { search, page, limit, sort } = req.query;
+    const queryParams: IRequestQuery = req.query as unknown as IRequestQuery;    
     
-    const target: string = await this.searchDigest(search);
-    const sortDiggest: any = await this.sortDigest(sort, {"createdAt": -1});
+    const target: string = await this.searchDigest(queryParams.search);
+    const sortDiggest: any = await this.sortDigest(queryParams.sort, {"createdAt": -1});
     
     try{
       const query = {
@@ -26,8 +27,8 @@ class MovementController extends BaseController{
       };
       const options: PaginateOptions = {
         sort: sortDiggest,
-        page: (typeof(page) !== 'undefined' ? parseInt(page) : 1),
-        limit: (typeof(limit) !== 'undefined' ? parseInt(limit) : 10)
+        page: (typeof(queryParams.page) !== 'undefined' ? parseInt(queryParams.page) : 1),
+        limit: (typeof(queryParams.limit) !== 'undefined' ? parseInt(queryParams.limit) : 10)
       };
       
       const movement: PaginateResult<IMovement> = await Movement.paginate(query, options);

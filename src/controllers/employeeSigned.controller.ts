@@ -15,7 +15,10 @@ class EmployeeSignedController extends BaseController{
   }
 
   getEmployeeSigneds = async (req: Request, res: Response): Promise<Response<IEmployeeSigned | null>> => {   
-    const {fromDate, toDate, employeeId, employee_liquidated_id} = req.query;
+    const fromDate: string = req.query.fromDate as string;
+    const toDate: string = req.query.toDate as string;
+    const employeeId: string = req.query.employeeId as string;
+    const employee_liquidated_id: string = req.query.employee_liquidated_id as string;
     try{
       const dateFrom = moment(fromDate, "DD-MM-YYYY").startOf('day');
       const dateTo = moment(toDate, "DD-MM-YYYY").endOf('day');
