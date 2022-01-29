@@ -2,13 +2,16 @@ import { IEvent, IPeriod, IShift } from "../interfaces/schedule.interface";
 import Period from '../models/period.model';
 import { Socket, Server } from "socket.io";
 import { ObjectId } from "mongodb";
+import User from "../models/user.model";
+import IUser from "../interfaces/user.interface";
+import Movement from "../models/movement.model";
 const eventSigns = require('../modules/signs.module');
 
 
 module.exports.updateEvent = function(io: Server, socket: Socket): void {
 
   socket.on("event:update", (data) => {
-    const {periodId, employeeId, event} = data;
+    const {periodId, employeeId, event, user} = data;
     Period.findOneAndUpdate({_id: periodId},
     { $set: { "shifts.$[outer].events.$[event]": { ...event } }},
     { 
@@ -21,7 +24,24 @@ module.exports.updateEvent = function(io: Server, socket: Socket): void {
     (err, doc: IPeriod | null) => {
       const shift: IShift | undefined = doc?.shifts.find((shift: IShift) => shift.employee._id.equals(employeeId))
       const result: IEvent | undefined = shift?.events.find((target: IEvent) => event._id && target._id?.equals(event._id));
-      io.emit("event:update", { text: "Fichado actualizado correctamente",  event: result });
+      User.findOne({_id: user}, undefined, undefined, (err, doc: IUser | null) => {
+        // create movement
+        Movement.create({
+          user: {
+            _id: doc?._id,
+            username: doc?.username,
+            profile: {
+                firstName: doc?.profile.firstName,
+                lastName: doc?.profile.lastName,
+                dni: doc?.profile.dni
+            }
+          },
+          action: "Fichado Manual",
+          resource: "Evento",
+          target: `${shift?.employee.lastName} ${shift?.employee.firstName}`
+        });
+        io.emit("event:update", { text: "Fichado actualizado correctamente",  event: result });
+      });
     });
   });
 }
