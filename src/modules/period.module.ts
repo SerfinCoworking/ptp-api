@@ -147,8 +147,8 @@ export default class PeriodModule {
           const diffSignedAndScheduleFrom: number = scheduleDateTimeFrom.diff(signedDateTimeFrom, 'minutes') || 0;
           const diffSignedAndScheduleTo: number = scheduleDateTimeTo.diff(signedDateTimeTo, 'minutes') || 0;
           
-          signedDateTimeFrom = (Math.abs(diffSignedAndScheduleFrom) > 30 || event.corrected) ? signedDateTimeFrom : scheduleDateTimeFrom;
-          signedDateTimeTo = (Math.abs(diffSignedAndScheduleTo) > 30 || event.corrected) ? signedDateTimeTo : scheduleDateTimeTo;
+          signedDateTimeFrom = (Math.abs(diffSignedAndScheduleFrom) > 30 || event.checkin_corrected) ? signedDateTimeFrom : scheduleDateTimeFrom;
+          signedDateTimeTo = (Math.abs(diffSignedAndScheduleTo) > 30 || event.checkout_corrected) ? signedDateTimeTo : scheduleDateTimeTo;
           /**=====================================================================================**/
           
           let { dayHours: signedDH, nightHours: signedNH} = await calcDayAndNightHours(signedDateTimeFrom, signedDateTimeTo, 'minutes');

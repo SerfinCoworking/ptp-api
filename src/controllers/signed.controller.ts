@@ -134,6 +134,7 @@ class SignedController extends BaseController{
     }
   }
 
+  // deprecated (changed by socketIO)
   manualSign = async (req: Request, res: Response): Promise<Response<any>> => {
     const {id, employee_id} = req.params;
     const { event } = await this.filterNullValues(req.body, ['event']);

@@ -97,7 +97,7 @@ class PrivateRoutes{
     this.router.get('/periods/objective/:objectiveId',hasPermissionIn('read', 'schedule'), PeriodController.index);
     this.router.post('/period/:id/create-shifts',hasPermissionIn('create', 'schedule'), PeriodController.createShifts);
     this.router.patch('/period/:id/update-shifts', hasPermissionIn('update', 'schedule'), PeriodController.updateShifts); // deprecated
-    this.router.patch('/period/:id/update-signeds', hasPermissionIn('update', 'schedule'), PeriodController.updateSigneds);
+    // this.router.patch('/period/:id/update-signeds', hasPermissionIn('update', 'schedule'), PeriodController.updateSigneds); // deprecated
     this.router.delete('/period/:id', hasPermissionIn('delete', 'schedule'), PeriodController.delete);
     
     // liquidation
@@ -135,7 +135,7 @@ class PrivateRoutes{
     
     // signed
     this.router.post('/signed', hasPermissionIn('signed', 'objective'), SignedController.employeeSign);
-    this.router.post('/period/:id/employee/:employee_id/manual-sign', hasPermissionIn('update', 'schedule'), SignedController.manualSign);
+    // this.router.post('/period/:id/employee/:employee_id/manual-sign', hasPermissionIn('update', 'schedule'), SignedController.manualSign); // deprecated (replaced with socketIO)
     
     // signedByEmployee
     this.router.get('/show/:employee_liquidated_id', hasPermissionIn('read', 'liquidation'), EmployeeSignedController.show);

@@ -306,6 +306,7 @@ class PeriodController extends BaseController{
     }
   }
   
+  // deprecated
   updateSigneds = async (req: Request, res: Response): Promise<Response<any>> => {
     const id: string = req.params.id;
     const body: any = await this.filterNullValues(req.body, ['employeeId', 'eventsDay']);
