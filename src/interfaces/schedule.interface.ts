@@ -12,6 +12,8 @@ export interface IEvent{
   checkout?: Date;
   checkoutDescription?: string;
   corrected?: boolean;
+  checkin_corrected?: boolean;
+  checkout_corrected?: boolean;
   color: {
     r: number;
     g: number;

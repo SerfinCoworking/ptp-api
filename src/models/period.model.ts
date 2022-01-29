@@ -69,6 +69,12 @@ export const eventSchema = new Schema({
   corrected: {
     type: Boolean
   },
+  checkin_corrected: {
+    type: Boolean
+  },
+  checkout_corrected: {
+    type: Boolean
+  },
   color: { 
     r: { type: Number},
     g: { type: Number},
