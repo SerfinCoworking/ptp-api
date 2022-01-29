@@ -18,7 +18,8 @@
         "start:dev": "ts-node ./src/server.ts",
         "dev": "nodemon",
         "db:seed-dev": "ts-node ./src/database/seeds.ts",
-        "db:seed": "node dist/src/database/seeds.js"
+        "db:seed": "node dist/src/database/seeds.js",
+        "db:migrate": "ts-node ./src/database/migrations/fill_checkout_and_checkin_corrected_param.ts"
     },
     "dependencies": {
         "bcryptjs": "^2.4.3",
