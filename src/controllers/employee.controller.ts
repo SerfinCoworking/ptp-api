@@ -70,7 +70,7 @@ class EmployeeController extends BaseController{
     const id: string = req.params.id;
     try{
       const employee: IEmployee | null = await Employee.findOne({_id: id});
-      if(!employee) throw new GenericError({property:"Employee", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
+      if(!employee) throw new GenericError({property:"Employee", message: 'Empleado no encontrado', type: "RESOURCE_NOT_FOUND"});
       return res.status(200).json(employee);
     }catch(err){
       const handler = errorHandler(err);
@@ -82,9 +82,9 @@ class EmployeeController extends BaseController{
     const id: string = req.params.id;
     const body = await this.filterNullValues(req.body, this.permitBody());
     try{
-      const opts: any = { runValidators: true, new: true };
+      const opts: any = { runValidators: true, new: true, context: 'query' };
       const employee: IEmployee = await Employee.findOneAndUpdate({_id: id}, body, opts) as IEmployee;
-      if(!employee) throw new GenericError({property:"Employee", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
+      if(!employee) throw new GenericError({property:"Employee", message: 'Empleado no encontrado', type: "RESOURCE_NOT_FOUND"});
       await createMovement(req.user, 'editó', 'empleado', `${employee.profile.lastName} ${employee.profile.lastName}`);
       return res.status(200).json(employee);
     }catch(err){
@@ -97,7 +97,7 @@ class EmployeeController extends BaseController{
     const { id } = req.params;
     try{
       const employee: IEmployee | null = await Employee.findOneAndDelete({_id: id});
-      if(!employee) throw new GenericError({property:"Employee", message: 'Emploeado no encontrado', type: "RESOURCE_NOT_FOUND"});
+      if(!employee) throw new GenericError({property:"Employee", message: 'Empleado no encontrado', type: "RESOURCE_NOT_FOUND"});
       await createMovement(req.user, 'eliminó', 'empleado', `${employee.profile.lastName} ${employee.profile.lastName}`);
       
       return res.status(200).json("Employee deleted successfully");
