@@ -50,6 +50,7 @@ class PrivateRoutes{
     this.router.get('/employees/:id', hasPermissionIn('read', 'employee'), EmployeeController.show);
     this.router.patch('/employees/:id', hasPermissionIn('update', 'employee'), EmployeeController.update);
     this.router.patch('/employees/:id/status', hasPermissionIn('status', 'employee'), EmployeeController.updateStatus);
+    this.router.patch('/employee-remove-rfid/:id', hasPermissionIn('update', 'employee'), EmployeeController.removeEmployeeRfid);
     this.router.delete('/employees/:id', hasPermissionIn('delete', 'employee'), EmployeeController.delete);
 
     // objective

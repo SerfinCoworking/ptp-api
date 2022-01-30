@@ -140,15 +140,22 @@ class EmployeeController extends BaseController{
   employeeByRfid = async (req: Request, res: Response): Promise<Response<IEmployee[]>> => {
     const rfid: number = parseInt(req.params.rfid);
     const id: string[] = req.query.id ? [req.query.id?.toString()] : [];
-    
     const queryBuilder = {
       rfid: rfid,
       _id: { $nin:  id }
     };
 
-
     const employees: IEmployee[] = await Employee.find(queryBuilder);
     return res.status(200).json(employees);
+  }
+  
+  removeEmployeeRfid = async (req: Request, res: Response): Promise<Response<IEmployee>> => {
+    const id: string = req.params.id;
+
+    const employee: IEmployee | null = await Employee.findOneAndUpdate({_id: id}, {
+      rfid: undefined
+    });
+    return res.status(200).json("Se ha desvinculado la tarjeta correctamente");
   }
 
   private permitBody = (): Array<string> => {
