@@ -9,6 +9,7 @@ import NewsConcept from '../models/news-concept.model';
 import News from '../models/news.model';
 import { createMovement } from '../utils/helpers';
 import { IRequestQuery } from '../interfaces/request-query,interface';
+import { ObjectId } from 'mongodb';
 
 class EmployeeController extends BaseController{
 
@@ -138,7 +139,15 @@ class EmployeeController extends BaseController{
 
   employeeByRfid = async (req: Request, res: Response): Promise<Response<IEmployee[]>> => {
     const rfid: number = parseInt(req.params.rfid);
-    const employees: IEmployee[] = await Employee.find({rfid: rfid});
+    const id: string[] = req.query.id ? [req.query.id?.toString()] : [];
+    
+    const queryBuilder = {
+      rfid: rfid,
+      _id: { $nin:  id }
+    };
+
+
+    const employees: IEmployee[] = await Employee.find(queryBuilder);
     return res.status(200).json(employees);
   }
 
