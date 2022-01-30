@@ -136,6 +136,12 @@ class EmployeeController extends BaseController{
     }
   }
 
+  employeeByRfid = async (req: Request, res: Response): Promise<Response<IEmployee[]>> => {
+    const rfid: number = parseInt(req.params.rfid);
+    const employees: IEmployee[] = await Employee.find({rfid: rfid});
+    return res.status(200).json(employees);
+  }
+
   private permitBody = (): Array<string> => {
     return [ 'enrollment', 'rfid', 'profile', 'contact' ];
   }

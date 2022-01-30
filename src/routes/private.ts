@@ -45,6 +45,7 @@ class PrivateRoutes{
     // employee
     this.router.get('/employees', hasPermissionIn('read', 'employee'), EmployeeController.index);
     this.router.get('/employees/available', hasPermissionIn('read', 'employee'), EmployeeController.availableEmployees);
+    this.router.get('/employees-by-rfid/:rfid', hasPermissionIn('read', 'employee'), EmployeeController.employeeByRfid);
     this.router.post('/employees', hasPermissionIn('create', 'employee'), EmployeeController.create);
     this.router.get('/employees/:id', hasPermissionIn('read', 'employee'), EmployeeController.show);
     this.router.patch('/employees/:id', hasPermissionIn('update', 'employee'), EmployeeController.update);
