@@ -124,7 +124,7 @@ export default class NewsModule {
     const lic_sin_goce_sueldo = await this.scopeNews(this.queryByDate, employee._id, "LIC_SIN_SUELDO");
 
     const totalFeriado = await this.calcHours(this.events, feriados, 'minute');
-    this.news.feriado = Math.round(totalFeriado / 60);
+    this.news.feriado = parseFloat((totalFeriado / 60).toFixed(2));
     this.news.suspension = await this.calcHours(this.events, suspensiones, 'hour', false);
     this.news.lic_justificada = await this.calcJustificadasHours(lic_justificadas);
     this.news.lic_no_justificada = await this.calcHours(this.events, lic_no_justificadas, 'hour', false);
